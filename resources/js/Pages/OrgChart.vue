@@ -8,12 +8,10 @@
       <Toolbar class="mb-4">
         <template #start>
           <div class="flex gap-2 items-center">
-            <IconField>
-              <InputIcon><i class="pi pi-search" /></InputIcon>
-              <InputText v-model="q" placeholder="Tìm kiếm..." @input="onSearch" />
-            </IconField>
             <Button icon="pi pi-plus" label="Mở rộng tất cả" text @click="expandAll" :loading="expandingAll" />
             <Button icon="pi pi-minus" label="Thu gọn tất cả" text @click="collapseAll" />
+            <Button icon="pi pi-search" label="Load toàn bộ" text @click="loadAllForSearch" :loading="loadingAll"
+                    v-tooltip="'Load tất cả nodes để có thể tìm kiếm trong toàn bộ cây'" />
           </div>
         </template>
         <template #end>
@@ -32,15 +30,19 @@
       <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
         <!-- Trái: Cây -->
         <div class="lg:col-span-1">
+          <div class="mb-2 text-sm text-gray-600">
+            <i class="pi pi-info-circle mr-1"></i>
+            Tìm kiếm chỉ trong nodes đã được load. Click "Load toàn bộ" để tìm kiếm sâu hơn.
+          </div>
           <Tree
             :value="nodes"
             :loading="loading"
             selectionMode="single"
             v-model:selectionKeys="selectedKey"
             :filter="true"
-            filterMode="lenient"
-            :filterBy="'label'"
-            filterPlaceholder="Tìm kiếm..."
+            filterMode="custom"
+            :filterFunction="customFilter"
+            filterPlaceholder="Tìm kiếm trong cây tổ chức..."
             :expandedKeys="expandedKeys"
             @nodeExpand="onExpand"
             @nodeSelect="onSelect"
@@ -134,11 +136,11 @@ const props = defineProps({
 const nodes = ref([])
 const loading = ref(false)
 const expandingAll = ref(false)
+const loadingAll = ref(false)
 const expandedKeys = ref({})
 const selectedKey = ref(null)
 const current = ref(null)
 
-const q = ref('')
 const typeFilter = ref(null)
 const typeOptions = [
   { value: 'DEPARTMENT', label: 'Phòng/Ban' },
@@ -207,19 +209,57 @@ function hasChildren(node) {
   return false
 }
 
+// Custom filter function to search across multiple fields
+function customFilter(node, filterValue) {
+  if (!filterValue || filterValue.trim() === '') {
+    return true // Show all nodes when no filter
+  }
+
+  const searchTerm = filterValue.toLowerCase()
+
+  // Search in current node fields
+  const fieldsToSearch = [
+    node.label,
+    node.data?.code,
+    node.data?.head,
+    node.data?.deputy
+  ]
+
+  const currentNodeMatches = fieldsToSearch.some(field =>
+    field && field.toString().toLowerCase().includes(searchTerm)
+  )
+
+  // If current node matches, show it
+  if (currentNodeMatches) {
+    return true
+  }
+
+  // If node has children loaded, recursively search them
+  if (node.children && Array.isArray(node.children) && node.children.length > 0) {
+    const hasMatchingChild = node.children.some(child =>
+      customFilter(child, filterValue)
+    )
+
+    if (hasMatchingChild) {
+      // Auto-expand parent if child matches
+      expandedKeys.value = { ...expandedKeys.value, [node.key]: true }
+      return true
+    }
+  }
+
+  return false
+}
+
 async function loadRoots() {
   loading.value = true
   try {
     // Use props first if available, otherwise fetch from API
     if (props.roots && props.roots.length > 0) {
-      console.log('Using props roots:', props.roots)
       nodes.value = processNodesForLeafStatus(props.roots)
     } else {
-      console.log('Fetching roots from API...')
       const rootNodes = await OrgService.roots()
       nodes.value = processNodesForLeafStatus(rootNodes)
     }
-    console.log('Final nodes structure:', nodes.value)
   } catch (error) {
     console.error('Error loading roots:', error)
     // Fallback to empty array on error
@@ -264,11 +304,9 @@ async function onExpand(node) {
       return
     }
 
-    console.log('Expanding node:', node.key, node.label)
 
     // Use the correct method name from OrgService
     const kids = await OrgService.children(node.key)
-    console.log('Received children:', kids)
 
     // Process children to set correct leaf status
     const processedChildren = processNodesForLeafStatus(kids)
@@ -296,21 +334,20 @@ function onSelect(node) {
     return
   }
 
-  console.log('Selected node:', node.key, node.label)
   current.value = node
 }
 
 async function expandAll() {
   expandingAll.value = true
   const map = {}
-  
+
   // Recursive function to expand all nodes and load their children
   const expandNode = async (node) => {
     if (!node || !node.key) return
-    
+
     // Add to expanded keys
     map[node.key] = true
-    
+
     // If node doesn't have children loaded yet and is not a leaf, load them
     if (!node.children && !node.leaf) {
       try {
@@ -318,7 +355,7 @@ async function expandAll() {
         const processedChildren = processNodesForLeafStatus(kids)
         node.children = processedChildren
         node.leaf = !kids || kids.length === 0
-        
+
         // Recursively expand children
         if (processedChildren && processedChildren.length > 0) {
           for (const child of processedChildren) {
@@ -336,7 +373,7 @@ async function expandAll() {
       }
     }
   }
-  
+
   // Start expansion from all root nodes
   try {
     for (const node of nodes.value) {
@@ -356,8 +393,49 @@ function collapseAll() {
   expandedKeys.value = {}
 }
 
-function onSearch() {
-  // Tree có filter built-in (đã bật ở template). Ở đây không cần xử lý thêm.
+async function loadAllForSearch() {
+  loadingAll.value = true
+
+  // Recursive function to load all children without expanding
+  const loadNode = async (node) => {
+    if (!node || !node.key || node.leaf) return
+
+    // If node doesn't have children loaded yet, load them
+    if (!node.children) {
+      try {
+        const kids = await OrgService.children(node.key)
+        const processedChildren = processNodesForLeafStatus(kids)
+        node.children = processedChildren
+        node.leaf = !kids || kids.length === 0
+
+        // Recursively load children
+        if (processedChildren && processedChildren.length > 0) {
+          for (const child of processedChildren) {
+            await loadNode(child)
+          }
+        }
+      } catch (error) {
+        console.error('Error loading children for node:', node.key, error)
+        node.leaf = true
+      }
+    } else if (node.children && Array.isArray(node.children)) {
+      // If children already loaded, recursively load their children
+      for (const child of node.children) {
+        await loadNode(child)
+      }
+    }
+  }
+
+  // Start loading from all root nodes
+  try {
+    for (const node of nodes.value) {
+      await loadNode(node)
+    }
+  } catch (error) {
+    console.error('Error in loadAllForSearch:', error)
+  } finally {
+    loadingAll.value = false
+  }
 }
 
 function applyTypeFilter() {
