@@ -14,17 +14,6 @@
                     v-tooltip="'Load tất cả nodes để có thể tìm kiếm trong toàn bộ cây'" />
           </div>
         </template>
-        <template #end>
-          <Select
-            :options="typeOptions"
-            optionLabel="label"
-            optionValue="value"
-            v-model="typeFilter"
-            placeholder="-- Loại đơn vị --"
-            showClear
-            @change="applyTypeFilter"
-          />
-        </template>
       </Toolbar>
 
       <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
@@ -436,11 +425,6 @@ async function loadAllForSearch() {
   } finally {
     loadingAll.value = false
   }
-}
-
-function applyTypeFilter() {
-  // Có thể làm filter client-side bằng cách ẩn node không khớp type, hoặc
-  // thêm tham số gọi server. Để đơn giản, giữ nguyên (filter text đủ cho đa số).
 }
 
 onMounted(loadRoots)
