@@ -138,9 +138,10 @@
                 <OrganizationChart :value="employeeChartData"
                                   class="org-chart-custom">
                   <template #person="slotProps">
-                    <div class="employee-card bg-white border border-gray-200 rounded-lg p-3 min-w-[160px] max-w-[200px]">
+                    <div class="employee-card bg-white rounded-lg p-3 min-w-[160px] max-w-[200px]">
                       <div class="text-center">
                         <div class="font-semibold text-gray-800 text-sm truncate">{{ slotProps.node.data.name }}</div>
+                        <div v-if="slotProps.node.data.code" class="text-xs text-gray-500 mt-1">{{ slotProps.node.data.code }}</div>
                         <div class="text-xs text-gray-600 mt-1 truncate">{{ slotProps.node.data.position }}</div>
                         <div class="text-xs text-blue-600 mt-1">{{ slotProps.node.data.role }}</div>
                         <div v-if="slotProps.node.data.department" class="text-xs text-gray-500 mt-1 truncate">
@@ -222,6 +223,7 @@ const employeeChartData = computed(() => {
       type: 'person',
       data: {
         name: currentEmployees.value[0].full_name,
+        code: currentEmployees.value[0].employee_code,
         position: currentEmployees.value[0].position_name || 'Nhân viên',
         role: getRoleLabel(currentEmployees.value[0].role_type)
       }
@@ -244,6 +246,7 @@ const employeeChartData = computed(() => {
       type: 'person',
       data: {
         name: emp.full_name,
+        code: emp.employee_code,
         position: emp.position_name || 'Nhân viên',
         role: getRoleLabel(emp.role_type)
       }
@@ -270,6 +273,7 @@ function buildSingleDepartmentChart(employees) {
         type: 'person',
         data: {
           name: emp.full_name,
+          code: emp.employee_code,
           position: emp.position_name || 'Nhân viên',
           role: getRoleLabel(emp.role_type),
           department: emp.department_name
@@ -286,6 +290,7 @@ function buildSingleDepartmentChart(employees) {
       type: 'person',
       data: {
         name: emp.full_name,
+        code: emp.employee_code,
         position: emp.position_name || 'Nhân viên',
         role: getRoleLabel(emp.role_type),
         department: emp.department_name
@@ -297,6 +302,7 @@ function buildSingleDepartmentChart(employees) {
     type: 'person',
     data: {
       name: head.full_name,
+      code: head.employee_code,
       position: head.position_name || 'Trưởng đơn vị',
       role: getRoleLabel(head.role_type),
       department: head.department_name
@@ -325,6 +331,7 @@ function buildMultiDepartmentChart(employeesByDept, mainDeptId) {
           type: 'person',
           data: {
             name: emp.full_name,
+            code: emp.employee_code,
             position: emp.position_name || 'Nhân viên',
             role: getRoleLabel(emp.role_type),
             department: deptName
@@ -336,6 +343,7 @@ function buildMultiDepartmentChart(employeesByDept, mainDeptId) {
         type: 'person',
         data: {
           name: head.full_name,
+          code: head.employee_code,
           position: head.position_name || 'Trưởng đơn vị',
           role: getRoleLabel(head.role_type),
           department: deptName,
@@ -350,6 +358,7 @@ function buildMultiDepartmentChart(employeesByDept, mainDeptId) {
         type: 'person',
         data: {
           name: emp.full_name,
+          code: emp.employee_code,
           position: emp.position_name || 'Nhân viên',
           role: getRoleLabel(emp.role_type),
           department: deptName
@@ -406,7 +415,7 @@ function getRoleLabel(roleType) {
   switch (roleType) {
     case 'HEAD': return 'Trưởng đơn vị'
     case 'DEPUTY': return 'Phó đơn vị'
-    case 'MEMBER': return 'Thành viên'
+    case 'MEMBER': return 'Nhân viên'
     default: return 'Nhân viên'
   }
 }

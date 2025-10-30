@@ -65,6 +65,7 @@ class DepartmentOrgController extends Controller
             ->select([
                 'e.id',
                 'e.full_name',
+                'e.employee_code',
                 'p.title as position_name',
                 'ea.role_type',
                 'ea.department_id',
