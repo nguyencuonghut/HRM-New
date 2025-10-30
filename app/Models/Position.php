@@ -10,7 +10,7 @@ class Position extends Model
     use HasUuids; // UUID cho khóa chính
 
     protected $fillable = [
-        'department_id','title','level','insurance_base_salary','position_salary','competency_salary'
+        'department_id','title','level','insurance_base_salary','position_salary','competency_salary', 'allowance'
     ]; // Cho phép gán hàng loạt
 
     // Quan hệ: thuộc phòng ban nào

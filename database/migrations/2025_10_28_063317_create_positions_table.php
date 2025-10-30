@@ -14,6 +14,7 @@ return new class extends Migration {
             $table->decimal('insurance_base_salary', 14, 2)->nullable(); // Lương đóng BHXH mặc định
             $table->decimal('position_salary', 14, 2)->nullable(); // Lương vị trí
             $table->decimal('competency_salary', 14, 2)->nullable(); // Lương năng lực/kỹ năng
+            $table->decimal('allowance', 14, 2)->nullable(); // Phụ cấp (nếu có)
             $table->timestamps(); // created_at, updated_at
         });
     }
