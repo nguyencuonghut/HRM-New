@@ -24,8 +24,18 @@ class UpdateDepartmentRequest extends FormRequest
             'code'                 => ['nullable', 'string', 'max:255', Rule::unique('departments', 'code')->ignore($id)],
             'head_assignment_id'   => ['nullable', 'uuid'],
             'deputy_assignment_id' => ['nullable', 'uuid'],
-            'order_index'          => ['nullable', 'integer', 'min:0'],
+            'order_index'          => ['nullable', 'integer', 'min:1'], // Optional, can be updated manually
             'is_active'            => ['nullable', 'boolean'],
+        ];
+    }
+
+    public function messages(): array
+    {
+        return [
+            'type.in'            => 'Loại đơn vị không hợp lệ.',
+            'name.required'      => 'Vui lòng nhập tên phòng/ban.',
+            'order_index.min'    => 'Thứ tự phải lớn hơn 0.',
+            'order_index.integer'=> 'Thứ tự phải là số nguyên.',
         ];
     }
 }

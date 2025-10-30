@@ -21,7 +21,7 @@ class StoreDepartmentRequest extends FormRequest
             'code'                => ['nullable', 'string', 'max:255', 'unique:departments,code'],
             'head_assignment_id'  => ['nullable', 'uuid'],
             'deputy_assignment_id'=> ['nullable', 'uuid'],
-            'order_index'         => ['nullable', 'integer', 'min:0'],
+            'order_index'         => ['nullable', 'integer', 'min:1'], // Optional, auto-generated if not provided
             'is_active'           => ['nullable', 'boolean'],
         ];
     }
@@ -29,8 +29,10 @@ class StoreDepartmentRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'type.in'      => 'Loại đơn vị không hợp lệ.',
-            'name.required'=> 'Vui lòng nhập tên phòng/ban.',
+            'type.in'            => 'Loại đơn vị không hợp lệ.',
+            'name.required'      => 'Vui lòng nhập tên phòng/ban.',
+            'order_index.min'    => 'Thứ tự phải lớn hơn 0.',
+            'order_index.integer'=> 'Thứ tự phải là số nguyên.',
         ];
     }
 }

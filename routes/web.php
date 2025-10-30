@@ -76,6 +76,10 @@ Route::group(['middleware' => 'auth'], function () {
     // (tuỳ chọn) bulk delete
     Route::delete('departments/bulk-delete', [DepartmentController::class, 'bulkDelete'])->name('departments.bulk-delete');
 
+    // Department order management API routes
+    Route::get('/departments/next-order/{parentId?}', [DepartmentController::class, 'getNextOrderIndexApi'])->name('departments.next-order');
+    Route::post('/departments/reorder', [DepartmentController::class, 'updateOrderIndexes'])->name('departments.reorder');
+
     // Department Org Chart Routes
     Route::get('/departments/org', [DepartmentOrgController::class, 'index'])->name('departments.org');       // Trang Inertia
     Route::get('/departments/tree', [DepartmentOrgController::class, 'roots'])->name('departments.tree');     // JSON (web)

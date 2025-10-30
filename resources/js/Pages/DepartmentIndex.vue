@@ -189,21 +189,9 @@
                     <small v-if="hasError('parent_id')" class="p-error block mt-1">{{ getError('parent_id') }}</small>
                 </div>
 
-                <div class="grid grid-cols-2 gap-4">
-                    <div>
-                        <label for="order_index" class="block font-bold mb-3">Thứ tự</label>
-                        <InputText
-                            id="order_index"
-                            v-model.number="department.order_index"
-                            fluid
-                            :invalid="hasError('order_index')"
-                        />
-                        <small v-if="hasError('order_index')" class="p-error block mt-1">{{ getError('order_index') }}</small>
-                    </div>
-                    <div class="flex items-center gap-2">
-                        <Checkbox v-model="department.is_active" :binary="true" inputId="active" />
-                        <label for="active" class="font-bold">Kích hoạt</label>
-                    </div>
+                <div class="flex items-center gap-2">
+                    <Checkbox v-model="department.is_active" :binary="true" inputId="active" />
+                    <label for="active" class="font-bold">Kích hoạt</label>
                 </div>
             </div>
 
@@ -302,7 +290,6 @@ const department = ref({
     type: 'DEPARTMENT',
     name: '',
     code: '',
-    order_index: 0,
     is_active: true,
 })
 
@@ -339,7 +326,6 @@ function openNew() {
         type: 'DEPARTMENT',
         name: '',
         code: '',
-        order_index: 0,
         is_active: true,
     }
     departmentDialog.value = true
@@ -353,7 +339,6 @@ function editDepartment(row) {
         type: row.type,
         name: row.name,
         code: row.code || '',
-        order_index: row.order_index ?? 0,
         is_active: !!row.is_active,
     }
     departmentDialog.value = true

@@ -16,7 +16,8 @@ class DepartmentOrgController extends Controller
         $roots = $this->nodes(
             Department::query()
                 ->whereNull('parent_id')
-                ->orderBy('order_index')->orderBy('name')
+                ->orderByRaw('CASE WHEN order_index IS NULL THEN 1 ELSE 0 END, order_index ASC')
+                ->orderBy('name')
                 ->get(['id','parent_id','type','name','code','is_active'])
         );
 
@@ -30,7 +31,8 @@ class DepartmentOrgController extends Controller
     {
         $rows = Department::query()
             ->whereNull('parent_id')
-            ->orderBy('order_index')->orderBy('name')
+            ->orderByRaw('CASE WHEN order_index IS NULL THEN 1 ELSE 0 END, order_index ASC')
+            ->orderBy('name')
             ->get(['id','parent_id','type','name','code','is_active']);
 
         return response()->json($this->nodes($rows));
@@ -42,7 +44,8 @@ class DepartmentOrgController extends Controller
         $parentId = $request->query('parent_id');
         $rows = Department::query()
             ->where('parent_id', $parentId)
-            ->orderBy('order_index')->orderBy('name')
+            ->orderByRaw('CASE WHEN order_index IS NULL THEN 1 ELSE 0 END, order_index ASC')
+            ->orderBy('name')
             ->get(['id','parent_id','type','name','code','is_active']);
 
         return response()->json($this->nodes($rows));
