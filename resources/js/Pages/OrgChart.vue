@@ -134,22 +134,23 @@
                 <p class="text-gray-500">Đơn vị này chưa có nhân viên nào được phân công</p>
               </div>
 
-              <OrganizationChart v-else-if="employeeChartData"
-                                :value="employeeChartData"
-                                class="org-chart-custom">
-                <template #person="slotProps">
-                  <div class="employee-card bg-white rounded-lg p-3 min-w-[200px]">
-                    <div class="text-center">
-                      <div class="font-semibold text-blue-700">{{ slotProps.node.data.name }}</div>
-                      <div class="text-sm text-gray-600 mt-1">{{ slotProps.node.data.position }}</div>
-                      <div class="text-xs text-blue-500 mt-1">{{ slotProps.node.data.role }}</div>
-                      <div v-if="slotProps.node.data.department" class="text-xs text-gray-500 mt-1">
-                        {{ slotProps.node.data.department }}
+              <div v-else-if="employeeChartData" class="org-chart-container">
+                <OrganizationChart :value="employeeChartData"
+                                  class="org-chart-custom">
+                  <template #person="slotProps">
+                    <div class="employee-card bg-white border border-gray-200 rounded-lg p-3 min-w-[160px] max-w-[200px]">
+                      <div class="text-center">
+                        <div class="font-semibold text-gray-800 text-sm truncate">{{ slotProps.node.data.name }}</div>
+                        <div class="text-xs text-gray-600 mt-1 truncate">{{ slotProps.node.data.position }}</div>
+                        <div class="text-xs text-blue-600 mt-1">{{ slotProps.node.data.role }}</div>
+                        <div v-if="slotProps.node.data.department" class="text-xs text-gray-500 mt-1 truncate">
+                          {{ slotProps.node.data.department }}
+                        </div>
                       </div>
                     </div>
-                  </div>
-                </template>
-              </OrganizationChart>
+                  </template>
+                </OrganizationChart>
+              </div>
             </template>
           </Card>
 
@@ -720,3 +721,81 @@ async function loadAllForSearch() {
 
 onMounted(loadRoots)
 </script>
+
+<style scoped>
+/* Organization Chart Container */
+.org-chart-container {
+  width: 100%;
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding: 20px 0;
+  min-height: 400px;
+}
+
+/* Organization Chart Styling */
+:deep(.org-chart-custom) {
+  width: 100%;
+  min-width: fit-content;
+}
+
+:deep(.org-chart-custom .p-organizationchart-table) {
+  margin: 0 auto;
+  width: auto;
+  min-width: fit-content;
+}
+
+:deep(.org-chart-custom .p-organizationchart-node) {
+  padding: 0.5rem;
+  white-space: nowrap;
+}
+
+:deep(.org-chart-custom .p-organizationchart-node-content) {
+  border: none;
+  background: transparent;
+  padding: 0;
+}
+
+/* Connection Lines */
+:deep(.org-chart-custom .p-organizationchart-line-down) {
+  background: #3b82f6;
+  width: 2px;
+}
+
+:deep(.org-chart-custom .p-organizationchart-line-left),
+:deep(.org-chart-custom .p-organizationchart-line-right) {
+  border-color: #3b82f6;
+  border-width: 2px;
+}
+
+:deep(.org-chart-custom .p-organizationchart-line-top) {
+  border-color: #3b82f6;
+  border-width: 2px;
+}
+
+/* Employee Card Styling */
+.employee-card {
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  transition: all 0.2s ease;
+}
+
+.employee-card:hover {
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+  transform: translateY(-2px);
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .org-chart-container {
+    padding: 10px 0;
+  }
+
+  .employee-card {
+    min-width: 140px;
+    max-width: 160px;
+  }
+
+  :deep(.org-chart-custom .p-organizationchart-node) {
+    padding: 0.25rem;
+  }
+}
+</style>
