@@ -42,7 +42,7 @@
                 <Tag :value="typeLabel(node.data.type)"
                      :style="getTagStyle(node.data.type)" />
                 <span class="font-medium">{{ node.label }}</span>
-                <Badge :value="node.data.headcount" severity="info" />
+                <Badge :value="getTotalHeadcount(node)" severity="info" />
 
                 <!-- Status indicator -->
                 <i v-if="node.data.is_active"
@@ -93,7 +93,7 @@
                 </div>
                 <div>
                   <span class="text-sm text-gray-500">Nhân sự (ACTIVE)</span>
-                  <div class="font-medium">{{ current.data.headcount }}</div>
+                  <div class="font-medium">{{ getTotalHeadcount(current) }}</div>
                 </div>
               </div>
 
@@ -104,6 +104,55 @@
               </div>
             </template>
           </Card>
+
+          <!-- Organization Chart cho nhân viên -->
+          <Card v-if="current" class="mt-4">
+            <template #title>
+              <div class="flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                  <i class="pi pi-users text-blue-600"></i>
+                  <span class="font-semibold">Nhân viên - {{ current.label }}</span>
+                  <Badge :value="currentEmployees.length" severity="info" />
+                </div>
+                <Button icon="pi pi-refresh"
+                        label="Tải lại"
+                        text
+                        size="small"
+                        :loading="loadingEmployees"
+                        @click="loadDepartmentEmployees" />
+              </div>
+            </template>
+            <template #content>
+              <div v-if="loadingEmployees" class="text-center py-8">
+                <i class="pi pi-spinner pi-spin text-2xl text-blue-600"></i>
+                <p class="text-gray-500 mt-2">Đang tải danh sách nhân viên...</p>
+              </div>
+
+              <div v-else-if="currentEmployees.length === 0" class="text-center py-8">
+                <i class="pi pi-user-plus text-4xl text-gray-300 mb-4"></i>
+                <h3 class="text-lg font-medium text-gray-700 mb-2">Chưa có nhân viên</h3>
+                <p class="text-gray-500">Đơn vị này chưa có nhân viên nào được phân công</p>
+              </div>
+
+              <OrganizationChart v-else-if="employeeChartData"
+                                :value="employeeChartData"
+                                class="org-chart-custom">
+                <template #person="slotProps">
+                  <div class="employee-card bg-white rounded-lg p-3 min-w-[200px]">
+                    <div class="text-center">
+                      <div class="font-semibold text-blue-700">{{ slotProps.node.data.name }}</div>
+                      <div class="text-sm text-gray-600 mt-1">{{ slotProps.node.data.position }}</div>
+                      <div class="text-xs text-blue-500 mt-1">{{ slotProps.node.data.role }}</div>
+                      <div v-if="slotProps.node.data.department" class="text-xs text-gray-500 mt-1">
+                        {{ slotProps.node.data.department }}
+                      </div>
+                    </div>
+                  </div>
+                </template>
+              </OrganizationChart>
+            </template>
+          </Card>
+
           <div v-else class="text-gray-500">Chọn một đơn vị ở cây bên trái để xem chi tiết.</div>
         </div>
       </div>
@@ -112,9 +161,9 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, computed } from 'vue'
 import { Head } from '@inertiajs/vue3'
-import Select from 'primevue/select'
+import OrganizationChart from 'primevue/organizationchart'
 import { OrgService } from '@/services'
 
 // Props from Controller
@@ -129,17 +178,251 @@ const loadingAll = ref(false)
 const expandedKeys = ref({})
 const selectedKey = ref(null)
 const current = ref(null)
+const currentEmployees = ref([])
+const loadingEmployees = ref(false)
 
-const typeFilter = ref(null)
-const typeOptions = [
-  { value: 'DEPARTMENT', label: 'Phòng/Ban' },
-  { value: 'UNIT', label: 'Bộ phận' },
-  { value: 'TEAM', label: 'Nhóm' },
-]
+// Computed để tạo data cho OrganizationChart với hierarchy theo department
+const employeeChartData = computed(() => {
+  if (currentEmployees.value.length === 0) {
+    return null
+  }
 
-function typeLabel(v) {
-  const found = typeOptions.find(x => x.value === v)
-  return found ? found.label : v
+  // REAL DATA: Tạo cấu trúc thực từ dữ liệu nhân viên
+  if (currentEmployees.value.length >= 2) {
+    // Nhóm nhân viên theo department
+    const employeesByDept = {}
+
+    currentEmployees.value.forEach(emp => {
+      const deptName = emp.department_name
+      if (!employeesByDept[deptName]) {
+        employeesByDept[deptName] = {
+          department_name: deptName,
+          employees: []
+        }
+      }
+      employeesByDept[deptName].employees.push(emp)
+    })
+
+    // Nếu chỉ có 1 department, dùng buildSingleDepartmentChart
+    const deptCount = Object.keys(employeesByDept).length
+    if (deptCount === 1) {
+      const singleDept = Object.values(employeesByDept)[0]
+      const realData = buildSingleDepartmentChart(singleDept.employees)
+      return realData
+    } else {
+      // Có nhiều departments, dùng buildMultiDepartmentChart
+      const realData = buildMultiDepartmentChart(employeesByDept, current.value?.key)
+      return realData
+    }
+  }  // Fallback: single employee
+  if (currentEmployees.value.length === 1) {
+    const fallbackData = {
+      key: currentEmployees.value[0].id,
+      type: 'person',
+      data: {
+        name: currentEmployees.value[0].full_name,
+        position: currentEmployees.value[0].position_name || 'Nhân viên',
+        role: getRoleLabel(currentEmployees.value[0].role_type)
+      }
+    }
+
+    return fallbackData
+  }
+
+  // Multiple employees without hierarchy
+  const fallbackData = {
+    key: 'department_root',
+    type: 'person',
+    data: {
+      name: current.value?.label || 'Đơn vị',
+      position: 'Đơn vị',
+      role: 'Department'
+    },
+    children: currentEmployees.value.map(emp => ({
+      key: emp.id,
+      type: 'person',
+      data: {
+        name: emp.full_name,
+        position: emp.position_name || 'Nhân viên',
+        role: getRoleLabel(emp.role_type)
+      }
+    }))
+  }
+
+  return fallbackData
+})// Function xây dựng chart cho 1 department
+function buildSingleDepartmentChart(employees) {
+  const head = employees.find(emp => emp.role_type === 'HEAD')
+
+  if (!head) {
+    // Không có trưởng, tạo node department làm root
+    return {
+      key: 'dept_root',
+      type: 'person',
+      data: {
+        name: current.value?.label || 'Đơn vị',
+        position: 'Đơn vị',
+        role: 'Department'
+      },
+      children: employees.map(emp => ({
+        key: emp.id,
+        type: 'person',
+        data: {
+          name: emp.full_name,
+          position: emp.position_name || 'Nhân viên',
+          role: getRoleLabel(emp.role_type),
+          department: emp.department_name
+        }
+      }))
+    }
+  }
+
+  // Có trưởng, tạo cấu trúc phân cấp
+  const children = employees
+    .filter(emp => emp.role_type !== 'HEAD')
+    .map(emp => ({
+      key: emp.id,
+      type: 'person',
+      data: {
+        name: emp.full_name,
+        position: emp.position_name || 'Nhân viên',
+        role: getRoleLabel(emp.role_type),
+        department: emp.department_name
+      }
+    }))
+
+  return {
+    key: head.id,
+    type: 'person',
+    data: {
+      name: head.full_name,
+      position: head.position_name || 'Trưởng đơn vị',
+      role: getRoleLabel(head.role_type),
+      department: head.department_name
+    },
+    children: children
+  }
+}
+
+// Function xây dựng chart cho nhiều department với hierarchy
+function buildMultiDepartmentChart(employeesByDept, mainDeptId) {
+  const deptNodes = []
+
+  Object.entries(employeesByDept).forEach(([deptId, deptData]) => {
+    const employees = deptData.employees
+    const deptName = deptData.department_name
+
+    // Tìm trưởng đơn vị của department này
+    const head = employees.find(emp => emp.role_type === 'HEAD')
+
+    if (head) {
+      // Có trưởng đơn vị
+      const children = employees
+        .filter(emp => emp.role_type !== 'HEAD')
+        .map(emp => ({
+          key: emp.id,
+          type: 'person',
+          data: {
+            name: emp.full_name,
+            position: emp.position_name || 'Nhân viên',
+            role: getRoleLabel(emp.role_type),
+            department: deptName
+          }
+        }))
+
+      deptNodes.push({
+        key: head.id,
+        type: 'person',
+        data: {
+          name: head.full_name,
+          position: head.position_name || 'Trưởng đơn vị',
+          role: getRoleLabel(head.role_type),
+          department: deptName,
+          isDepartmentHead: true
+        },
+        children: children
+      })
+    } else {
+      // Không có trưởng, tạo node department
+      const empNodes = employees.map(emp => ({
+        key: emp.id,
+        type: 'person',
+        data: {
+          name: emp.full_name,
+          position: emp.position_name || 'Nhân viên',
+          role: getRoleLabel(emp.role_type),
+          department: deptName
+        }
+      }))
+
+      deptNodes.push({
+        key: `dept_${deptId}`,
+        type: 'department',
+        data: {
+          name: deptName,
+          position: 'Đơn vị',
+          role: 'Department',
+          department: deptName
+        },
+        children: empNodes
+      })
+    }
+  })
+
+  // Tìm department chính (được click) để làm root
+  const mainDeptName = current.value?.label || 'Tổ chức'
+  const mainNode = deptNodes.find(node =>
+    node.data.department === mainDeptName ||
+    node.key === mainDeptId
+  )
+
+  if (mainNode && deptNodes.length > 1) {
+    // Có department chính, đặt làm root với các department khác làm children
+    const otherNodes = deptNodes.filter(node => node !== mainNode)
+    return {
+      ...mainNode,
+      children: [...(mainNode.children || []), ...otherNodes]
+    }
+  } else if (deptNodes.length > 1) {
+    // Không tìm thấy department chính, tạo root ảo
+    return {
+      key: 'org_root',
+      type: 'department',
+      data: {
+        name: mainDeptName,
+        position: 'Tổ chức',
+        role: 'Organization',
+        department: mainDeptName
+      },
+      children: deptNodes
+    }
+  }
+
+  // Chỉ có 1 department, trả về node đầu tiên
+  return deptNodes[0] || null
+}// Function để lấy label cho role
+function getRoleLabel(roleType) {
+  switch (roleType) {
+    case 'HEAD': return 'Trưởng đơn vị'
+    case 'DEPUTY': return 'Phó đơn vị'
+    case 'MEMBER': return 'Thành viên'
+    default: return 'Nhân viên'
+  }
+}
+
+// Function để tính tổng nhân viên đệ quy bao gồm cả node con
+function getTotalHeadcount(node) {
+  if (!node) return 0
+
+  // Backend đã tính sẵn headcount bao gồm cả descendants
+  return node.data.headcount || 0
+}function typeLabel(v) {
+  switch (v) {
+    case 'DEPARTMENT': return 'Phòng/Ban'
+    case 'UNIT': return 'Bộ phận'
+    case 'TEAM': return 'Nhóm'
+    default: return v
+  }
 }
 
 // Function to get tag inline style based on type
@@ -170,32 +453,6 @@ function getTagStyle(type) {
         border: 'none'
       }
   }
-}
-
-// Function to check if a node has children
-function hasChildren(node) {
-  // Nếu node đã được expand và có children
-  if (node.children && Array.isArray(node.children) && node.children.length > 0) {
-    return true
-  }
-
-  // Nếu node đã được expand nhưng không có children (leaf = true)
-  if (node.leaf === true) {
-    return false
-  }
-
-  // Nếu chưa expand nhưng backend set leaf = false (có khả năng có con)
-  if (node.leaf === false) {
-    return true
-  }
-
-  // Fallback: dự đoán theo type nếu chưa có thông tin leaf
-  if (node.data && node.data.type) {
-    // DEPARTMENT thường có con, TEAM thường không có con
-    return node.data.type === 'DEPARTMENT' || node.data.type === 'UNIT'
-  }
-
-  return false
 }
 
 // Custom filter function to search across multiple fields
@@ -324,6 +581,40 @@ function onSelect(node) {
   }
 
   current.value = node
+
+  // Load employees for selected department
+  loadDepartmentEmployees()
+}// Function to load employees for current department
+async function loadDepartmentEmployees() {
+  if (!current.value) {
+    return
+  }
+
+  loadingEmployees.value = true
+
+  try {
+    // Call API to get employees of the department
+    const url = `/departments/${current.value.key}/employees`
+
+    const response = await fetch(url)
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`)
+    }
+
+    const data = await response.json()
+
+    // Handle both old format (array) and new format (object with employees property)
+    const employees = Array.isArray(data) ? data : data.employees || []
+
+    currentEmployees.value = employees
+
+  } catch (error) {
+    console.error('Error loading employees:', error)
+    currentEmployees.value = []
+  } finally {
+    loadingEmployees.value = false
+  }
 }
 
 async function expandAll() {
@@ -429,43 +720,3 @@ async function loadAllForSearch() {
 
 onMounted(loadRoots)
 </script>
-
-<style scoped>
-/* Cải thiện styling cho Tree component */
-:deep(.p-tree) {
-  border: none;
-}
-
-/* Styling cho tree nodes */
-:deep(.p-tree-node-content) {
-  border-radius: 6px;
-  transition: all 0.2s;
-}
-
-:deep(.p-tree-node-content:hover) {
-  background-color: rgba(59, 130, 246, 0.1);
-}
-
-/* Styling cho selected node */
-:deep(.p-tree-node-content.p-tree-node-selectable.p-tree-node-selected) {
-  background-color: rgba(59, 130, 246, 0.2) !important;
-  border: 1px solid rgba(59, 130, 246, 0.3);
-}
-
-/* Cải thiện icon toggle */
-:deep(.p-tree-toggler) {
-  color: #3b82f6 !important;
-  border-radius: 50%;
-  transition: all 0.2s;
-}
-
-:deep(.p-tree-toggler:hover) {
-  background-color: rgba(59, 130, 246, 0.1) !important;
-  color: #1d4ed8 !important;
-}
-
-/* Status indicators với màu rõ ràng hơn */
-.pi-circle-fill {
-  font-size: 8px !important;
-}
-</style>

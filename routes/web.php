@@ -80,4 +80,5 @@ Route::group(['middleware' => 'auth'], function () {
     Route::get('/departments/org', [DepartmentOrgController::class, 'index'])->name('departments.org');       // Trang Inertia
     Route::get('/departments/tree', [DepartmentOrgController::class, 'roots'])->name('departments.tree');     // JSON (web)
     Route::get('/departments/children', [DepartmentOrgController::class, 'children'])->name('departments.children'); // JSON (web)
+    Route::get('/departments/{departmentId}/employees', [DepartmentOrgController::class, 'employees'])->name('departments.employees'); // JSON employees
 });

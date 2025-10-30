@@ -48,6 +48,39 @@ class DepartmentOrgController extends Controller
         return response()->json($this->nodes($rows));
     }
 
+    // JSON: employees của 1 department (bao gồm cả nhân viên của department con)
+    public function employees(Request $request, $departmentId)
+    {
+        // Lấy tất cả descendant department IDs (bao gồm cả department hiện tại)
+        $descendantIds = $this->getAllDescendantIds($departmentId);
+        $allDepartmentIds = array_merge([$departmentId], $descendantIds);
+
+        // Query nhân viên từ tất cả departments với thông tin department
+        $employees = DB::table('employee_assignments as ea')
+            ->join('employees as e', 'e.id', '=', 'ea.employee_id')
+            ->leftJoin('positions as p', 'p.id', '=', 'ea.position_id')
+            ->leftJoin('departments as d', 'd.id', '=', 'ea.department_id')
+            ->whereIn('ea.department_id', $allDepartmentIds)
+            ->where('ea.status', 'ACTIVE')
+            ->select([
+                'e.id',
+                'e.full_name',
+                'p.title as position_name',
+                'ea.role_type',
+                'ea.department_id',
+                'd.name as department_name'
+            ])
+            ->get();
+
+        return response()->json([
+            'success' => true,
+            'department_id' => $departmentId,
+            'employees' => $employees,
+            'count' => $employees->count(),
+            'debug' => 'API with descendants'
+        ]);
+    }
+
     // Map về cấu trúc PrimeVue Tree + headcount + trưởng/phó
     private function nodes($rows)
     {
