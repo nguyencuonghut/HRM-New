@@ -73,6 +73,10 @@ class RolesAndPermissionsSeeder extends Seeder
             'view backups',
             'create backups',
             'view activity logs',
+            'view departments',
+            'create departments',
+            'edit departments',
+            'delete departments',
         ]);
 
         // Director - can manage users and backups
@@ -81,6 +85,9 @@ class RolesAndPermissionsSeeder extends Seeder
             'view users',
             'create users',
             'edit users',
+            'view departments',
+            'create departments',
+            'edit departments',
         ]);
 
         // Manager - can manage users and backups
@@ -89,6 +96,7 @@ class RolesAndPermissionsSeeder extends Seeder
             'view users',
             'create users',
             'edit users',
+            'view departments',
         ]);
 
         // User - basic permissions

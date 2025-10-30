@@ -153,6 +153,38 @@ export function usePermission() {
         return isSuperAdmin();
     };
 
+    /**
+     * Check if user can view departments
+     * @returns {boolean}
+     */
+    const canViewDepartments = () => {
+        return can('view departments');
+    };
+
+    /**
+     * Check if user can create departments
+     * @returns {boolean}
+     */
+    const canCreateDepartments = () => {
+        return can('create departments');
+    };
+
+    /**
+     * Check if user can edit departments
+     * @returns {boolean}
+     */
+    const canEditDepartments = () => {
+        return can('edit departments');
+    };
+
+    /**
+     * Check if user can delete departments
+     * @returns {boolean}
+     */
+    const canDeleteDepartments = () => {
+        return can('delete departments');
+    };
+
     return {
         // User data
         user,
@@ -176,5 +208,11 @@ export function usePermission() {
         canManageUsers,
         canManageRoles,
         canManageBackups,
+
+        // Department permissions
+        canViewDepartments,
+        canCreateDepartments,
+        canEditDepartments,
+        canDeleteDepartments,
     };
 }

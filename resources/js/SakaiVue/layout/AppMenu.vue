@@ -5,7 +5,14 @@ import { usePermission } from '@/composables/usePermission';
 import AppMenuItem from './AppMenuItem.vue';
 
 const { t } = useI18n();
-const { isSuperAdmin } = usePermission();
+const {
+    isSuperAdmin,
+    canManageUsers,
+    canManageRoles,
+    canViewDepartments,
+    canManageBackups,
+    can
+} = usePermission();
 
 const model = computed(() => {
     const items = [
@@ -15,31 +22,65 @@ const model = computed(() => {
         },
     ];
 
-    // Only show System menu for Super Admin
-    if (isSuperAdmin()) {
+    // Build System menu based on permissions
+    const systemMenuItems = [];
+
+    // Users menu - check permission
+    if (canManageUsers()) {
+        systemMenuItems.push({
+            label: t('nav.users'),
+            icon: 'pi pi-fw pi-users',
+            to: '/users'
+        });
+    }
+
+    // Departments menu - check permission
+    if (canViewDepartments()) {
+        systemMenuItems.push({
+            label: t('nav.departments'),
+            icon: 'pi pi-fw pi-sitemap',
+            items: [
+                { label: 'Quản lý phòng/ban', icon: 'pi pi-fw pi-list-check', to: '/departments' },
+                { label: 'Sơ đồ tổ chức', icon: 'pi pi-fw pi-share-alt', to: '/departments/org' }
+            ]
+        });
+    }
+
+    // Roles menu - check permission
+    if (canManageRoles()) {
+        systemMenuItems.push({
+            label: t('nav.roles'),
+            icon: 'pi pi-fw pi-lock',
+            to: '/roles'
+        });
+    }
+
+    // Backup menu - check permission
+    if (canManageBackups()) {
+        systemMenuItems.push({
+            label: 'Backup & Bảo trì',
+            icon: 'pi pi-fw pi-shield',
+            items: [
+                { label: 'Backup thủ công', icon: 'pi pi-fw pi-download', to: '/backup' },
+                { label: 'Auto Backup', icon: 'pi pi-fw pi-clock', to: '/backup/configurations' }
+            ]
+        });
+    }
+
+    // Activity logs - check permission
+    if (can('view activity logs')) {
+        systemMenuItems.push({
+            label: 'Nhật ký hoạt động',
+            icon: 'pi pi-fw pi-list',
+            to: '/activity-logs'
+        });
+    }
+
+    // Only add System menu if user has at least one permission
+    if (systemMenuItems.length > 0) {
         items.push({
             label: t('nav.system'),
-            items: [
-                { label: t('nav.users'), icon: 'pi pi-fw pi-users', to: '/users' },
-                {
-                    label: t('nav.departments'),
-                    icon: 'pi pi-fw pi-sitemap',
-                    items: [
-                        { label: 'Quản lý phòng/ban', icon: 'pi pi-fw pi-list-check', to: '/departments' },
-                        { label: 'Sơ đồ tổ chức', icon: 'pi pi-fw pi-share-alt', to: '/departments/org' }
-                    ]
-                },
-                { label: t('nav.roles'), icon: 'pi pi-fw pi-lock', to: '/roles' },
-                {
-                    label: 'Backup & Bảo trì',
-                    icon: 'pi pi-fw pi-shield',
-                    items: [
-                        { label: 'Backup thủ công', icon: 'pi pi-fw pi-download', to: '/backup' },
-                        { label: 'Auto Backup', icon: 'pi pi-fw pi-clock', to: '/backup/configurations' }
-                    ]
-                },
-                { label: 'Nhật ký hoạt động', icon: 'pi pi-fw pi-list', to: '/activity-logs' }
-            ]
+            items: systemMenuItems
         });
     }
 

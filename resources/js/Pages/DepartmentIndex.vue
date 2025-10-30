@@ -8,14 +8,14 @@
             <Toolbar class="mb-6">
                 <template #start>
                     <Button
-                        v-if="isSuperAdmin()"
-                        label="Thêm"
+                        v-if="canCreateDepartments()"
+                        label="Thêm mới"
                         icon="pi pi-plus"
                         class="mr-2"
                         @click="openNew"
                     />
                     <Button
-                        v-if="isSuperAdmin()"
+                        v-if="canDeleteDepartments()"
                         label="Xoá"
                         icon="pi pi-trash"
                         severity="danger"
@@ -86,7 +86,7 @@
                     </div>
                 </template>
 
-                <Column v-if="isSuperAdmin()" selectionMode="multiple" style="width: 3rem" :exportable="false"></Column>
+                <Column v-if="canDeleteDepartments()" selectionMode="multiple" style="width: 3rem" :exportable="false"></Column>
                 <Column field="name" header="Tên" sortable style="min-width: 16rem"></Column>
                 <Column field="code" header="Mã" sortable style="min-width: 10rem"></Column>
 
@@ -115,11 +115,11 @@
                     </template>
                 </Column>
 
-                <Column v-if="isSuperAdmin()" header="Hành động" :exportable="false" style="min-width: 12rem">
+                <Column v-if="canEditDepartments() || canDeleteDepartments()" header="Hành động" :exportable="false" style="min-width: 12rem">
                     <template #body="slotProps">
                         <div class="flex gap-2">
-                            <Button icon="pi pi-pencil" variant="outlined" rounded @click="editDepartment(slotProps.data)" />
-                            <Button icon="pi pi-trash" variant="outlined" rounded severity="danger" @click="confirmDeleteDepartment(slotProps.data)" />
+                            <Button v-if="canEditDepartments()" icon="pi pi-pencil" variant="outlined" rounded @click="editDepartment(slotProps.data)" />
+                            <Button v-if="canDeleteDepartments()" icon="pi pi-trash" variant="outlined" rounded severity="danger" @click="confirmDeleteDepartment(slotProps.data)" />
                         </div>
                     </template>
                 </Column>
@@ -259,7 +259,7 @@ const props = defineProps({
 
 // Composables
 const { errors, hasError, getError } = useFormValidation()
-const { isSuperAdmin } = usePermission()
+const { canViewDepartments, canCreateDepartments, canEditDepartments, canDeleteDepartments } = usePermission()
 
 // Reactive
 const dt = ref()

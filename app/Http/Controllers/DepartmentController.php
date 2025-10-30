@@ -9,13 +9,18 @@ use Inertia\Inertia;
 use Illuminate\Support\Str;
 use App\Http\Requests\StoreDepartmentRequest;
 use App\Http\Requests\UpdateDepartmentRequest;
+use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 
 class DepartmentController extends Controller
 {
+    use AuthorizesRequests;
+
     // GET /departments
     // Trả về MẢNG (không paginate) giống pattern UserIndex.vue để DataTable lọc client-side
     public function index(Request $request)
     {
+        $this->authorize('viewAny', Department::class);
+
         $search    = trim((string) $request->get('search', ''));
         $type      = (string) $request->get('type', '');
         $isActiveQ = $request->has('is_active') ? $request->get('is_active') : null;
@@ -67,6 +72,8 @@ class DepartmentController extends Controller
     // POST /departments
     public function store(StoreDepartmentRequest $request)
     {
+        $this->authorize('create', Department::class);
+
         $data = $request->validated();
         if (empty($data['code'])) {
             $data['code'] = Str::slug($data['name'], '_');
@@ -90,6 +97,8 @@ class DepartmentController extends Controller
     // PUT /departments/{department}
     public function update(UpdateDepartmentRequest $request, Department $department)
     {
+        $this->authorize('update', $department);
+
         $data = $request->validated();
         if (empty($data['code'])) {
             $data['code'] = Str::slug($data['name'], '_');
@@ -107,6 +116,8 @@ class DepartmentController extends Controller
     // DELETE /departments/{department}
     public function destroy(Department $department)
     {
+        $this->authorize('delete', $department);
+
         // Kiểm tra các ràng buộc trước khi xóa
         $constraints = $this->checkDepartmentConstraints($department->id);
 
@@ -128,6 +139,8 @@ class DepartmentController extends Controller
     }    // DELETE /departments/bulk-delete
     public function bulkDelete(Request $request)
     {
+        $this->authorize('bulkDelete', Department::class);
+
         $ids = (array) $request->get('ids', []);
         if (empty($ids)) {
             return redirect()->route('departments.index')
@@ -215,6 +228,8 @@ class DepartmentController extends Controller
      */
     public function updateOrderIndexes(Request $request)
     {
+        $this->authorize('reorder', Department::class);
+
         $orders = $request->input('orders', []);
 
         $request->validate([
