@@ -81,7 +81,10 @@ class DepartmentController extends Controller
 
         // Trả về Index để UserIndex-style cập nhật list
         return redirect()->route('departments.index')
-            ->with('success', 'Tạo phòng/ban thành công.');
+            ->with([
+                'message' => 'Tạo phòng/ban thành công.',
+                'type' => 'success'
+            ]);
     }
 
     // PUT /departments/{department}
@@ -95,29 +98,88 @@ class DepartmentController extends Controller
         $department->update($data);
 
         return redirect()->route('departments.index')
-            ->with('success', 'Cập nhật phòng/ban thành công.');
+            ->with([
+                'message' => 'Cập nhật phòng/ban thành công.',
+                'type' => 'success'
+            ]);
     }
 
     // DELETE /departments/{department}
     public function destroy(Department $department)
     {
-        // Tuỳ nhu cầu, có thể kiểm tra ràng buộc children/assignments trước khi xoá
+        // Kiểm tra các ràng buộc trước khi xóa
+        $constraints = $this->checkDepartmentConstraints($department->id);
+
+        if (!empty($constraints)) {
+            return redirect()->route('departments.index')
+                ->with([
+                    'message' => 'Không thể xóa phòng/ban "' . $department->name . '". ' . implode(' ', $constraints),
+                    'type' => 'error'
+                ]);
+        }
+
         $department->delete();
 
         return redirect()->route('departments.index')
-            ->with('success', 'Đã xoá phòng/ban.');
-    }
-
-    // DELETE /departments/bulk-delete
+            ->with([
+                'message' => 'Đã xóa phòng/ban "' . $department->name . '" thành công.',
+                'type' => 'success'
+            ]);
+    }    // DELETE /departments/bulk-delete
     public function bulkDelete(Request $request)
     {
         $ids = (array) $request->get('ids', []);
-        if (!empty($ids)) {
-            Department::whereIn('id', $ids)->delete();
+        if (empty($ids)) {
+            return redirect()->route('departments.index')
+                ->with([
+                    'message' => 'Không có mục nào được chọn để xóa.',
+                    'type' => 'warning'
+                ]);
         }
 
-        return redirect()->route('departments.index')
-            ->with('success', 'Đã xoá các mục đã chọn.');
+        // Kiểm tra ràng buộc cho từng department
+        $allConstraints = [];
+        $validIds = [];
+
+        foreach ($ids as $id) {
+            $department = Department::find($id);
+            if (!$department) continue;
+
+            $constraints = $this->checkDepartmentConstraints($id);
+            if (!empty($constraints)) {
+                $allConstraints[] = $department->name . ': ' . implode(', ', $constraints);
+            } else {
+                $validIds[] = $id;
+            }
+        }
+
+        // Xóa các department hợp lệ
+        $deletedCount = 0;
+        if (!empty($validIds)) {
+            $deletedCount = Department::whereIn('id', $validIds)->count();
+            Department::whereIn('id', $validIds)->delete();
+        }
+
+        // Tạo thông báo phù hợp
+        if (!empty($allConstraints) && $deletedCount > 0) {
+            return redirect()->route('departments.index')
+                ->with([
+                    'message' => "Đã xóa $deletedCount phòng/ban. Không thể xóa một số phòng/ban khác: " . implode('; ', $allConstraints),
+                    'type' => 'warning'
+                ]);
+        } elseif (!empty($allConstraints)) {
+            return redirect()->route('departments.index')
+                ->with([
+                    'message' => 'Không thể xóa các phòng/ban đã chọn: ' . implode('; ', $allConstraints),
+                    'type' => 'error'
+                ]);
+        } else {
+            return redirect()->route('departments.index')
+                ->with([
+                    'message' => "Đã xóa $deletedCount phòng/ban thành công.",
+                    'type' => 'success'
+                ]);
+        }
     }
 
     /**
@@ -175,5 +237,45 @@ class DepartmentController extends Controller
             DB::rollback();
             return response()->json(['success' => false, 'error' => $e->getMessage()], 500);
         }
+    }
+
+    /**
+     * Kiểm tra các ràng buộc trước khi xóa department
+     * @param string $departmentId
+     * @return array Danh sách các lỗi ràng buộc
+     */
+    private function checkDepartmentConstraints($departmentId)
+    {
+        $constraints = [];
+
+        // 1. Kiểm tra có departments con không
+        $hasChildren = Department::where('parent_id', $departmentId)->exists();
+        if ($hasChildren) {
+            $childrenCount = Department::where('parent_id', $departmentId)->count();
+            $constraints[] = "Có $childrenCount phòng/ban con.";
+        }
+
+        // 2. Kiểm tra có positions không
+        $hasPositions = DB::table('positions')->where('department_id', $departmentId)->exists();
+        if ($hasPositions) {
+            $positionsCount = DB::table('positions')->where('department_id', $departmentId)->count();
+            $constraints[] = "Có $positionsCount vị trí công việc.";
+        }
+
+        // 3. Kiểm tra có employee assignments không
+        $hasAssignments = DB::table('employee_assignments')->where('department_id', $departmentId)->exists();
+        if ($hasAssignments) {
+            $assignmentsCount = DB::table('employee_assignments')->where('department_id', $departmentId)->count();
+            $constraints[] = "Có $assignmentsCount nhân viên.";
+        }
+
+        // 4. Kiểm tra có role scopes không
+        $hasRoleScopes = DB::table('role_scopes')->where('department_id', $departmentId)->exists();
+        if ($hasRoleScopes) {
+            $roleScopesCount = DB::table('role_scopes')->where('department_id', $departmentId)->count();
+            $constraints[] = "Có $roleScopesCount phạm vi quyền.";
+        }
+
+        return $constraints;
     }
 }

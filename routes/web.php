@@ -72,13 +72,15 @@ Route::group(['middleware' => 'auth'], function () {
     });
 
     // Department Routes
-    Route::resource('departments', DepartmentController::class)->except(['show']);
-    // (tuỳ chọn) bulk delete
+    // IMPORTANT: Bulk delete MUST come before resource routes to avoid route conflict
     Route::delete('departments/bulk-delete', [DepartmentController::class, 'bulkDelete'])->name('departments.bulk-delete');
 
     // Department order management API routes
     Route::get('/departments/next-order/{parentId?}', [DepartmentController::class, 'getNextOrderIndexApi'])->name('departments.next-order');
     Route::post('/departments/reorder', [DepartmentController::class, 'updateOrderIndexes'])->name('departments.reorder');
+
+    // Department resource routes
+    Route::resource('departments', DepartmentController::class)->except(['show']);
 
     // Department Org Chart Routes
     Route::get('/departments/org', [DepartmentOrgController::class, 'index'])->name('departments.org');       // Trang Inertia

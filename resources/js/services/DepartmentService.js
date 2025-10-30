@@ -138,10 +138,10 @@ export class DepartmentService {
      * @param {Array} departmentIds - Array of department IDs to delete
      * @param {Object} options - Additional options
      */
-    static bulkDestroy(departmentIds, options = {}) {
+    static bulkDelete(departmentIds, options = {}) {
         const { onStart, onFinish, onError, onSuccess } = options;
 
-        router.delete('/departments-bulk', {
+        router.delete('/departments/bulk-delete', {
             data: {
                 ids: departmentIds, // Gửi mảng IDs
             },

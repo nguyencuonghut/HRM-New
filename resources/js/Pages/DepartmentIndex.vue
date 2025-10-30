@@ -397,7 +397,7 @@ function deleteSelectedDepartments() {
     const ids = selectedDepartments.value.map((x) => x.id)
     if (!ids.length) return
     deleting.value = true
-    DepartmentService.bulkDestroy(ids, {
+    DepartmentService.bulkDelete(ids, {
         onSuccess: () => {
             deleting.value = false
             deleteDepartmentsDialog.value = false
