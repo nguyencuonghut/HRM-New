@@ -18,6 +18,7 @@ class PositionSeeder extends Seeder
         $deptKSNB = DB::table('departments')->where('name','Phòng Kiểm Soát Nội Bộ')->first();
         $deptHC = DB::table('departments')->where('name','Phòng Hành Chính')->first();
         $deptNS = DB::table('departments')->where('name','Phòng Nhân Sự')->first();
+        $deptCL = DB::table('departments')->where('name','Phòng Chất Lượng')->first();
         if (!$deptKSNB || !$deptHC || !$deptNS) return;
 
         $rows = [
@@ -37,6 +38,13 @@ class PositionSeeder extends Seeder
             ['department_id'=>$deptNS->id,'title'=>'Trưởng phòng Nhân Sự','level'=>null,'insurance_base_salary'=>35000000,'position_salary'=>38000000,'competency_salary'=>3000000],
             ['department_id'=>$deptNS->id,'title'=>'Trưởng nhóm Nhân Sự Kinh Doanh','level'=>null,'insurance_base_salary'=>13000000,'position_salary'=>15000000,'competency_salary'=>2500000],
             ['department_id'=>$deptNS->id,'title'=>'Nhân viên Nhân Sự','level'=>null,'insurance_base_salary'=>9000000,'position_salary'=>8000000,'competency_salary'=>1500000],
+
+            // Chất Lượng
+            ['department_id'=>$deptCL->id,'title'=>'Giám đốc Khối Quản Lý Chất Lượng','level'=>null,'insurance_base_salary'=>25000000,'position_salary'=>2000000,'competency_salary'=>3000000],
+            ['department_id'=>$deptCL->id,'title'=>'Trưởng nhóm KCS Nguyên Liệu','level'=>null,'insurance_base_salary'=>18000000,'position_salary'=>18000000,'competency_salary'=>2000000],
+            ['department_id'=>$deptCL->id,'title'=>'Nhân viên Chất Lượng','level'=>null,'insurance_base_salary'=>8000000,'position_salary'=>8000000,'competency_salary'=>1000000],
+            ['department_id'=>$deptCL->id,'title'=>'Trưởng bộ phận Phân Tích','level'=>null,'insurance_base_salary'=>15000000,'position_salary'=>15000000,'competency_salary'=>2000000],
+            ['department_id'=>$deptCL->id,'title'=>'Nhân viên Phân Tích','level'=>null,'insurance_base_salary'=>9000000,'position_salary'=>9000000,'competency_salary'=>1200000],
         ];
 
         foreach ($rows as &$r) {

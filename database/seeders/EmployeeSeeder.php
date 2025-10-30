@@ -29,6 +29,17 @@ class EmployeeSeeder extends Seeder
             // NS
             ['employee_code'=>'481','full_name'=>'Trần Thị Bích Phương','phone'=>'0901000005','personal_email'=>'tranthibichphuong@honghafeed.com.vn','status'=>'ACTIVE'],
             ['employee_code'=>'2411','full_name'=>'Nguyễn Thị Ngọc Lan','phone'=>'0901000006','personal_email'=>'nguyenthingoclan@honghafeed.com.vn','status'=>'ACTIVE'],
+            // Chất lượng
+            ['employee_code'=>'468','full_name'=>'Phạm Thành Thứ','phone'=>'0901000007','personal_email'=>'phamthanhthu@honghafeed.com.vn','status'=>'ACTIVE'],
+            ['employee_code'=>'353','full_name'=>'Ngô Tiến Trung','phone'=>'0901000008','personal_email'=>'ngotientrung@honghafeed.com.vn','status'=>'ACTIVE'],
+            ['employee_code'=>'226','full_name'=>'Cao Xuân Thuyên','phone'=>'0901000009','personal_email'=>'caoxuanthuyen@honghafeed.com.vn','status'=>'ACTIVE'],
+            ['employee_code'=>'233','full_name'=>'Phạm Thị Thúy','phone'=>'0901000010','personal_email'=>'phamthithuy@honghafeed.com.vn','status'=>'ACTIVE'],
+            ['employee_code'=>'249','full_name'=>'Phan Thị Hằng','phone'=>'0901000011','personal_email'=>'phanthihang@honghafeed.com.vn','status'=>'ACTIVE'],
+            ['employee_code'=>'248','full_name'=>'Trần Thị Thu Hương','phone'=>'0901000012','personal_email'=>'tranthithuhuong@honghafeed.com.vn','status'=>'ACTIVE'],
+            ['employee_code'=>'252','full_name'=>'Nguyễn Thị Thiết','phone'=>'0901000013','personal_email'=>'nguyenthithiet@honghafeed.com.vn','status'=>'ACTIVE'],
+            ['employee_code'=>'231','full_name'=>'Nguyễn Thị Thảo','phone'=>'0901000014','personal_email'=>'nguyenthithao@honghafeed.com.vn','status'=>'ACTIVE'],
+            ['employee_code'=>'874','full_name'=>'Vũ Thị Nga','phone'=>'0901000015','personal_email'=>'vuthinga@honghafeed.com.vn','status'=>'ACTIVE'],
+            ['employee_code'=>'554','full_name'=>'Cao Thị Phượng','phone'=>'0901000015','personal_email'=>'caothiphuong@honghafeed.com.vn','status'=>'ACTIVE'],
         ];
 
         foreach ($list as $r) {

@@ -91,11 +91,11 @@ class DepartmentSeeder extends Seeder
 
         // Phòng Chất Lượng
         $ktdd = $make('Phòng Chất Lượng', 'DEPARTMENT', null, 11);
-        $make('Phòng Thí Nghiệm', 'UNIT', $ktdd, 1);
+        $make('Bộ Phận Phân Tích', 'UNIT', $ktdd, 1);
         $make('Tổ Trộn Mix', 'TEAM', $ktdd, 2);
-        $make('Tổ Chất Lượng Nguyên Liệu', 'TEAM', $ktdd, 3);
-        $make('Tổ Chất Lượng Thành Phẩm Gia Súc', 'TEAM', $ktdd, 4);
-        $make('Tổ Chất Lượng Thành Phẩm Thủy Sản', 'TEAM', $ktdd, 5);
+        $make('Nhóm KCS Nguyên Liệu', 'TEAM', $ktdd, 3);
+        $make('Nhóm KCS Thành Phẩm Gia Súc', 'TEAM', $ktdd, 4);
+        $make('Nhóm KCS Thành Phẩm Thủy Sản', 'TEAM', $ktdd, 5);
 
         // Ban Dự Án
         $make('Ban Dự Án', 'DEPARTMENT', null, 12);

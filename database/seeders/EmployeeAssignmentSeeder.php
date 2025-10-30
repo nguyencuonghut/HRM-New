@@ -21,6 +21,9 @@ class EmployeeAssignmentSeeder extends Seeder
         $it = DB::table('departments')->where('name','Bộ phận IT')->first();
         $hc = DB::table('departments')->where('name','Phòng Hành Chính')->first();
         $ns = DB::table('departments')->where('name','Phòng Nhân Sự')->first();
+        $cl = DB::table('departments')->where('name','Phòng Chất Lượng')->first();
+        $clnl = DB::table('departments')->where('name','Nhóm KCS Nguyên Liệu')->first();
+        $pt = DB::table('departments')->where('name','Bộ Phận Phân Tích')->first();
 
         $posTruongKSNB = DB::table('positions')->where('title','Trưởng phòng Kiểm Soát Nội Bộ')->first();
         $posChuyenVienKS = DB::table('positions')->where('title','Chuyên viên Kiểm Soát')->first();
@@ -35,6 +38,12 @@ class EmployeeAssignmentSeeder extends Seeder
         $posTruongNS = DB::table('positions')->where('title','Trưởng phòng Nhân Sự')->first();
         $posTruongNhomNS = DB::table('positions')->where('title','Trưởng nhóm Nhân Sự Kinh Doanh')->first();
         $nvNS = DB::table('positions')->where('title','Nhân viên Nhân Sự')->first();
+
+        $posGdCL = DB::table('positions')->where('title','Giám đốc Khối Quản Lý Chất Lượng')->first();
+        $posTruongKSCL = DB::table('positions')->where('title','Trưởng nhóm KCS Nguyên Liệu')->first();
+        $posNvCL = DB::table('positions')->where('title','Nhân viên Chất Lượng')->first();
+        $posTruongPT = DB::table('positions')->where('title','Trưởng bộ phận Phân Tích')->first();
+        $posNvPT = DB::table('positions')->where('title','Nhân viên Phân Tích')->first();
 
         $rows = [
             // KSNB
@@ -53,6 +62,18 @@ class EmployeeAssignmentSeeder extends Seeder
             ['employee_id'=>$emp['312'] ?? null,'department_id'=>$ns->id,'position_id'=>$posTruongNS->id ?? null,'is_primary'=>false,'role_type'=>'HEAD'],
             ['employee_id'=>$emp['481'] ?? null,'department_id'=>$ns->id,'position_id'=>$posTruongNhomNS->id ?? null,'is_primary'=>true,'role_type'=>'HEAD'],
             ['employee_id'=>$emp['2411'] ?? null,'department_id'=>$ns->id,'position_id'=>$nvNS->id ?? null,'is_primary'=>true,'role_type'=>'MEMBER'],
+
+            // Chất Lượng
+            ['employee_id'=>$emp['468'] ?? null,'department_id'=>$cl->id,'position_id'=>$posGdCL->id ?? null,'is_primary'=>true,'role_type'=>'HEAD'],
+            ['employee_id'=>$emp['353'] ?? null,'department_id'=>$clnl->id,'position_id'=>$posTruongKSCL->id ?? null,'is_primary'=>true,'role_type'=>'HEAD'],
+            ['employee_id'=>$emp['226'] ?? null,'department_id'=>$clnl->id,'position_id'=>$posNvCL->id ?? null,'is_primary'=>true,'role_type'=>'MEMBER'],
+            ['employee_id'=>$emp['233'] ?? null,'department_id'=>$clnl->id,'position_id'=>$posNvCL->id ?? null,'is_primary'=>true,'role_type'=>'MEMBER'],
+            ['employee_id'=>$emp['249'] ?? null,'department_id'=>$clnl->id,'position_id'=>$posNvCL->id ?? null,'is_primary'=>true,'role_type'=>'MEMBER'],
+            ['employee_id'=>$emp['248'] ?? null,'department_id'=>$pt->id,'position_id'=>$posTruongPT->id ?? null,'is_primary'=>true,'role_type'=>'HEAD'],
+            ['employee_id'=>$emp['252'] ?? null,'department_id'=>$pt->id,'position_id'=>$posNvPT->id ?? null,'is_primary'=>true,'role_type'=>'MEMBER'],
+            ['employee_id'=>$emp['231'] ?? null,'department_id'=>$pt->id,'position_id'=>$posNvPT->id ?? null,'is_primary'=>true,'role_type'=>'MEMBER'],
+            ['employee_id'=>$emp['874'] ?? null,'department_id'=>$pt->id,'position_id'=>$posNvPT->id ?? null,'is_primary'=>true,'role_type'=>'MEMBER'],
+            ['employee_id'=>$emp['554'] ?? null,'department_id'=>$pt->id,'position_id'=>$posNvPT->id ?? null,'is_primary'=>true,'role_type'=>'MEMBER'],
         ];
 
         foreach ($rows as $r) {
