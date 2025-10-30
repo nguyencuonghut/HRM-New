@@ -16,7 +16,7 @@
         </template>
       </Toolbar>
 
-      <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+      <div class="grid grid-cols-1 lg:grid-cols-4 gap-4">
         <!-- Trái: Cây -->
         <div class="lg:col-span-1">
           <div class="mb-2 text-sm text-gray-600">
@@ -61,7 +61,7 @@
         </div>
 
         <!-- Phải: Chi tiết -->
-        <div class="lg:col-span-2">
+        <div class="lg:col-span-3">
           <Card v-if="current">
             <template #title>
               <div class="flex items-center gap-2">
