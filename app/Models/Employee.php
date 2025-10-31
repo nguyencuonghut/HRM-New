@@ -14,13 +14,20 @@ class Employee extends Model
         'employee_code',
         'full_name',
         'dob',
+        'gender',
+        'marital_status',
+        'avatar',
         'cccd',
         'cccd_issued_on',
         'cccd_issued_by',
         'ward_id',
         'address_street',
+        'temp_ward_id',
+        'temp_address_street',
         'phone',
+        'emergency_contact_phone',
         'personal_email',
+        'company_email',
         'hire_date',
         'status',
         'si_number',
@@ -32,6 +39,9 @@ class Employee extends Model
     // Quan hệ: assignments (phân công/kiêm nhiệm) của nhân viên
     public function assignments() { return $this->hasMany(EmployeeAssignment::class); }
 
-    // (Tuỳ chọn) ward nếu có danh mục hành chính
+    // Quan hệ: ward thường trú (theo CCCD)
     public function ward() { return $this->belongsTo(\App\Models\Ward::class); }
+
+    // Quan hệ: ward tạm trú
+    public function tempWard() { return $this->belongsTo(\App\Models\Ward::class, 'temp_ward_id'); }
 }

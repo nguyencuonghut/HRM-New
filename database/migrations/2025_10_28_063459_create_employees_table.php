@@ -17,15 +17,27 @@ return new class extends Migration {
             $table->string('employee_code')->unique(); // Mã nhân viên (duy nhất)
             $table->string('full_name'); // Họ và tên đầy đủ
             $table->date('dob')->nullable(); // Ngày sinh
+            $table->enum('gender', ['MALE', 'FEMALE', 'OTHER'])->nullable(); // Giới tính
+            $table->enum('marital_status', ['SINGLE', 'MARRIED', 'DIVORCED', 'WIDOWED'])->nullable(); // Tình trạng hôn nhân
+
+            $table->string('avatar')->nullable(); // Ảnh đại diện (đường dẫn file)
+
             $table->string('cccd')->nullable(); // CCCD/CMND
             $table->date('cccd_issued_on')->nullable(); // Ngày cấp CCCD
             $table->string('cccd_issued_by')->nullable(); // Nơi cấp CCCD
 
-            // Địa chỉ hành chính theo danh mục Tỉnh/Thành & Xã/Phường
-            $table->uuid('ward_id')->nullable()->index(); // ID xã/phường (nối với bảng wards)
-            $table->string('address_street')->nullable(); // Số nhà/đường
+            // Địa chỉ thường trú (theo CCCD)
+            $table->uuid('ward_id')->nullable()->index(); // ID xã/phường thường trú (nối với bảng wards)
+            $table->string('address_street')->nullable(); // Số nhà/đường thường trú
+
+            // Địa chỉ tạm trú (nếu khác với địa chỉ thường trú)
+            $table->uuid('temp_ward_id')->nullable()->index(); // ID xã/phường tạm trú (nối với bảng wards)
+            $table->string('temp_address_street')->nullable(); // Số nhà/đường tạm trú
+
             $table->string('phone')->nullable(); // SĐT liên hệ
+            $table->string('emergency_contact_phone')->nullable(); // SĐT người thân
             $table->string('personal_email')->nullable(); // Email cá nhân
+            $table->string('company_email')->nullable(); // Email công ty
 
             $table->date('hire_date')->nullable(); // Ngày vào làm
             $table->enum('status', ['ACTIVE','INACTIVE','ON_LEAVE','TERMINATED'])->default('ACTIVE')->index(); // Trạng thái nhân sự
