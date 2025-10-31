@@ -6,11 +6,10 @@ import AppMenuItem from './AppMenuItem.vue';
 
 const { t } = useI18n();
 const {
-    isSuperAdmin,
-    canManageUsers,
-    canManageRoles,
+    canViewUsers,
+    canViewRoles,
     canViewDepartments,
-    canManageBackups,
+    canViewBackups,
     can
 } = usePermission();
 
@@ -26,7 +25,7 @@ const model = computed(() => {
     const systemMenuItems = [];
 
     // Users menu - check permission
-    if (canManageUsers()) {
+    if (canViewUsers()) {
         systemMenuItems.push({
             label: t('nav.users'),
             icon: 'pi pi-fw pi-users',
@@ -47,7 +46,7 @@ const model = computed(() => {
     }
 
     // Roles menu - check permission
-    if (canManageRoles()) {
+    if (canViewRoles()) {
         systemMenuItems.push({
             label: t('nav.roles'),
             icon: 'pi pi-fw pi-lock',
@@ -56,7 +55,7 @@ const model = computed(() => {
     }
 
     // Backup menu - check permission
-    if (canManageBackups()) {
+    if (canViewBackups()) {
         systemMenuItems.push({
             label: 'Backup & Bảo trì',
             icon: 'pi pi-fw pi-shield',

@@ -2,6 +2,9 @@
 import { ref } from 'vue';
 import { Head } from '@inertiajs/vue3';
 import Button from 'primevue/button';
+import { usePermission } from '@/composables/usePermission';
+
+const { canCreateBackups } = usePermission();
 
 const isLoading = ref(false);
 
@@ -56,6 +59,7 @@ const performBackup = () => {
 
                     <div class="flex justify-content-center">
                         <Button
+                            v-if="canCreateBackups()"
                             @click="performBackup"
                             :loading="isLoading"
                             :disabled="isLoading"
@@ -64,6 +68,10 @@ const performBackup = () => {
                             :label="isLoading ? 'Đang backup...' : 'Thực hiện Backup'"
                             severity="success"
                         />
+                        <div v-else class="p-3 surface-100 border-round text-600 line-height-3">
+                            <i class="pi pi-lock text-orange-500 mr-2"></i>
+                            Bạn không có quyền tạo backup.
+                        </div>
                     </div>
                 </div>
             </div>

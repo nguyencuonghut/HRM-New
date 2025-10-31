@@ -7,6 +7,7 @@
                 <h1 class="text-2xl sm:text-3xl font-bold">Auto Backup</h1>
             </div>
             <Button
+                v-if="canConfigureBackups()"
                 @click="showCreateModal = true"
                 icon="pi pi-plus"
                 :label="'Tạo Backup Mới'"
@@ -90,7 +91,7 @@
                             <i class="pi pi-users text-6xl text-muted-color mb-4"></i>
                             <h3 class="mt-2 text-sm font-medium">Chưa có cấu hình backup</h3>
                             <p class="mt-1 text-sm text-muted-color">Bắt đầu bằng cách tạo cấu hình backup đầu tiên.</p>
-                            <div class="mt-6">
+                            <div v-if="canConfigureBackups()" class="mt-6">
                                 <Button
                                     @click="showCreateModal = true"
                                     label="Tạo Backup Đầu Tiên"
@@ -141,6 +142,7 @@
 
                                     <div class="flex flex-col sm:flex-row gap-2 flex-shrink-0">
                                         <Button
+                                            v-if="canCreateBackups()"
                                             @click="runBackup(config)"
                                             :disabled="runningBackup === config.id"
                                             :loading="runningBackup === config.id"
@@ -150,6 +152,7 @@
                                             size="small"
                                         />
                                         <Button
+                                            v-if="canConfigureBackups()"
                                             @click="editConfig(config)"
                                             label="Sửa"
                                             icon="pi pi-pencil"
@@ -157,6 +160,7 @@
                                             size="small"
                                         />
                                         <Button
+                                            v-if="canConfigureBackups()"
                                             @click="toggleConfig(config)"
                                             :label="config.is_active ? 'Tạm dừng' : 'Kích hoạt'"
                                             :icon="config.is_active ? 'pi pi-pause' : 'pi pi-play'"
@@ -164,6 +168,7 @@
                                             size="small"
                                         />
                                         <Button
+                                            v-if="canConfigureBackups()"
                                             @click="deleteConfig(config)"
                                             label="Xóa"
                                             icon="pi pi-trash"
@@ -232,9 +237,13 @@ import Tag from 'primevue/tag'
 import Toast from 'primevue/toast'
 import BackupConfigModal from '@/Components/BackupConfigModal.vue'
 import GoogleDriveFolderPicker from '@/Components/GoogleDriveFolderPicker.vue'
+import { usePermission } from '@/composables/usePermission'
 
 // Toast setup
 const toast = useToast()
+
+// Permission checks
+const { canCreateBackups, canConfigureBackups } = usePermission()
 
 // Props
 const props = defineProps({

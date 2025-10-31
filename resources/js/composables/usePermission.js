@@ -134,7 +134,39 @@ export function usePermission() {
      * @returns {boolean}
      */
     const canManageUsers = () => {
-        return isSuperAdmin();
+        return can('view users') && can('create users') && can('edit users') && can('delete users');
+    };
+
+    /**
+     * Check if user can view users
+     * @returns {boolean}
+     */
+    const canViewUsers = () => {
+        return can('view users');
+    };
+
+    /**
+     * Check if user can create users
+     * @returns {boolean}
+     */
+    const canCreateUsers = () => {
+        return can('create users');
+    };
+
+    /**
+     * Check if user can edit users
+     * @returns {boolean}
+     */
+    const canEditUsers = () => {
+        return can('edit users');
+    };
+
+    /**
+     * Check if user can delete users
+     * @returns {boolean}
+     */
+    const canDeleteUsers = () => {
+        return can('delete users');
     };
 
     /**
@@ -142,7 +174,39 @@ export function usePermission() {
      * @returns {boolean}
      */
     const canManageRoles = () => {
-        return isSuperAdmin();
+        return can('view roles') && can('create roles') && can('edit roles') && can('delete roles');
+    };
+
+    /**
+     * Check if user can view roles
+     * @returns {boolean}
+     */
+    const canViewRoles = () => {
+        return can('view roles');
+    };
+
+    /**
+     * Check if user can create roles
+     * @returns {boolean}
+     */
+    const canCreateRoles = () => {
+        return can('create roles');
+    };
+
+    /**
+     * Check if user can edit roles
+     * @returns {boolean}
+     */
+    const canEditRoles = () => {
+        return can('edit roles');
+    };
+
+    /**
+     * Check if user can delete roles
+     * @returns {boolean}
+     */
+    const canDeleteRoles = () => {
+        return can('delete roles');
     };
 
     /**
@@ -150,7 +214,47 @@ export function usePermission() {
      * @returns {boolean}
      */
     const canManageBackups = () => {
-        return isSuperAdmin();
+        return can('view backups') && can('create backups') && can('configure backups');
+    };
+
+    /**
+     * Check if user can view backups
+     * @returns {boolean}
+     */
+    const canViewBackups = () => {
+        return can('view backups');
+    };
+
+    /**
+     * Check if user can create backups
+     * @returns {boolean}
+     */
+    const canCreateBackups = () => {
+        return can('create backups');
+    };
+
+    /**
+     * Check if user can configure backups
+     * @returns {boolean}
+     */
+    const canConfigureBackups = () => {
+        return can('configure backups');
+    };
+
+    /**
+     * Check if user can restore backups
+     * @returns {boolean}
+     */
+    const canRestoreBackups = () => {
+        return can('restore backups');
+    };
+
+    /**
+     * Check if user can delete backups
+     * @returns {boolean}
+     */
+    const canDeleteBackups = () => {
+        return can('delete backups');
     };
 
     /**
@@ -206,8 +310,21 @@ export function usePermission() {
         isSuperAdmin,
         isAdmin,
         canManageUsers,
+        canViewUsers,
+        canCreateUsers,
+        canEditUsers,
+        canDeleteUsers,
         canManageRoles,
+        canViewRoles,
+        canCreateRoles,
+        canEditRoles,
+        canDeleteRoles,
         canManageBackups,
+        canViewBackups,
+        canCreateBackups,
+        canConfigureBackups,
+        canRestoreBackups,
+        canDeleteBackups,
 
         // Department permissions
         canViewDepartments,

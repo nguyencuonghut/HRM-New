@@ -14,7 +14,7 @@ class UserPolicy
      */
     public function viewAny(User $user): bool
     {
-        return $user->hasRole('Super Admin');
+        return $user->can('view users');
     }
 
     /**
@@ -22,8 +22,8 @@ class UserPolicy
      */
     public function view(User $user, User $model): bool
     {
-        // User can view their own profile or if they're Super Admin
-        return $user->id === $model->id || $user->hasRole('Super Admin');
+        // User can view their own profile or if they have permission
+        return $user->id === $model->id || $user->can('view users');
     }
 
     /**
@@ -31,7 +31,7 @@ class UserPolicy
      */
     public function create(User $user): bool
     {
-        return $user->hasRole('Super Admin');
+        return $user->can('create users');
     }
 
     /**
@@ -39,8 +39,8 @@ class UserPolicy
      */
     public function update(User $user, User $model): bool
     {
-        // User can update their own profile or if they're Super Admin
-        return $user->id === $model->id || $user->hasRole('Super Admin');
+        // User can update their own profile or if they have permission
+        return $user->id === $model->id || $user->can('edit users');
     }
 
     /**
@@ -48,8 +48,8 @@ class UserPolicy
      */
     public function delete(User $user, User $model): bool
     {
-        // Cannot delete yourself, only Super Admin can delete others
-        return $user->id !== $model->id && $user->hasRole('Super Admin');
+        // Cannot delete yourself, must have permission to delete others
+        return $user->id !== $model->id && $user->can('delete users');
     }
 
     /**
@@ -57,7 +57,7 @@ class UserPolicy
      */
     public function restore(User $user, User $model): bool
     {
-        return $user->hasRole('Super Admin');
+        return $user->can('edit users');
     }
 
     /**
@@ -65,7 +65,7 @@ class UserPolicy
      */
     public function forceDelete(User $user, User $model): bool
     {
-        return $user->hasRole('Super Admin');
+        return $user->can('delete users');
     }
 
     /**
@@ -73,6 +73,6 @@ class UserPolicy
      */
     public function bulkDelete(User $user): bool
     {
-        return $user->hasRole('Super Admin');
+        return $user->can('delete users');
     }
 }
