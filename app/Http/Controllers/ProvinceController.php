@@ -3,63 +3,29 @@
 namespace App\Http\Controllers;
 
 use App\Models\Province;
+use App\Models\Ward;
 use Illuminate\Http\Request;
 
 class ProvinceController extends Controller
 {
     /**
-     * Display a listing of the resource.
+     * Get all provinces for dropdown
      */
     public function index()
     {
-        //
+        $provinces = Province::orderBy('name')->get(['id', 'code', 'name']);
+        return response()->json($provinces);
     }
 
     /**
-     * Show the form for creating a new resource.
+     * Get wards by province_id for dropdown
      */
-    public function create()
+    public function getWards($provinceId)
     {
-        //
-    }
+        $wards = Ward::where('province_id', $provinceId)
+            ->orderBy('name')
+            ->get(['id', 'code', 'name', 'province_id']);
 
-    /**
-     * Store a newly created resource in storage.
-     */
-    public function store(Request $request)
-    {
-        //
-    }
-
-    /**
-     * Display the specified resource.
-     */
-    public function show(Province $province)
-    {
-        //
-    }
-
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(Province $province)
-    {
-        //
-    }
-
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, Province $province)
-    {
-        //
-    }
-
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(Province $province)
-    {
-        //
+        return response()->json($wards);
     }
 }

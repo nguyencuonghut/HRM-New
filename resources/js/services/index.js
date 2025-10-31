@@ -4,6 +4,7 @@ import { UserService } from './UserService';
 import { RoleService } from './RoleService';
 import { DepartmentService } from './DepartmentService';
 import { OrgService } from './OrgService';
+import { EmployeeService } from './EmployeeService';
 
 export {
     AuthService,
@@ -12,4 +13,5 @@ export {
     OrgService,
     RoleService,
     DepartmentService,
+    EmployeeService,
 };

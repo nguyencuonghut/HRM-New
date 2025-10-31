@@ -14,10 +14,23 @@ const {
 } = usePermission();
 
 const model = computed(() => {
+    const homeItems = [
+        { label: t('nav.home'), icon: 'pi pi-fw pi-home', to: '/' },
+    ];
+
+    // Add Employee to home section if user has permission
+    if (can('view employees')) {
+        homeItems.push({
+            label: 'Nhân sự',
+            icon: 'pi pi-fw pi-id-card',
+            to: '/employees'
+        });
+    }
+
     const items = [
         {
             label: t('nav.home'),
-            items: [{ label: t('nav.home'), icon: 'pi pi-fw pi-home', to: '/' }]
+            items: homeItems
         },
     ];
 

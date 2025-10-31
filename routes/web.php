@@ -9,6 +9,8 @@ use App\Http\Controllers\RoleController;
 use App\Http\Controllers\ActivityLogController;
 use App\Http\Controllers\DepartmentController;
 use App\Http\Controllers\DepartmentOrgController;
+use App\Http\Controllers\EmployeeController;
+use App\Http\Controllers\ProvinceController;
 
 /*** Login Routes ***/
 Route::group(['middleware' => 'guest'], function () {
@@ -87,4 +89,11 @@ Route::group(['middleware' => 'auth'], function () {
     Route::get('/departments/tree', [DepartmentOrgController::class, 'roots'])->name('departments.tree');     // JSON (web)
     Route::get('/departments/children', [DepartmentOrgController::class, 'children'])->name('departments.children'); // JSON (web)
     Route::get('/departments/{departmentId}/employees', [DepartmentOrgController::class, 'employees'])->name('departments.employees'); // JSON employees
+
+    // Employee
+    Route::resource('employees', EmployeeController::class);
+
+    // Address (Province & Ward) Routes for dropdowns
+    Route::get('/provinces', [ProvinceController::class, 'index'])->name('provinces.index');
+    Route::get('/provinces/{province}/wards', [ProvinceController::class, 'getWards'])->name('provinces.wards');
 });
