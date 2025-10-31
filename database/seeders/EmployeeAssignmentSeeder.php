@@ -50,7 +50,7 @@ class EmployeeAssignmentSeeder extends Seeder
             ['employee_id'=>$emp['312'] ?? null,'department_id'=>$ksnb->id,'position_id'=>$posTruongKSNB->id ?? null,'is_primary'=>true,'role_type'=>'HEAD'],
             ['employee_id'=>$emp['2142'] ?? null,'department_id'=>$ks->id,'position_id'=>$posChuyenVienKS->id ?? null,'is_primary'=>true,'role_type'=>'HEAD'],
             ['employee_id'=>$emp['2272'] ?? null,'department_id'=>$ks->id,'position_id'=>$posNhanVienKS->id ?? null,'is_primary'=>true,'role_type'=>'MEMBER'],
-            ['employee_id'=>$emp['912'] ?? null,'department_id'=>$it->id,'position_id'=>$posChuyenVienIT->id ?? null,'is_primary'=>true,'role_type'=>'HEAD'],
+            ['employee_id'=>$emp['912'] ?? null,'department_id'=>$it->id,'position_id'=>$posChuyenVienIT->id ?? null,'is_primary'=>true,'role_type'=>'MEMBER'],
             ['employee_id'=>$emp['1992'] ?? null,'department_id'=>$it->id,'position_id'=>$posNhanVienIT->id ?? null,'is_primary'=>true,'role_type'=>'MEMBER'],
 
             // HC
