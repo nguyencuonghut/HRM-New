@@ -9,6 +9,7 @@ use Inertia\Inertia;
 use Illuminate\Support\Str;
 use App\Http\Requests\StoreDepartmentRequest;
 use App\Http\Requests\UpdateDepartmentRequest;
+use App\Http\Resources\DepartmentResource;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 
 class DepartmentController extends Controller
@@ -46,18 +47,15 @@ class DepartmentController extends Controller
             ->orderByRaw('CASE WHEN order_index IS NULL THEN 1 ELSE 0 END, order_index ASC')
             ->orderBy('name');
 
-        $departments = $query->get([
-            'id','parent_id','type','name','code',
-            'order_index','is_active','created_at','updated_at'
-        ]);
+        $departments = $query->get();
 
         $parents = Department::query()
             ->orderBy('name')
             ->get(['id','name']);
 
         return Inertia::render('DepartmentIndex', [
-            // giống UserIndex.vue: props là mảng
-            'departments' => $departments,
+            // Sử dụng DepartmentResource
+            'departments' => DepartmentResource::collection($departments)->resolve(),
             'parents'     => $parents,
             'enums'       => [
                 'types' => [
