@@ -138,7 +138,18 @@
                 <OrganizationChart :value="employeeChartData"
                                   class="org-chart-custom">
                   <template #person="slotProps">
-                    <div class="employee-card bg-white rounded-lg p-3 min-w-[160px] max-w-[200px]">
+                    <!-- Organization/Department Node (phòng ban không có HEAD) -->
+                    <div v-if="slotProps.node.data?.role === 'Organization' ||
+                               slotProps.node.data?.role === 'Department' ||
+                               slotProps.node.type === 'department'"
+                         class="department-card bg-blue-50 border-2 border-blue-300 rounded-lg p-3 min-w-[160px] max-w-[200px]">
+                      <div class="text-center">
+                        <div class="font-semibold text-blue-800 text-sm truncate">{{ slotProps.node.data.name }}</div>
+                      </div>
+                    </div>
+
+                    <!-- Employee Node -->
+                    <div v-else class="employee-card bg-white rounded-lg p-3 min-w-[160px] max-w-[200px]">
                       <div class="text-center">
                         <div class="font-semibold text-gray-800 text-sm truncate">{{ slotProps.node.data.name }}</div>
                         <div v-if="slotProps.node.data.code" class="text-xs text-gray-500 mt-1">{{ slotProps.node.data.code }}</div>
@@ -185,6 +196,7 @@ const loadingEmployees = ref(false)
 
 // Computed để tạo data cho OrganizationChart với hierarchy theo department
 const employeeChartData = computed(() => {
+
   if (currentEmployees.value.length === 0) {
     return null
   }
@@ -235,11 +247,11 @@ const employeeChartData = computed(() => {
   // Multiple employees without hierarchy
   const fallbackData = {
     key: 'department_root',
-    type: 'person',
+    type: 'person',  // Changed from 'department' to 'person'
     data: {
       name: current.value?.label || 'Đơn vị',
       position: 'Đơn vị',
-      role: 'Department'
+      role: 'Department'  // Use role to identify department nodes
     },
     children: currentEmployees.value.map(emp => ({
       key: emp.id,
@@ -260,13 +272,13 @@ function buildSingleDepartmentChart(employees) {
 
   if (!head) {
     // Không có trưởng, tạo node department làm root
-    return {
+    const result = {
       key: 'dept_root',
-      type: 'person',
+      type: 'person',  // Changed from 'department' to 'person'
       data: {
         name: current.value?.label || 'Đơn vị',
         position: 'Đơn vị',
-        role: 'Department'
+        role: 'Department'  // Use role to identify department nodes
       },
       children: employees.map(emp => ({
         key: emp.id,
@@ -280,6 +292,7 @@ function buildSingleDepartmentChart(employees) {
         }
       }))
     }
+    return result
   }
 
   // Có trưởng, tạo cấu trúc phân cấp
@@ -321,7 +334,6 @@ function buildMultiDepartmentChart(employeesByDept, mainDeptId) {
 
     // Tìm trưởng đơn vị của department này
     const head = employees.find(emp => emp.role_type === 'HEAD')
-
     if (head) {
       // Có trưởng đơn vị
       const children = employees
@@ -338,7 +350,7 @@ function buildMultiDepartmentChart(employeesByDept, mainDeptId) {
           }
         }))
 
-      deptNodes.push({
+      const headNode = {
         key: head.id,
         type: 'person',
         data: {
@@ -350,7 +362,8 @@ function buildMultiDepartmentChart(employeesByDept, mainDeptId) {
           isDepartmentHead: true
         },
         children: children
-      })
+      }
+      deptNodes.push(headNode)
     } else {
       // Không có trưởng, tạo node department
       const empNodes = employees.map(emp => ({
@@ -365,17 +378,18 @@ function buildMultiDepartmentChart(employeesByDept, mainDeptId) {
         }
       }))
 
-      deptNodes.push({
+      const deptNode = {
         key: `dept_${deptId}`,
-        type: 'department',
+        type: 'person',  // Changed from 'department' to 'person'
         data: {
           name: deptName,
           position: 'Đơn vị',
-          role: 'Department',
+          role: 'Department',  // Use role to identify department nodes
           department: deptName
         },
         children: empNodes
-      })
+      }
+      deptNodes.push(deptNode)
     }
   })
 
@@ -389,23 +403,25 @@ function buildMultiDepartmentChart(employeesByDept, mainDeptId) {
   if (mainNode && deptNodes.length > 1) {
     // Có department chính, đặt làm root với các department khác làm children
     const otherNodes = deptNodes.filter(node => node !== mainNode)
-    return {
+    const result = {
       ...mainNode,
       children: [...(mainNode.children || []), ...otherNodes]
     }
+    return result
   } else if (deptNodes.length > 1) {
-    // Không tìm thấy department chính, tạo root ảo
-    return {
+    // Không tìm thấy department chính, tạo root ảo với type: 'person' để hiển thị
+    // (PrimeVue OrganizationChart không render root node, chỉ render children)
+    const result = {
       key: 'org_root',
-      type: 'department',
+      type: 'person',
       data: {
-        name: mainDeptName,
+        name: current.value?.label || mainDeptName || 'Tổ chức',
         position: 'Tổ chức',
-        role: 'Organization',
-        department: mainDeptName
+        role: 'Organization'
       },
       children: deptNodes
     }
+    return result
   }
 
   // Chỉ có 1 department, trả về node đầu tiên
