@@ -93,6 +93,10 @@ Route::group(['middleware' => 'auth'], function () {
     // Employee
     Route::resource('employees', EmployeeController::class);
 
+    // Position Routes
+    Route::delete('positions/bulk-delete', [\App\Http\Controllers\PositionController::class, 'bulkDelete'])->name('positions.bulk-delete');
+    Route::resource('positions', \App\Http\Controllers\PositionController::class);
+
     // Address (Province & Ward) Routes for dropdowns
     Route::get('/provinces', [ProvinceController::class, 'index'])->name('provinces.index');
     Route::get('/provinces/{province}/wards', [ProvinceController::class, 'getWards'])->name('provinces.wards');

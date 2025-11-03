@@ -15,4 +15,7 @@ class Position extends Model
 
     // Quan hệ: thuộc phòng ban nào
     public function department() { return $this->belongsTo(Department::class); }
+
+    // Quan hệ: có nhiều employee assignments
+    public function employeeAssignments() { return $this->hasMany(EmployeeAssignment::class); }
 }

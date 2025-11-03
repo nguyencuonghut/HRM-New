@@ -58,6 +58,15 @@ const model = computed(() => {
         });
     }
 
+    // Positions menu - check permission
+    if (can('view positions')) {
+        systemMenuItems.push({
+            label: 'Chức vụ',
+            icon: 'pi pi-fw pi-briefcase',
+            to: '/positions'
+        });
+    }
+
     // Roles menu - check permission
     if (canViewRoles()) {
         systemMenuItems.push({
