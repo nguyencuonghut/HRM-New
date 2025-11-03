@@ -9,7 +9,7 @@ return new class extends Migration {
         Schema::create('wards', function (Blueprint $table) {
             $table->uuid('id')->primary(); // Khóa chính UUID
             $table->uuid('province_id')->index(); // Tỉnh/Thành phố cha
-            $table->string('code')->unique(); // Mã xã/phường
+            $table->string('code')->nullable()->unique(); // Mã xã/phường
             $table->string('name'); // Tên xã/phường
             $table->timestamps(); // created_at, updated_at
         });

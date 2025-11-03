@@ -76,6 +76,24 @@ const model = computed(() => {
         });
     }
 
+    // Province menu - check permission
+    if (can('view provinces')) {
+        systemMenuItems.push({
+            label: 'Tỉnh/Thành phố',
+            icon: 'pi pi-fw pi-map',
+            to: '/provinces'
+        });
+    }
+
+    // Ward menu - check permission
+    if (can('view wards')) {
+        systemMenuItems.push({
+            label: 'Phường/Xã',
+            icon: 'pi pi-fw pi-map-marker',
+            to: '/wards'
+        });
+    }
+
     // Backup menu - check permission
     if (canViewBackups()) {
         systemMenuItems.push({

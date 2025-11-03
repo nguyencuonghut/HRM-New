@@ -6,6 +6,8 @@ import { DepartmentService } from './DepartmentService';
 import { OrgService } from './OrgService';
 import { EmployeeService } from './EmployeeService';
 import { PositionService } from './PositionService';
+import { ProvinceService } from './ProvinceService';
+import { WardService } from './WardService';
 
 export {
     AuthService,
@@ -16,4 +18,6 @@ export {
     DepartmentService,
     EmployeeService,
     PositionService,
+    ProvinceService,
+    WardService,
 };

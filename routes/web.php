@@ -11,6 +11,7 @@ use App\Http\Controllers\DepartmentController;
 use App\Http\Controllers\DepartmentOrgController;
 use App\Http\Controllers\EmployeeController;
 use App\Http\Controllers\ProvinceController;
+use App\Http\Controllers\WardController;
 
 /*** Login Routes ***/
 Route::group(['middleware' => 'guest'], function () {
@@ -97,7 +98,15 @@ Route::group(['middleware' => 'auth'], function () {
     Route::delete('positions/bulk-delete', [\App\Http\Controllers\PositionController::class, 'bulkDelete'])->name('positions.bulk-delete');
     Route::resource('positions', \App\Http\Controllers\PositionController::class);
 
-    // Address (Province & Ward) Routes for dropdowns
-    Route::get('/provinces', [ProvinceController::class, 'index'])->name('provinces.index');
-    Route::get('/provinces/{province}/wards', [ProvinceController::class, 'getWards'])->name('provinces.wards');
+    // Province Routes
+    Route::delete('provinces/bulk-delete', [ProvinceController::class, 'bulkDelete'])->name('provinces.bulk-delete');
+    Route::resource('provinces', ProvinceController::class);
+
+    // Ward Routes
+    Route::delete('wards/bulk-delete', [WardController::class, 'bulkDelete'])->name('wards.bulk-delete');
+    Route::resource('wards', WardController::class);
+
+    // Address (Province & Ward) Routes for dropdowns (keep for compatibility)
+    Route::get('/api/provinces', [ProvinceController::class, 'index'])->name('api.provinces.index');
+    Route::get('/api/provinces/{province}/wards', [ProvinceController::class, 'getWards'])->name('api.provinces.wards');
 });

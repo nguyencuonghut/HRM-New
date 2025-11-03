@@ -62,6 +62,18 @@ class RolesAndPermissionsSeeder extends Seeder
             'create positions',
             'edit positions',
             'delete positions',
+
+            // Province
+            'view provinces',
+            'create provinces',
+            'edit provinces',
+            'delete provinces',
+
+            // Ward
+            'view wards',
+            'create wards',
+            'edit wards',
+            'delete wards',
         ];
 
         foreach ($permissions as $permission) {
