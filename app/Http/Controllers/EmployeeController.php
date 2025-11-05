@@ -55,7 +55,25 @@ class EmployeeController extends Controller
         $this->authorize('create', Employee::class);
 
         $data = $request->validated();
-        Employee::create($data);
+        $employee = Employee::create($data);
+        $employee->load(['ward.province', 'tempWard.province']);
+
+        activity()
+            ->performedOn($employee)
+            ->causedBy($request->user())
+            ->withProperties([
+                'attributes' => [
+                    'employee_code' => $employee->employee_code,
+                    'full_name' => $employee->full_name,
+                    'gender' => $employee->gender,
+                    'phone' => $employee->phone,
+                    'company_email' => $employee->company_email,
+                    'ward' => $employee->ward ? $employee->ward->province->name . ' - ' . $employee->ward->name : null,
+                    'hire_date' => $employee->hire_date?->toDateString(),
+                    'status' => $employee->status,
+                ]
+            ])
+            ->log('Tạo nhân viên');
 
         return redirect()->route('employees.index')
             ->with('success', 'Tạo nhân viên thành công!');
@@ -65,8 +83,41 @@ class EmployeeController extends Controller
     {
         $this->authorize('update', $employee);
 
+        $employee->load(['ward.province', 'tempWard.province']);
+        $oldData = [
+            'employee_code' => $employee->employee_code,
+            'full_name' => $employee->full_name,
+            'gender' => $employee->gender,
+            'phone' => $employee->phone,
+            'company_email' => $employee->company_email,
+            'ward' => $employee->ward ? $employee->ward->province->name . ' - ' . $employee->ward->name : null,
+            'hire_date' => $employee->hire_date?->toDateString(),
+            'status' => $employee->status,
+        ];
+
         $data = $request->validated();
         $employee->update($data);
+        $employee->refresh()->load(['ward.province', 'tempWard.province']);
+
+        $newData = [
+            'employee_code' => $employee->employee_code,
+            'full_name' => $employee->full_name,
+            'gender' => $employee->gender,
+            'phone' => $employee->phone,
+            'company_email' => $employee->company_email,
+            'ward' => $employee->ward ? $employee->ward->province->name . ' - ' . $employee->ward->name : null,
+            'hire_date' => $employee->hire_date?->toDateString(),
+            'status' => $employee->status,
+        ];
+
+        activity()
+            ->performedOn($employee)
+            ->causedBy($request->user())
+            ->withProperties([
+                'old' => $oldData,
+                'attributes' => $newData
+            ])
+            ->log('Cập nhật nhân viên');
 
         return redirect()->route('employees.index')
             ->with('success', 'Cập nhật nhân viên thành công!');
@@ -76,8 +127,26 @@ class EmployeeController extends Controller
     {
         $this->authorize('delete', $employee);
 
+        $employee->load(['ward.province', 'tempWard.province']);
+        $oldData = [
+            'employee_code' => $employee->employee_code,
+            'full_name' => $employee->full_name,
+            'gender' => $employee->gender,
+            'phone' => $employee->phone,
+            'company_email' => $employee->company_email,
+            'ward' => $employee->ward ? $employee->ward->province->name . ' - ' . $employee->ward->name : null,
+            'hire_date' => $employee->hire_date?->toDateString(),
+            'status' => $employee->status,
+        ];
+
         // Không dùng soft delete theo quyết định của bạn
         $employee->delete();
+
+        activity()
+            ->performedOn($employee)
+            ->causedBy(request()->user())
+            ->withProperties(['old' => $oldData])
+            ->log('Xóa nhân viên');
 
         return redirect()->route('employees.index')
             ->with('success', 'Đã xóa nhân viên!');

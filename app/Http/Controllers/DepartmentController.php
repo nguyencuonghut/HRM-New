@@ -82,7 +82,22 @@ class DepartmentController extends Controller
             $data['order_index'] = $this->getNextOrderIndex($data['parent_id'] ?? null);
         }
 
-        Department::create($data);
+        $department = Department::create($data);
+        $department->load('parent');
+
+        activity()
+            ->performedOn($department)
+            ->causedBy($request->user())
+            ->withProperties([
+                'attributes' => [
+                    'name' => $department->name,
+                    'code' => $department->code,
+                    'type' => $department->type,
+                    'parent' => $department->parent?->name,
+                    'is_active' => $department->is_active ? 'Kích hoạt' : 'Vô hiệu hóa',
+                ]
+            ])
+            ->log('Tạo phòng/ban');
 
         // Trả về Index để UserIndex-style cập nhật list
         return redirect()->route('departments.index')
@@ -97,12 +112,39 @@ class DepartmentController extends Controller
     {
         $this->authorize('update', $department);
 
+        $department->load('parent');
+        $oldData = [
+            'name' => $department->name,
+            'code' => $department->code,
+            'type' => $department->type,
+            'parent' => $department->parent?->name,
+            'is_active' => $department->is_active ? 'Kích hoạt' : 'Vô hiệu hóa',
+        ];
+
         $data = $request->validated();
         if (empty($data['code'])) {
             $data['code'] = Str::slug($data['name'], '_');
         }
 
         $department->update($data);
+        $department->refresh()->load('parent');
+
+        $newData = [
+            'name' => $department->name,
+            'code' => $department->code,
+            'type' => $department->type,
+            'parent' => $department->parent?->name,
+            'is_active' => $department->is_active ? 'Kích hoạt' : 'Vô hiệu hóa',
+        ];
+
+        activity()
+            ->performedOn($department)
+            ->causedBy($request->user())
+            ->withProperties([
+                'old' => $oldData,
+                'attributes' => $newData
+            ])
+            ->log('Cập nhật phòng/ban');
 
         return redirect()->route('departments.index')
             ->with([
@@ -127,7 +169,22 @@ class DepartmentController extends Controller
                 ]);
         }
 
+        $department->load('parent');
+        $oldData = [
+            'name' => $department->name,
+            'code' => $department->code,
+            'type' => $department->type,
+            'parent' => $department->parent?->name,
+            'is_active' => $department->is_active ? 'Kích hoạt' : 'Vô hiệu hóa',
+        ];
+
         $department->delete();
+
+        activity()
+            ->performedOn($department)
+            ->causedBy(request()->user())
+            ->withProperties(['old' => $oldData])
+            ->log('Xóa phòng/ban');
 
         return redirect()->route('departments.index')
             ->with([
@@ -167,8 +224,26 @@ class DepartmentController extends Controller
         // Xóa các department hợp lệ
         $deletedCount = 0;
         if (!empty($validIds)) {
-            $deletedCount = Department::whereIn('id', $validIds)->count();
+            $departments = Department::with('parent')->whereIn('id', $validIds)->get();
+            $deletedRecords = $departments->map(function ($dept) {
+                return [
+                    'name' => $dept->name,
+                    'code' => $dept->code,
+                    'type' => $dept->type,
+                    'parent' => $dept->parent?->name,
+                ];
+            })->toArray();
+
+            $deletedCount = $departments->count();
             Department::whereIn('id', $validIds)->delete();
+
+            activity()
+                ->causedBy($request->user())
+                ->withProperties([
+                    'count' => $deletedCount,
+                    'deleted_records' => $deletedRecords
+                ])
+                ->log('Xóa hàng loạt phòng/ban');
         }
 
         // Tạo thông báo phù hợp
