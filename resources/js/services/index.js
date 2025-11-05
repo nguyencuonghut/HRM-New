@@ -8,6 +8,7 @@ import { EmployeeService } from './EmployeeService';
 import { PositionService } from './PositionService';
 import { ProvinceService } from './ProvinceService';
 import { WardService } from './WardService';
+import { EmployeeAssignmentService } from './EmployeeAssignmentService';
 
 export {
     AuthService,
@@ -17,6 +18,7 @@ export {
     RoleService,
     DepartmentService,
     EmployeeService,
+    EmployeeAssignmentService,
     PositionService,
     ProvinceService,
     WardService,

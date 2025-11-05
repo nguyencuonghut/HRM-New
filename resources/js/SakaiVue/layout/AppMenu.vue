@@ -27,6 +27,14 @@ const model = computed(() => {
         });
     }
 
+    if (can('view employee assignments')) {
+        homeItems.push({
+            label: 'Phân công nhân sự',
+            icon: 'pi pi-fw pi-users',
+            to: '/employee-assignments'
+        });
+    }
+
     const items = [
         {
             label: t('nav.home'),

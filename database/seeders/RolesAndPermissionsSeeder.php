@@ -57,6 +57,12 @@ class RolesAndPermissionsSeeder extends Seeder
             'edit employees',
             'delete employees',
 
+            // Employee Assignment
+            'view employee assignments',
+            'create employee assignments',
+            'edit employee assignments',
+            'delete employee assignments',
+
             // Position
             'view positions',
             'create positions',

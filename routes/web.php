@@ -10,6 +10,7 @@ use App\Http\Controllers\ActivityLogController;
 use App\Http\Controllers\DepartmentController;
 use App\Http\Controllers\DepartmentOrgController;
 use App\Http\Controllers\EmployeeController;
+use App\Http\Controllers\EmployeeAssignmentController;
 use App\Http\Controllers\ProvinceController;
 use App\Http\Controllers\WardController;
 
@@ -93,6 +94,9 @@ Route::group(['middleware' => 'auth'], function () {
 
     // Employee
     Route::resource('employees', EmployeeController::class);
+
+    // Employee Assignment
+    Route::resource('employee-assignments', EmployeeAssignmentController::class)->except(['show']);
 
     // Position Routes
     Route::delete('positions/bulk-delete', [\App\Http\Controllers\PositionController::class, 'bulkDelete'])->name('positions.bulk-delete');
