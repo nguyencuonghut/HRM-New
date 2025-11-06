@@ -102,6 +102,24 @@ const model = computed(() => {
         });
     }
 
+    // Education Levels - check permission
+    if (can('view education levels')) {
+        systemMenuItems.push({
+            label: 'Trình độ học vấn',
+            icon: 'pi pi-fw pi-book',
+            to: '/education-levels'
+        });
+    }
+
+    // Schools - check permission
+    if (can('view schools')) {
+        systemMenuItems.push({
+            label: 'Trường học',
+            icon: 'pi pi-fw pi-building',
+            to: '/schools'
+        });
+    }
+
     // Backup menu - check permission
     if (canViewBackups()) {
         systemMenuItems.push({

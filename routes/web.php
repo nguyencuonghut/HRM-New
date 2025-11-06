@@ -13,6 +13,8 @@ use App\Http\Controllers\EmployeeController;
 use App\Http\Controllers\EmployeeAssignmentController;
 use App\Http\Controllers\ProvinceController;
 use App\Http\Controllers\WardController;
+use App\Http\Controllers\EducationLevelController;
+use App\Http\Controllers\SchoolController;
 
 /*** Login Routes ***/
 Route::group(['middleware' => 'guest'], function () {
@@ -113,4 +115,18 @@ Route::group(['middleware' => 'auth'], function () {
     // Address (Province & Ward) Routes for dropdowns (keep for compatibility)
     Route::get('/api/provinces', [ProvinceController::class, 'index'])->name('api.provinces.index');
     Route::get('/api/provinces/{province}/wards', [ProvinceController::class, 'getWards'])->name('api.provinces.wards');
+
+        // Education Levels
+    Route::get('education-levels', [EducationLevelController::class, 'index'])->name('education-levels.index');
+    Route::post('education-levels', [EducationLevelController::class, 'store'])->name('education-levels.store');
+    Route::put('education-levels/{education_level}', [EducationLevelController::class, 'update'])->name('education-levels.update');
+    Route::delete('education-levels/{education_level}', [EducationLevelController::class, 'destroy'])->name('education-levels.destroy');
+    Route::post('education-levels/bulk-delete', [EducationLevelController::class, 'bulkDelete'])->name('education-levels.bulk-delete');
+
+    // Schools
+    Route::get('schools', [SchoolController::class, 'index'])->name('schools.index');
+    Route::post('schools', [SchoolController::class, 'store'])->name('schools.store');
+    Route::put('schools/{school}', [SchoolController::class, 'update'])->name('schools.update');
+    Route::delete('schools/{school}', [SchoolController::class, 'destroy'])->name('schools.destroy');
+    Route::post('schools/bulk-delete', [SchoolController::class, 'bulkDelete'])->name('schools.bulk-delete');
 });

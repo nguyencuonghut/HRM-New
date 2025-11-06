@@ -23,6 +23,8 @@ class DatabaseSeeder extends Seeder
             EmployeeSeeder::class,
             EmployeeAssignmentSeeder::class,
             RoleScopeSeeder::class,
+            EducationLevelSeeder::class,
+            SchoolSeeder::class,
         ]);
     }
 }

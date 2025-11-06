@@ -80,6 +80,18 @@ class RolesAndPermissionsSeeder extends Seeder
             'create wards',
             'edit wards',
             'delete wards',
+
+            // Education Level
+            'view education levels',
+            'create education levels',
+            'edit education levels',
+            'delete education levels',
+
+            // School
+            'view schools',
+            'create schools',
+            'edit schools',
+            'delete schools',
         ];
 
         foreach ($permissions as $permission) {

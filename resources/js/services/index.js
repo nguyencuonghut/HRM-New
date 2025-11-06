@@ -9,6 +9,8 @@ import { PositionService } from './PositionService';
 import { ProvinceService } from './ProvinceService';
 import { WardService } from './WardService';
 import { EmployeeAssignmentService } from './EmployeeAssignmentService';
+import { EducationLevelService } from './EducationLevelService';
+import { SchoolService } from './SchoolService';
 
 export {
     AuthService,
@@ -22,4 +24,6 @@ export {
     PositionService,
     ProvinceService,
     WardService,
+    EducationLevelService,
+    SchoolService,
 };
