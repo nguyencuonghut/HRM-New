@@ -6,9 +6,15 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreEmployeeEducationRequest;
 use App\Http\Requests\UpdateEmployeeEducationRequest;
 use App\Http\Resources\EmployeeEducationResource;
+use App\Http\Resources\EmployeeExperienceResource;
+use App\Http\Resources\EmployeeRelativeResource;
+use App\Http\Resources\EmployeeSkillResource;
+use App\Http\Resources\SkillResource;
+use App\Models\Skill;
 use App\Models\EducationLevel;
 use App\Models\Employee;
 use App\Models\EmployeeEducation;
+use App\Models\EmployeeSkill;
 use App\Models\School;
 use Illuminate\Http\Request;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
@@ -27,11 +33,27 @@ class EmployeeEducationController extends Controller
             'employee'          => $employee->only(['id','full_name','employee_code']),
             'education_levels'  => EducationLevel::orderBy('order_index')->get(['id','name']),
             'schools'           => School::orderBy('name')->get(['id','name']),
+            // master skill list
+            'skills'           => SkillResource::collection(
+                Skill::orderBy('name')->get()
+            )->resolve(),
             // Nạp data tab Education (mặc định tab đầu)
             'educations'        => EmployeeEducationResource::collection(
                 $employee->educations()->with(['educationLevel','school'])->orderByDesc('start_year')->get()
             )->resolve(),
             // 3 tab còn lại load lazy bởi route riêng (index) hoặc bạn có thể nạp luôn tại đây
+            'relatives'        => EmployeeRelativeResource::collection(
+                $employee->relatives()->orderBy('full_name')->get()
+            )->resolve(),
+            'experiences'      => EmployeeExperienceResource::collection(
+                $employee->experiences()->orderByDesc('start_date')->get()
+            )->resolve(),
+            // gán kỹ năng của nhân viên
+            'employee_skills'  => EmployeeSkillResource::collection(
+                EmployeeSkill::with('skill:id,name')
+                    ->where('employee_id', $employee->id)
+                    ->get()
+            )->resolve(),
         ]);
     }
 

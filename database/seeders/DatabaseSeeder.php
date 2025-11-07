@@ -25,6 +25,7 @@ class DatabaseSeeder extends Seeder
             RoleScopeSeeder::class,
             EducationLevelSeeder::class,
             SchoolSeeder::class,
+            SkillSeeder::class,
         ]);
     }
 }

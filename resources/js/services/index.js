@@ -12,6 +12,9 @@ import { EmployeeAssignmentService } from './EmployeeAssignmentService';
 import { EducationLevelService } from './EducationLevelService';
 import { SchoolService } from './SchoolService';
 import { EmployeeEducationService } from './EmployeeEducationService';
+import { EmployeeRelativeService } from './EmployeeRelativeService';
+import { EmployeeExperienceService } from './EmployeeExperienceService';
+import { EmployeeSkillService } from './EmployeeSkillService';
 
 export {
     AuthService,
@@ -28,4 +31,7 @@ export {
     EducationLevelService,
     SchoolService,
     EmployeeEducationService,
+    EmployeeRelativeService,
+    EmployeeExperienceService,
+    EmployeeSkillService,
 };

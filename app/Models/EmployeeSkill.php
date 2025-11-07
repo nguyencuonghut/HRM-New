@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Relations\Pivot;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 
 class EmployeeSkill extends Pivot
@@ -19,4 +20,20 @@ class EmployeeSkill extends Pivot
         'level' => 'integer',
         'years' => 'integer',
     ];
+
+    /**
+     * Relationship to Employee
+     */
+    public function employee(): BelongsTo
+    {
+        return $this->belongsTo(Employee::class, 'employee_id');
+    }
+
+    /**
+     * Relationship to Skill
+     */
+    public function skill(): BelongsTo
+    {
+        return $this->belongsTo(Skill::class, 'skill_id');
+    }
 }
