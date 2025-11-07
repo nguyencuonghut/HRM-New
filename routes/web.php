@@ -15,6 +15,10 @@ use App\Http\Controllers\ProvinceController;
 use App\Http\Controllers\WardController;
 use App\Http\Controllers\EducationLevelController;
 use App\Http\Controllers\SchoolController;
+use App\Http\Controllers\EmployeeEducationController;
+use App\Http\Controllers\EmployeeRelativeController;
+use App\Http\Controllers\EmployeeExperienceController;
+use App\Http\Controllers\EmployeeSkillController;
 
 /*** Login Routes ***/
 Route::group(['middleware' => 'guest'], function () {
@@ -97,6 +101,44 @@ Route::group(['middleware' => 'auth'], function () {
     // Employee
     Route::resource('employees', EmployeeController::class);
 
+    // Trang tổng profile (tabs)
+    Route::get('employees/{employee}/profile', [EmployeeEducationController::class, 'profile'])
+        ->name('employees.profile');
+
+    // Educations
+    Route::get('employees/{employee}/educations', [EmployeeEducationController::class, 'index'])->name('employees.educations.index');
+    Route::post('employees/{employee}/educations', [EmployeeEducationController::class, 'store'])->name('employees.educations.store');
+    Route::put('employees/{employee}/educations/{education}', [EmployeeEducationController::class, 'update'])->name('employees.educations.update');
+    Route::delete('employees/{employee}/educations/{education}', [EmployeeEducationController::class, 'destroy'])->name('employees.educations.destroy');
+    Route::post('employees/{employee}/educations/bulk-delete', [EmployeeEducationController::class, 'bulkDelete'])->name('employees.educations.bulk-delete');
+
+    // Relatives
+    Route::get('employees/{employee}/relatives', [EmployeeRelativeController::class, 'index'])->name('employees.relatives.index');
+    Route::post('employees/{employee}/relatives', [EmployeeRelativeController::class, 'store'])->name('employees.relatives.store');
+    Route::put('employees/{employee}/relatives/{relative}', [EmployeeRelativeController::class, 'update'])->name('employees.relatives.update');
+    Route::delete('employees/{employee}/relatives/{relative}', [EmployeeRelativeController::class, 'destroy'])->name('employees.relatives.destroy');
+    Route::post('employees/{employee}/relatives/bulk-delete', [EmployeeRelativeController::class, 'bulkDelete'])->name('employees.relatives.bulk-delete');
+
+    // Experiences
+    Route::get('employees/{employee}/experiences', [EmployeeExperienceController::class, 'index'])->name('employees.experiences.index');
+    Route::post('employees/{employee}/experiences', [EmployeeExperienceController::class, 'store'])->name('employees.experiences.store');
+    Route::put('employees/{employee}/experiences/{experience}', [EmployeeExperienceController::class, 'update'])->name('employees.experiences.update');
+    Route::delete('employees/{employee}/experiences/{experience}', [EmployeeExperienceController::class, 'destroy'])->name('employees.experiences.destroy');
+    Route::post('employees/{employee}/experiences/bulk-delete', [EmployeeExperienceController::class, 'bulkDelete'])->name('employees.experiences.bulk-delete');
+
+    // Skills (gán kỹ năng cho NV)
+    Route::get('employees/{employee}/skills', [EmployeeSkillController::class, 'index'])->name('employees.skills.index');
+    Route::post('employees/{employee}/skills', [EmployeeSkillController::class, 'store'])->name('employees.skills.store');
+    Route::put('employees/{employee}/skills/{employeeSkill}', [EmployeeSkillController::class, 'update'])->name('employees.skills.update');
+    Route::delete('employees/{employee}/skills/{employeeSkill}', [EmployeeSkillController::class, 'destroy'])->name('employees.skills.destroy');
+    Route::post('employees/{employee}/skills/bulk-delete', [EmployeeSkillController::class, 'bulkDelete'])->name('employees.skills.bulk-delete');
+
+    // Danh mục kỹ năng (quản trị)
+    Route::get('skills', [EmployeeSkillController::class, 'skillIndex'])->name('skills.index');
+    Route::post('skills', [EmployeeSkillController::class, 'skillStore'])->name('skills.store');
+    Route::put('skills/{skill}', [EmployeeSkillController::class, 'skillUpdate'])->name('skills.update');
+    Route::delete('skills/{skill}', [EmployeeSkillController::class, 'skillDestroy'])->name('skills.destroy');
+
     // Employee Assignment
     Route::resource('employee-assignments', EmployeeAssignmentController::class)->except(['show']);
 
@@ -116,7 +158,7 @@ Route::group(['middleware' => 'auth'], function () {
     Route::get('/api/provinces', [ProvinceController::class, 'index'])->name('api.provinces.index');
     Route::get('/api/provinces/{province}/wards', [ProvinceController::class, 'getWards'])->name('api.provinces.wards');
 
-        // Education Levels
+    // Education Levels
     Route::get('education-levels', [EducationLevelController::class, 'index'])->name('education-levels.index');
     Route::post('education-levels', [EducationLevelController::class, 'store'])->name('education-levels.store');
     Route::put('education-levels/{education_level}', [EducationLevelController::class, 'update'])->name('education-levels.update');

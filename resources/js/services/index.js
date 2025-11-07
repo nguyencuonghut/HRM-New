@@ -11,6 +11,7 @@ import { WardService } from './WardService';
 import { EmployeeAssignmentService } from './EmployeeAssignmentService';
 import { EducationLevelService } from './EducationLevelService';
 import { SchoolService } from './SchoolService';
+import { EmployeeEducationService } from './EmployeeEducationService';
 
 export {
     AuthService,
@@ -26,4 +27,5 @@ export {
     WardService,
     EducationLevelService,
     SchoolService,
+    EmployeeEducationService,
 };

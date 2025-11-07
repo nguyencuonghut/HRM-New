@@ -47,4 +47,26 @@ class EmployeePolicy
     {
         return $user->can('delete employees');
     }
+
+    public function viewProfile(User $user, Employee $employee): bool
+    {
+        // Quyền xem profile nhân viên
+        // Admin/Director/Manager xem được; Employee chỉ xem chính mình
+        if ($user->hasPermissionTo('view employees')) return true;
+        return $user->employee_id === $employee->id;
+    }
+
+    public function editProfile(User $user, Employee $employee): bool
+    {
+        // Admin/Manager chỉnh sửa (tuỳ chính sách phòng ban), ví dụ đơn giản:
+        return $user->hasPermissionTo('edit employees');
+    }
+
+    /**
+     * Kiểm tra một bản ghi con (education/relative/experience/skill) có thuộc employee này không
+     */
+    public function ownEmployeeItem(User $user, Employee $employee, $child): bool
+    {
+        return $child->employee_id === $employee->id;
+    }
 }

@@ -39,7 +39,9 @@ class EducationLevelSeeder extends Seeder
         }, $levels);
 
         // Xoá & seed lại cho an toàn môi trường dev
+        DB::statement('SET FOREIGN_KEY_CHECKS=0;');
         DB::table('education_levels')->truncate();
+        DB::statement('SET FOREIGN_KEY_CHECKS=1;');
         DB::table('education_levels')->insert($rows);
     }
 }

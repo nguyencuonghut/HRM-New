@@ -68,6 +68,7 @@
                 <Column header="Thao tác" :exportable="false" style="min-width: 12rem">
                     <template #body="slotProps">
                         <div class="flex gap-2">
+                            <Button icon="pi pi-id-card" variant="outlined" rounded @click="goProfile(slotProps.data)" />
                             <Button icon="pi pi-pencil" variant="outlined" rounded @click="edit(slotProps.data)" />
                             <Button icon="pi pi-trash" variant="outlined" rounded severity="danger"
                                     @click="confirmDelete(slotProps.data)" />
@@ -207,7 +208,7 @@
 <script setup>
 import { ref, computed, watch } from 'vue'
 import { FilterMatchMode } from '@primevue/core/api'
-import { Head } from '@inertiajs/vue3'
+import { Head, router } from '@inertiajs/vue3'
 import Select from 'primevue/select'
 import DatePicker from 'primevue/datepicker'
 import AddressSelector from '@/components/AddressSelector.vue'
@@ -351,5 +352,12 @@ function applyStatusFilter() {
     onStart: ()=> loading.value = true,
     onFinish: ()=> loading.value = false,
   })
+}
+
+function goProfile(emp) {
+  router.get(`/employees/${emp.id}/profile`, {}, {
+    preserveState: true,
+    preserveScroll: true,
+  });
 }
 </script>
