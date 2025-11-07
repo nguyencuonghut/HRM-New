@@ -64,6 +64,19 @@ function itemClick(event, item) {
     setActiveMenuItem(foundItemKey);
 }
 
+function isActiveRoute(menuPath) {
+    const currentUrl = $page.url;
+
+    // Exact match
+    if (currentUrl === menuPath) return true;
+
+    // Check if current URL starts with menu path (for nested routes)
+    // E.g., /employees/123/profile should make /employees active
+    if (currentUrl.startsWith(menuPath + '/')) return true;
+
+    return false;
+}
+
 </script>
 
 <template>
@@ -74,7 +87,7 @@ function itemClick(event, item) {
             <span class="layout-menuitem-text">{{ item.label }}</span>
             <i class="pi pi-fw pi-angle-down layout-submenu-toggler" v-if="item.items"></i>
         </a>
-        <NavLink v-if="item.to && !item.items && item.visible !== false" :href="item.to" @click="itemClick($event, item, index)" :class="[item.class, { 'active-route': $page.url === item.to }]" tabindex="0">
+        <NavLink v-if="item.to && !item.items && item.visible !== false" :href="item.to" @click="itemClick($event, item, index)" :class="[item.class, { 'active-route': isActiveRoute(item.to) }]" tabindex="0">
             <i :class="item.icon" class="layout-menuitem-icon"></i>
             <span class="layout-menuitem-text">{{ item.label }}</span>
             <i class="pi pi-fw pi-angle-down layout-submenu-toggler" v-if="item.items"></i>
