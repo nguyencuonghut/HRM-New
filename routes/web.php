@@ -19,6 +19,9 @@ use App\Http\Controllers\EmployeeEducationController;
 use App\Http\Controllers\EmployeeRelativeController;
 use App\Http\Controllers\EmployeeExperienceController;
 use App\Http\Controllers\EmployeeSkillController;
+use App\Http\Controllers\ContractController;
+use App\Http\Controllers\ContractAppendixController;
+use App\Http\Controllers\ContractGenerateController;
 
 /*** Login Routes ***/
 Route::group(['middleware' => 'guest'], function () {
@@ -141,6 +144,29 @@ Route::group(['middleware' => 'auth'], function () {
 
     // Employee Assignment
     Route::resource('employee-assignments', EmployeeAssignmentController::class)->except(['show']);
+
+    // Contract routes
+    Route::get('contracts', [ContractController::class,'index'])->name('contracts.index');
+    Route::post('contracts', [ContractController::class,'store'])->name('contracts.store');
+    Route::put('contracts/{contract}', [ContractController::class,'update'])->name('contracts.update');
+    Route::delete('contracts/{contract}', [ContractController::class,'destroy'])->name('contracts.destroy');
+    Route::post('contracts/bulk-delete', [ContractController::class,'bulkDelete'])->name('contracts.bulk-delete');
+
+    Route::post('contracts/{contract}/approve', [ContractController::class,'approve'])->name('contracts.approve');
+    Route::post('contracts/{contract}/reject', [ContractController::class,'reject'])->name('contracts.reject');
+    Route::post('contracts/{contract}/generate', [ContractGenerateController::class, 'generate'])->name('contracts.generate');
+
+    // Contract Appendix routes (nested under contracts)
+    Route::prefix('contracts/{contract}')->group(function () {
+        Route::get('appendixes', [ContractAppendixController::class,'index'])->name('contracts.appendixes.index');
+        Route::post('appendixes', [ContractAppendixController::class,'store'])->name('contracts.appendixes.store');
+        Route::put('appendixes/{appendix}', [ContractAppendixController::class,'update'])->name('contracts.appendixes.update');
+        Route::delete('appendixes/{appendix}', [ContractAppendixController::class,'destroy'])->name('contracts.appendixes.destroy');
+        Route::post('appendixes/bulk-delete', [ContractAppendixController::class,'bulkDelete'])->name('contracts.appendixes.bulk-delete');
+
+        Route::post('appendixes/{appendix}/approve', [ContractAppendixController::class,'approve'])->name('contracts.appendixes.approve');
+        Route::post('appendixes/{appendix}/reject', [ContractAppendixController::class,'reject'])->name('contracts.appendixes.reject');
+    });
 
     // Position Routes
     Route::delete('positions/bulk-delete', [\App\Http\Controllers\PositionController::class, 'bulkDelete'])->name('positions.bulk-delete');

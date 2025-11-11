@@ -35,6 +35,15 @@ const model = computed(() => {
         });
     }
 
+    // Add Contract to home section if user has permission
+    if (can('view contracts')) {
+        homeItems.push({
+            label: 'Hợp đồng',
+            icon: 'pi pi-fw pi-file-edit',
+            to: '/contracts'
+        });
+    }
+
     const items = [
         {
             label: t('nav.home'),
