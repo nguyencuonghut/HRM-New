@@ -167,6 +167,8 @@ Route::group(['middleware' => 'auth'], function () {
 
         Route::post('appendixes/{appendix}/approve', [ContractAppendixController::class,'approve'])->name('contracts.appendixes.approve');
         Route::post('appendixes/{appendix}/reject', [ContractAppendixController::class,'reject'])->name('contracts.appendixes.reject');
+
+        Route::post('appendixes/{appendix}/generate', [ContractAppendixController::class, 'generate'])->name('contracts.appendixes.generate');
     });
 
     // Position Routes

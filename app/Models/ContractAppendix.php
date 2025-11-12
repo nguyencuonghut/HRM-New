@@ -13,7 +13,7 @@ class ContractAppendix extends Model
         'contract_id','appendix_no','appendix_type','source','title','summary',
         'effective_date','end_date','status','approver_id','approved_at','rejected_at','approval_note',
         'base_salary','insurance_salary','position_allowance','other_allowances',
-        'department_id','position_id','working_time','work_location','note',
+        'department_id','position_id','working_time','work_location','note','generated_pdf_path'
     ];
 
     protected $casts = [

@@ -41,6 +41,8 @@ return new class extends Migration {
             $t->string('working_time')->nullable();         // Ví dụ: "T2–T6 8:00–17:00"
             $t->string('work_location')->nullable();
 
+            $t->string('generated_pdf_path')->nullable();          // storage path file PDF sinh ra
+
             $t->text('note')->nullable();
 
             $t->timestamps();

@@ -3,6 +3,7 @@
 namespace App\Http\Resources;
 
 use Illuminate\Http\Resources\Json\JsonResource;
+use Illuminate\Support\Facades\Storage;
 
 class ContractAppendixResource extends JsonResource
 {
@@ -34,6 +35,8 @@ class ContractAppendixResource extends JsonResource
             'working_time' => $this->working_time,
             'work_location' => $this->work_location,
             'note' => $this->note,
+            'generated_pdf_path'  => $this->generated_pdf_path,
+            'generated_pdf_url'   => $this->generated_pdf_path ? Storage::url($this->generated_pdf_path) : null,
             'created_at' => optional($this->created_at)->toDateTimeString(),
         ];
     }

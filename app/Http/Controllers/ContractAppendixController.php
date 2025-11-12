@@ -5,9 +5,12 @@ namespace App\Http\Controllers;
 use App\Http\Requests\StoreContractAppendixRequest;
 use App\Http\Requests\UpdateContractAppendixRequest;
 use App\Http\Resources\ContractAppendixResource;
-use App\Models\{Contract, ContractAppendix};
+use App\Models\Contract;
+use App\Models\ContractAppendix;
+use App\Models\ContractAppendixTemplate;
+use App\Services\ContractAppendixGenerateService;
+use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Http\Request;
-use \Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Inertia\Inertia;
 
 class ContractAppendixController extends Controller
@@ -179,6 +182,32 @@ class ContractAppendixController extends Controller
             ])->log('rejected');
 
         session()->flash('message', 'Đã từ chối phụ lục.');
+        session()->flash('type', 'success');
+
+        return Inertia::location(route('contracts.show', [
+            'contract' => $contract->id,
+            'tab' => 'appendixes'
+        ]));
+    }
+
+    public function generate(
+        Request $request,
+        Contract $contract,
+        ContractAppendix $appendix,
+        ContractAppendixGenerateService $generator
+    ) {
+        $this->authorize('update', $appendix);
+
+        $templateId = $request->input('template_id');
+        $template   = null;
+
+        if ($templateId) {
+            $template = ContractAppendixTemplate::find($templateId);
+        }
+
+        $generator->generate($appendix, $template);
+
+        session()->flash('message', 'Đã sinh file PDF cho phụ lục.');
         session()->flash('type', 'success');
 
         return Inertia::location(route('contracts.show', [

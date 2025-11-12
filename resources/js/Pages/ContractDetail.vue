@@ -35,6 +35,7 @@
         <ContractAppendixTab
           :contract-id="contract.id"
           :appendixes="appendixes"
+          :appendix-templates="appendixTemplates"
         />
       </TabPanel>
     </Tabs>
@@ -52,9 +53,10 @@ import ContractAppendixTab from './ContractAppendixTab.vue'
 import { formatDate } from '@/utils/dateHelper'
 
 const props = defineProps({
-  contract:   { type: Object, required: true },
-  appendixes: { type: Array,  default: () => [] },
-  activeTab:  { type: String, default: 'general' } // nhận từ BE
+  contract:          { type: Object, required: true },
+  appendixes:        { type: Array,  default: () => [] },
+  appendixTemplates: { type: Array,  default: () => [] },
+  activeTab:         { type: String, default: 'general' } // nhận từ BE
 })
 
 const contract   = props.contract

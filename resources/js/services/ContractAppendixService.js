@@ -139,4 +139,17 @@ export class ContractAppendixService {
             }
         });
     }
+
+    static generate(contractId, appendixId, data = {}, options = {}) {
+        const { onStart, onFinish, onSuccess, onError } = options
+
+        router.post(`/contracts/${contractId}/appendixes/${appendixId}/generate`, data, {
+            onStart: () => { if (onStart) onStart() },
+            onFinish: () => { if (onFinish) onFinish() },
+            onSuccess: (page) => { if (onSuccess) onSuccess(page) },
+            onError: (errors) => { if (onError) onError(errors) },
+            preserveState: true,
+            preserveScroll: true
+        })
+    }
 }
