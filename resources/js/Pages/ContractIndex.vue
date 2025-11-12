@@ -38,7 +38,17 @@
         </template>
 
         <Column selectionMode="multiple" headerStyle="width: 3rem"></Column>
-        <Column field="contract_number" header="Số HĐ" sortable headerStyle="min-width:10rem;" />
+        <Column field="contract_number" header="Số HĐ" sortable headerStyle="min-width:10rem;">
+            <template #body="sp">
+                <a
+                href="#"
+                class="text-primary underline"
+                @click.prevent="goToGeneral(sp.data)"
+                >
+                {{ sp.data.contract_number }}
+                </a>
+            </template>
+        </Column>
         <Column field="employee_name" header="Nhân viên" headerStyle="min-width:14rem;">
           <template #body="sp">
             {{ sp.data.employee?.full_name }} ({{ sp.data.employee?.employee_code }})
@@ -71,9 +81,10 @@
         <Column header="Thao tác" headerStyle="min-width:18rem;">
           <template #body="sp">
             <div class="flex gap-2">
-              <Button icon="pi pi-pencil" outlined severity="success" rounded @click="edit(sp.data)" />
-              <Button icon="pi pi-trash" outlined severity="danger" rounded @click="confirmDelete(sp.data)" />
+              <Button icon="pi pi-pencil" outlined severity="success" rounded @click="edit(sp.data)" v-tooltip="'Chỉnh sửa hợp đồng'" />
+              <Button icon="pi pi-trash" outlined severity="danger" rounded @click="confirmDelete(sp.data)" v-tooltip="'Xóa hợp đồng'" />
               <Button icon="pi pi-file" outlined rounded @click="openGenerate(sp.data)" v-tooltip="'Sinh hợp đồng (PDF)'" />
+              <Button icon="pi pi-list" outlined rounded @click="goToAppendixes(sp.data)" v-tooltip="'Xem chi tiết & phụ lục'" />
             </div>
           </template>
         </Column>
@@ -265,7 +276,7 @@
 
 <script setup>
 import { ref, computed } from 'vue'
-import { Head } from '@inertiajs/vue3'
+import { Head, router } from '@inertiajs/vue3'
 import DatePicker from 'primevue/datepicker'
 import Select from 'primevue/select'
 import Textarea from 'primevue/textarea'
@@ -284,7 +295,7 @@ const definePropsData = defineProps({
   templates: { type: Array, default: () => [] },
   contractTypeOptions: { type: Array, default: () => [] },
   statusOptions: { type: Array, default: () => [] },
-  sourceOptions: { type: Array, default: () => [] }
+  sourceOptions: { type: Array, default: () => [] },
 })
 
 // Table
@@ -495,6 +506,12 @@ function doGenerate() {
       current.value = null
     }
   })
+}
+function goToAppendixes(row) {
+  router.get(`/contracts/${row.id}`, { tab: 'appendixes' })
+}
+function goToGeneral(row) {
+  router.get(`/contracts/${row.id}`, { tab: 'general' })
 }
 </script>
 

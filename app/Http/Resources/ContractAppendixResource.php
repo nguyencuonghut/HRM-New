@@ -13,12 +13,14 @@ class ContractAppendixResource extends JsonResource
             'contract_id' => $this->contract_id,
             'appendix_no' => $this->appendix_no,
             'appendix_type' => $this->appendix_type,
+            'appendix_type_label' => $this->getAppendixTypeLabel(),
             'source' => $this->source,
             'title' => $this->title,
             'summary' => $this->summary,
             'effective_date' => optional($this->effective_date)->toDateString(),
             'end_date' => optional($this->end_date)->toDateString(),
             'status' => $this->status,
+            'status_label' => $this->getStatusLabel(),
             'approver_id' => $this->approver_id,
             'approved_at' => optional($this->approved_at)->toDateTimeString(),
             'rejected_at' => optional($this->rejected_at)->toDateTimeString(),
@@ -34,5 +36,31 @@ class ContractAppendixResource extends JsonResource
             'note' => $this->note,
             'created_at' => optional($this->created_at)->toDateTimeString(),
         ];
+    }
+
+    private function getAppendixTypeLabel(): ?string
+    {
+        return match ($this->appendix_type) {
+            'SALARY' => 'Điều chỉnh lương',
+            'ALLOWANCE' => 'Điều chỉnh phụ cấp',
+            'POSITION' => 'Bổ nhiệm chức vụ',
+            'DEPARTMENT' => 'Điều chuyển phòng ban',
+            'WORKING_TERMS' => 'Điều chỉnh điều kiện làm việc',
+            'EXTENSION' => 'Gia hạn hợp đồng',
+            'OTHER' => 'Khác',
+            default => null,
+        };
+    }
+
+    private function getStatusLabel(): ?string
+    {
+        return match ($this->status) {
+            'DRAFT' => 'Nháp',
+            'ACTIVE' => 'Đang hiệu lực',
+            'PENDING' => 'Chờ duyệt',
+            'EXPIRED' => 'Hết hiệu lực',
+            'TERMINATED' => 'Đã chấm dứt',
+            default => null,
+        };
     }
 }

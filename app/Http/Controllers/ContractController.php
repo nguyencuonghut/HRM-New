@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Requests\StoreContractRequest;
 use App\Http\Requests\UpdateContractRequest;
 use App\Http\Resources\ContractResource;
+use App\Http\Resources\ContractAppendixResource;
 use App\Models\{Contract, ContractTemplate, Employee, Department, Position};
 use App\Enums\{ContractType, ContractStatus, ContractSource};
 use Illuminate\Http\Request;
@@ -148,6 +149,29 @@ class ContractController extends Controller
             'type'    => 'success'
         ]);
     }
+
+    public function show(Contract $contract)
+    {
+        $this->authorize('view', $contract);
+
+        // Load các quan hệ cần cho header hồ sơ HĐ
+        $contract->load(['employee', 'department', 'position']);
+
+        // Lấy danh sách phụ lục theo HĐ
+        $appendixes = $contract->appendixes()
+            ->orderByDesc('effective_date')
+            ->orderByDesc('created_at')
+            ->get();
+
+        $activeTab = request('tab', 'general'); // default nếu không truyền
+
+        return \Inertia\Inertia::render('ContractDetail', [
+            'contract'   => new ContractResource($contract)->resolve(),
+            'appendixes' => ContractAppendixResource::collection($appendixes)->resolve(),
+            'activeTab'   => $activeTab,
+        ]);
+    }
+
 
     public function destroy(Request $request, Contract $contract)
     {

@@ -43,7 +43,13 @@ class ContractAppendixController extends Controller
                 'created'     => (new ContractAppendixResource($row))->resolve(),
             ])->log('created');
 
-        return redirect()->route('contracts.index')->with('success','Đã tạo phụ lục.');
+        session()->flash('message', 'Đã tạo phụ lục hợp đồng!');
+        session()->flash('type', 'success');
+
+        return Inertia::location(route('contracts.show', [
+            'contract' => $contract->id,
+            'tab' => 'appendixes'
+        ]));
     }
 
     public function update(UpdateContractAppendixRequest $request, Contract $contract, ContractAppendix $appendix)
@@ -62,7 +68,13 @@ class ContractAppendixController extends Controller
                 'changed'     => array_keys($appendix->getChanges()),
             ])->log('updated');
 
-        return redirect()->route('contracts.index')->with('success','Đã cập nhật phụ lục.');
+        session()->flash('message', 'Đã cập nhật phụ lục hợp đồng!');
+        session()->flash('type', 'success');
+
+        return Inertia::location(route('contracts.show', [
+            'contract' => $contract->id,
+            'tab' => 'appendixes'
+        ]));
     }
 
     public function destroy(Request $request, Contract $contract, ContractAppendix $appendix)
@@ -79,7 +91,13 @@ class ContractAppendixController extends Controller
                 'deleted'     => $snapshot,
             ])->log('deleted');
 
-        return redirect()->route('contracts.index')->with('success','Đã xoá phụ lục.');
+        session()->flash('message', 'Đã xoá phụ lục hợp đồng!');
+        session()->flash('type', 'success');
+
+        return Inertia::location(route('contracts.show', [
+            'contract' => $contract->id,
+            'tab' => 'appendixes'
+        ]));
     }
 
     public function bulkDelete(Request $request, Contract $contract)
@@ -99,7 +117,13 @@ class ContractAppendixController extends Controller
                 'deleted'     => $snapshots,
             ])->log('bulk-deleted');
 
-        return redirect()->route('contracts.index')->with('success','Đã xoá các phụ lục đã chọn.');
+        session()->flash('message', 'Đã xoá các phụ lục đã chọn!');
+        session()->flash('type', 'success');
+
+        return Inertia::location(route('contracts.show', [
+            'contract' => $contract->id,
+            'tab' => 'appendixes'
+        ]));
     }
 
     public function approve(Request $request, Contract $contract, ContractAppendix $appendix)
@@ -126,7 +150,13 @@ class ContractAppendixController extends Controller
         // VD: nếu appendix có base_salary != null => cập nhật contract.base_salary (hoặc bảng snapshot riêng).
         // Bản tối ưu là tạo service ApplyAppendixService để đồng bộ các trường có giá trị.
 
-        return redirect()->route('contracts.index')->with('success','Đã phê duyệt phụ lục.');
+        session()->flash('message', 'Đã phê duyệt phụ lục.');
+        session()->flash('type', 'success');
+
+        return Inertia::location(route('contracts.show', [
+            'contract' => $contract->id,
+            'tab' => 'appendixes'
+        ]));
     }
 
     public function reject(Request $request, Contract $contract, ContractAppendix $appendix)
@@ -148,6 +178,12 @@ class ContractAppendixController extends Controller
                 'approval_note' => $request->input('approval_note'),
             ])->log('rejected');
 
-        return redirect()->route('contracts.index')->with('success','Đã từ chối phụ lục.');
+        session()->flash('message', 'Đã từ chối phụ lục.');
+        session()->flash('type', 'success');
+
+        return Inertia::location(route('contracts.show', [
+            'contract' => $contract->id,
+            'tab' => 'appendixes'
+        ]));
     }
 }

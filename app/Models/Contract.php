@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
+use Illuminate\Support\Facades\Storage;
 
 class Contract extends Model
 {
@@ -40,6 +41,7 @@ class Contract extends Model
     public function approver(){ return $this->belongsTo(User::class,'approver_id'); }
     public function attachments(){ return $this->hasMany(ContractAttachment::class); }
     public function template(){ return $this->belongsTo(ContractTemplate::class, 'template_id'); }
+    public function appendixes(){ return $this->hasMany(ContractAppendix::class, 'contract_id'); }
 
 
     public function scopeActive($q){
