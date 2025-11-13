@@ -11,6 +11,7 @@ use App\Models\ContractAppendixTemplate;
 use App\Services\ContractAppendixGenerateService;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
 
 class ContractAppendixController extends Controller
@@ -85,6 +86,12 @@ class ContractAppendixController extends Controller
         $this->authorize('delete', $appendix);
 
         $snapshot = (new ContractAppendixResource($appendix))->resolve();
+
+        // Xóa file PDF nếu có
+        if ($appendix->generated_pdf_path && Storage::disk('public')->exists($appendix->generated_pdf_path)) {
+            Storage::disk('public')->delete($appendix->generated_pdf_path);
+        }
+
         $appendix->delete();
 
         activity('contract-appendix')
@@ -110,6 +117,14 @@ class ContractAppendixController extends Controller
         $ids  = (array) $request->input('ids', []);
         $rows = ContractAppendix::where('contract_id',$contract->id)->whereIn('id',$ids)->get();
         $snapshots = ContractAppendixResource::collection($rows)->resolve();
+
+        // Xóa các file PDF nếu có
+        foreach ($rows as $appendix) {
+            if ($appendix->generated_pdf_path && Storage::disk('public')->exists($appendix->generated_pdf_path)) {
+                Storage::disk('public')->delete($appendix->generated_pdf_path);
+            }
+        }
+
         ContractAppendix::whereIn('id', $rows->pluck('id'))->delete();
 
         activity('contract-appendix')

@@ -9,8 +9,9 @@ use App\Http\Resources\ContractAppendixResource;
 use App\Models\{Contract, ContractTemplate, Employee, Department, Position};
 use App\Enums\{ContractType, ContractStatus, ContractSource};
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\ValidationException;
-use \Illuminate\Foundation\Auth\Access\AuthorizesRequests;
+use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Inertia\Inertia;
 
 class ContractController extends Controller
@@ -196,6 +197,11 @@ class ContractController extends Controller
             'template' => $template?->name,
         ];
 
+        // Xóa file PDF nếu có
+        if ($contract->generated_pdf_path && Storage::disk('public')->exists($contract->generated_pdf_path)) {
+            Storage::disk('public')->delete($contract->generated_pdf_path);
+        }
+
         $contract->delete();
 
         activity('contract')->performedOn($contract)->causedBy($request->user())
@@ -228,6 +234,13 @@ class ContractController extends Controller
                 'status' => ContractStatus::tryFrom($contract->status)?->label(),
             ];
         })->toArray();
+
+        // Xóa các file PDF nếu có
+        foreach ($rows as $contract) {
+            if ($contract->generated_pdf_path && Storage::disk('public')->exists($contract->generated_pdf_path)) {
+                Storage::disk('public')->delete($contract->generated_pdf_path);
+            }
+        }
 
         Contract::whereIn('id',$ids)->delete();
 
