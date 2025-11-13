@@ -129,6 +129,15 @@ const model = computed(() => {
         });
     }
 
+    // Contract Templates - check permission
+    if (can('view contract templates')) {
+        systemMenuItems.push({
+            label: 'Mẫu hợp đồng',
+            icon: 'pi pi-fw pi-file',
+            to: '/contract-templates'
+        });
+    }
+
     // Backup menu - check permission
     if (canViewBackups()) {
         systemMenuItems.push({

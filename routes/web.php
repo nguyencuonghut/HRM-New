@@ -22,6 +22,7 @@ use App\Http\Controllers\EmployeeSkillController;
 use App\Http\Controllers\ContractController;
 use App\Http\Controllers\ContractAppendixController;
 use App\Http\Controllers\ContractGenerateController;
+use App\Http\Controllers\ContractTemplateController;
 
 /*** Login Routes ***/
 Route::group(['middleware' => 'guest'], function () {
@@ -156,6 +157,13 @@ Route::group(['middleware' => 'auth'], function () {
     Route::post('contracts/{contract}/approve', [ContractController::class,'approve'])->name('contracts.approve');
     Route::post('contracts/{contract}/reject', [ContractController::class,'reject'])->name('contracts.reject');
     Route::post('contracts/{contract}/generate', [ContractGenerateController::class, 'generate'])->name('contracts.generate');
+
+    // Contract Template routes
+    Route::get('/contract-templates', [ContractTemplateController::class, 'index'])->name('contract-templates.index');
+    Route::post('/contract-templates', [ContractTemplateController::class, 'store'])->name('contract-templates.store');
+    Route::put('/contract-templates/{template}', [ContractTemplateController::class, 'update'])->name('contract-templates.update');
+    Route::delete('/contract-templates/{template}', [ContractTemplateController::class, 'destroy'])->name('contract-templates.destroy');
+    Route::post('/contract-templates/bulk-delete', [ContractTemplateController::class, 'bulkDelete'])->name('contract-templates.bulk-delete');
 
     // Contract Appendix routes (nested under contracts)
     Route::prefix('contracts/{contract}')->group(function () {

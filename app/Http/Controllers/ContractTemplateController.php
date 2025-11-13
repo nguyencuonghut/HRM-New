@@ -1,0 +1,137 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use App\Http\Requests\ContractTemplateRequest;
+use App\Http\Resources\ContractTemplateResource;
+use App\Models\ContractTemplate;
+use Illuminate\Http\Request;
+use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
+use Inertia\Inertia;
+
+class ContractTemplateController extends Controller
+{
+    use AuthorizesRequests;
+
+    public function index(Request $request)
+    {
+        $this->authorize('viewAny', ContractTemplate::class);
+
+        $templates = ContractTemplate::query()
+            ->orderBy('created_at', 'desc')
+            ->get();
+
+        return Inertia::render('ContractTemplateIndex', [
+            'templates' => ContractTemplateResource::collection($templates)->resolve(),
+            'contractTypeOptions' => $this->contractTypeOptions(),
+            'statusOptions'       => [
+                ['value' => 1, 'label' => 'Hoạt động'],
+                ['value' => 0, 'label' => 'Ngừng dùng'],
+            ],
+        ]);
+    }
+
+    public function store(ContractTemplateRequest $request)
+    {
+        $this->authorize('create', ContractTemplate::class);
+
+        $data = $request->validated();
+
+        // nếu is_default = true, bỏ default các template cùng contract_type khác
+        if (!empty($data['is_default'])) {
+            ContractTemplate::where('contract_type', $data['contract_type'])
+                ->update(['is_default' => false]);
+        }
+
+        $template = ContractTemplate::create($data);
+
+        activity()
+            ->causedBy($request->user())
+            ->performedOn($template)
+            ->withProperties([
+                'attributes' => $template->toArray(),
+            ])
+            ->log('contract_template.created');
+
+        return redirect()->route('contract-templates.index')
+            ->with('success', 'Tạo mẫu hợp đồng thành công.');
+    }
+
+    public function update(ContractTemplateRequest $request, ContractTemplate $template)
+    {
+        $this->authorize('update', $template);
+
+        $data = $request->validated();
+
+        if (!empty($data['is_default'])) {
+            ContractTemplate::where('contract_type', $data['contract_type'])
+                ->where('id', '!=', $template->id)
+                ->update(['is_default' => false]);
+        }
+
+        $before = $template->getOriginal();
+        $template->update($data);
+
+        activity()
+            ->causedBy($request->user())
+            ->performedOn($template)
+            ->withProperties([
+                'old' => $before,
+                'attributes' => $template->toArray(),
+            ])
+            ->log('contract_template.updated');
+
+        return redirect()->route('contract-templates.index')
+            ->with('success', 'Cập nhật mẫu hợp đồng thành công.');
+    }
+
+    public function destroy(Request $request, ContractTemplate $template)
+    {
+        $this->authorize('delete', $template);
+
+        $snapshot = $template->toArray();
+        $template->delete();
+
+        activity()
+            ->causedBy($request->user())
+            ->performedOn($template)
+            ->withProperties(['deleted' => $snapshot])
+            ->log('contract_template.deleted');
+
+        return redirect()->route('contract-templates.index')
+            ->with('success', 'Đã xóa mẫu hợp đồng.');
+    }
+
+    public function bulkDelete(Request $request)
+    {
+        $this->authorize('bulkDelete', ContractTemplate::class);
+
+        $ids = (array) $request->input('ids', []);
+        $items = ContractTemplate::whereIn('id', $ids)->get();
+
+        foreach ($items as $item) {
+            $snapshot = $item->toArray();
+            $item->delete();
+
+            activity()
+                ->causedBy($request->user())
+                ->performedOn($item)
+                ->withProperties(['deleted' => $snapshot])
+                ->log('contract_template.deleted');
+        }
+
+        return redirect()->route('contract-templates.index')
+            ->with('success', 'Đã xóa các mẫu hợp đồng đã chọn.');
+    }
+
+    private function contractTypeOptions(): array
+    {
+        // Đồng bộ với enum bên Model/migration
+        return [
+            ['value' => 'PROBATION',   'label' => 'Thử việc'],
+            ['value' => 'FIXED_TERM',  'label' => 'Xác định thời hạn'],
+            ['value' => 'INDEFINITE',  'label' => 'Không xác định thời hạn'],
+            ['value' => 'SERVICE',     'label' => 'Cộng tác/Dịch vụ'],
+        ];
+    }
+}

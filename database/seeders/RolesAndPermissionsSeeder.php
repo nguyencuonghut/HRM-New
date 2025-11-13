@@ -99,6 +99,12 @@ class RolesAndPermissionsSeeder extends Seeder
             'edit contracts',
             'delete contracts',
             'approve contracts',
+
+            // Contract Template
+            'view contract templates',
+            'create contract templates',
+            'edit contract templates',
+            'delete contract templates',
         ];
 
         foreach ($permissions as $permission) {
