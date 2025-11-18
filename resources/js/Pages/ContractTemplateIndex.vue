@@ -41,7 +41,17 @@
         <Column v-if="canDelete" selectionMode="multiple" headerStyle="width: 3rem"></Column>
         <Column field="name" header="Tên mẫu" sortable headerStyle="min-width:14rem;"></Column>
         <Column field="type_label" header="Loại HĐ" sortable headerStyle="min-width:12rem;"></Column>
-        <Column field="body_path" header="Blade View" headerStyle="min-width:14rem;"></Column>
+        <Column field="engine_label" header="Engine" sortable headerStyle="min-width:12rem;">
+          <template #body="sp">
+            <Tag :value="sp.data.engine_label" :severity="sp.data.engine === 'LIQUID' ? 'info' : 'secondary'" />
+          </template>
+        </Column>
+        <Column field="body_path" header="Path/Content" headerStyle="min-width:14rem;">
+          <template #body="sp">
+            <span v-if="sp.data.engine === 'BLADE'">{{ sp.data.body_path || '-' }}</span>
+            <span v-else class="text-gray-500 text-sm italic">Nội dung Liquid</span>
+          </template>
+        </Column>
         <Column field="is_default" header="Mặc định" headerStyle="min-width:8rem;">
           <template #body="sp">
             <Tag :value="sp.data.is_default ? 'Yes' : 'No'" :severity="sp.data.is_default ? 'success' : 'secondary'" />
@@ -54,9 +64,11 @@
         </Column>
         <Column field="created_at" header="Tạo lúc" sortable headerStyle="min-width:12rem;"></Column>
 
-        <Column v-if="canEdit || canDelete" header="Thao tác" headerStyle="min-width:14rem;">
+        <Column v-if="canEdit || canDelete" header="Thao tác" headerStyle="min-width:16rem;">
           <template #body="sp">
             <div class="flex gap-2">
+              <Button v-if="canEdit && sp.data.engine === 'LIQUID'" icon="pi pi-file-edit" outlined severity="info" rounded
+                      @click="openEditor(sp.data)" v-tooltip.top="'Chỉnh sửa Liquid'" />
               <Button v-if="canEdit" icon="pi pi-pencil" outlined severity="success" rounded @click="edit(sp.data)" />
               <Button v-if="canDelete" icon="pi pi-trash" outlined severity="danger" rounded @click="confirmDelete(sp.data)" />
             </div>
@@ -66,7 +78,7 @@
     </div>
 
     <!-- Dialog tạo/sửa -->
-    <Dialog v-model:visible="dialog" :style="{ width: '700px' }" header="Mẫu Hợp đồng" :modal="true">
+    <Dialog v-model:visible="dialog" :style="{ width: '900px' }" header="Mẫu Hợp đồng" :modal="true">
       <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
           <label class="block font-bold mb-2 required-field">Tên mẫu</label>
@@ -76,7 +88,8 @@
         </div>
         <div>
           <label class="block font-bold mb-2 required-field">Engine</label>
-          <InputText v-model.trim="form.engine" class="w-full" :invalid="submitted && !form.engine || hasError('engine')" />
+          <Select v-model="form.engine" :options="engineOptions" optionLabel="label" optionValue="value" fluid
+                  :invalid="submitted && !form.engine || hasError('engine')" />
           <small class="text-red-500" v-if="submitted && !form.engine">Engine là bắt buộc.</small>
           <small class="text-red-500" v-if="hasError('engine')">{{ errors.engine }}</small>
         </div>
@@ -88,13 +101,18 @@
           <small class="text-red-500" v-if="submitted && !form.type">Loại HĐ là bắt buộc.</small>
           <small class="text-red-500" v-if="hasError('type')">{{ errors.type }}</small>
         </div>
-        <div>
+
+        <!-- BLADE: body_path -->
+        <div v-if="form.engine === 'BLADE'">
           <label class="block font-bold mb-2 required-field">Blade View</label>
           <InputText v-model.trim="form.body_path" class="w-full" placeholder="vd: contracts/templates/default"
-                     :invalid="submitted && !form.body_path || hasError('body_path')" />
-          <small class="text-red-500" v-if="submitted && !form.body_path">Blade View là bắt buộc.</small>
+                     :invalid="submitted && form.engine === 'BLADE' && !form.body_path || hasError('body_path')" />
+          <small class="text-red-500" v-if="submitted && form.engine === 'BLADE' && !form.body_path">Blade View là bắt buộc.</small>
           <small class="text-red-500" v-if="hasError('body_path')">{{ errors.body_path }}</small>
         </div>
+
+        <!-- Placeholder nếu không phải BLADE -->
+        <div v-if="form.engine !== 'BLADE'"></div>
 
         <div>
           <label class="block font-bold mb-2">Mặc định theo loại</label>
@@ -107,7 +125,31 @@
 
         <div class="md:col-span-2">
           <label class="block font-bold mb-2">Mô tả</label>
-          <Textarea v-model.trim="form.description" autoResize rows="3" class="w-full" />
+          <Textarea v-model.trim="form.description" autoResize rows="2" class="w-full" />
+        </div>
+
+        <!-- LIQUID: content editor -->
+        <div v-if="form.engine === 'LIQUID'" class="md:col-span-2">
+          <label class="block font-bold mb-2 required-field">Nội dung Template (Liquid)</label>
+          <Textarea v-model="form.content" rows="15" class="w-full font-mono text-sm"
+                    :invalid="submitted && form.engine === 'LIQUID' && !form.content || hasError('content')"
+                    placeholder="Nhập nội dung Liquid template..." />
+          <small class="text-red-500" v-if="submitted && form.engine === 'LIQUID' && !form.content">Nội dung template là bắt buộc.</small>
+          <small class="text-red-500" v-if="hasError('content')">{{ errors.content }}</small>
+        </div>
+
+        <!-- Placeholders helper -->
+        <div v-if="form.engine === 'LIQUID'" class="md:col-span-2">
+          <label class="block font-bold mb-2">Biến hỗ trợ (Placeholders)</label>
+          <div class="border rounded p-3 bg-gray-50 max-h-60 overflow-y-auto">
+            <div class="grid grid-cols-2 gap-2 text-sm">
+              <div v-for="ph in placeholdersList" :key="ph.name" class="flex items-center gap-2">
+                <code class="bg-blue-100 px-2 py-1 rounded text-xs" v-text="`{{ ${ph.name} }}`"></code>
+                <span class="text-gray-600">{{ ph.description }}</span>
+              </div>
+            </div>
+          </div>
+          <small class="text-gray-500">Copy các biến trên để sử dụng trong template</small>
         </div>
       </div>
 
@@ -158,7 +200,9 @@ const { can } = usePermission()
 const props = defineProps({
   templates: { type: Array, default: () => [] },
   contractTypeOptions: { type: Array, default: () => [] },
-  statusOptions: { type: Array, default: () => [] }
+  engineOptions: { type: Array, default: () => [] },
+  statusOptions: { type: Array, default: () => [] },
+  placeholdersList: { type: Array, default: () => [] }
 })
 
 const dt = ref()
@@ -180,16 +224,19 @@ const yesNoOptions = [
 ]
 
 const contractTypeOptions = computed(() => props.contractTypeOptions || [])
+const engineOptions = computed(() => props.engineOptions || [])
 const statusOptions = computed(() => props.statusOptions || [])
+const placeholdersList = computed(() => props.placeholdersList || [])
 
 const form = ref({
   id: null,
   name: '',
-  engine: '',
+  engine: 'LIQUID',
   type: null,
   body_path: '',
+  content: '',
   is_default: false,
-  is_active: true,
+  is_active: 1,
   description: ''
 })
 
@@ -201,11 +248,12 @@ function openNew() {
   form.value = {
     id: null,
     name: '',
-    engine: '',
+    engine: 'LIQUID',
     type: null,
     body_path: '',
+    content: '',
     is_default: false,
-    is_active: true,
+    is_active: 1,
     description: ''
   }
   submitted.value = false
@@ -216,9 +264,10 @@ function edit(row) {
   form.value = {
     id: row.id,
     name: row.name,
-    engine: row.engine,
+    engine: row.engine || 'LIQUID',
     type: row.type,
-    body_path: row.body_path,
+    body_path: row.body_path || '',
+    content: row.content || '',
     is_default: !!row.is_default,
     is_active: row.is_active,
     description: row.description || ''
@@ -234,7 +283,14 @@ function hideDialog() {
 
 function save() {
   submitted.value = true
-  if (!form.value.name || !form.value.engine || !form.value.type || !form.value.body_path) {
+  if (!form.value.name || !form.value.engine || !form.value.type) {
+    return
+  }
+  // Validate theo engine
+  if (form.value.engine === 'LIQUID' && !form.value.content) {
+    return
+  }
+  if (form.value.engine === 'BLADE' && !form.value.body_path) {
     return
   }
 
@@ -285,6 +341,10 @@ function removeMany() {
 
 function exportCSV() {
   dt.value?.exportCSV()
+}
+
+function openEditor(row) {
+  window.location.href = `/contract-templates/${row.id}/editor`
 }
 </script>
 

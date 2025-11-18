@@ -13,15 +13,19 @@ class ContractTemplate extends Model
 
     protected $fillable = [
         'name',
-        'type',              // PROBATION | FIXED_TERM | INDEFINITE | SERVICE | INTERNSHIP | PARTTIME
-        'engine',            // BLADE | HTML_TO_PDF | DOCX_MERGE
-        'body_path',         // ví dụ: 'contracts/templates/probation'
-        'placeholders_json', // json danh sách biến
+        'type',
+        'engine',
+        'body_path',
+        'content',
+        'placeholders_json',
+        'is_default',
         'is_active',
         'version',
+        'updated_by',
     ];
 
     protected $casts = [
+        'is_default'        => 'boolean',
         'is_active'         => 'boolean',
         'version'           => 'integer',
         'placeholders_json' => 'array',
@@ -50,6 +54,30 @@ class ContractTemplate extends Model
         return $q->orderByDesc('version');
     }
 
+    public function isLiquid(): bool
+    {
+        return $this->engine === 'LIQUID';
+    }
+
+    public function isBlade(): bool
+    {
+        return $this->engine === 'BLADE';
+    }
+
+    public function updatedBy()
+    {
+        return $this->belongsTo(User::class, 'updated_by');
+    }
+
+    /* ----------------- Accessors ----------------- */
+    /**
+     * Accessor để lấy placeholders dạng array
+     */
+    public function getPlaceholdersAttribute(): array
+    {
+        return $this->placeholders_json ?? [];
+    }
+
     /* ----------------- Helpers ----------------- */
     /**
      * Trả về view path dùng cho render (engine BLADE).
@@ -57,6 +85,6 @@ class ContractTemplate extends Model
      */
     public function viewPath(): ?string
     {
-        return $this->engine === 'BLADE' ? $this->body_path : null;
+        return $this->isBlade() ? $this->body_path : null;
     }
 }

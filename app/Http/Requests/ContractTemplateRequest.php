@@ -17,13 +17,15 @@ class ContractTemplateRequest extends FormRequest
         $id = $this->route('template')?->id;
 
         return [
-            'name'          => ['required','string','max:255'],
-            'code'          => ['required','string','max:100', Rule::unique('contract_templates','code')->ignore($id)],
-            'type' => ['required', Rule::in(['PROBATION','FIXED_TERM','INDEFINITE','SERVICE'])],
-            'body_path'    => ['required','string','max:255'], // ví dụ: contracts/templates/default
-            'is_default'    => ['required','boolean'],
-            'is_active'     => ['required','boolean'],
-            'description'   => ['nullable','string'],
+            'name'              => ['required','string','max:255'],
+            'type'              => ['required', Rule::in(['PROBATION','FIXED_TERM','INDEFINITE','SERVICE','INTERNSHIP','PARTTIME'])],
+            'engine'            => ['required', Rule::in(['LIQUID','BLADE','HTML_TO_PDF','DOCX_MERGE'])],
+            'body_path'         => ['nullable','string','max:255'], // BLADE: file path, LIQUID: không cần
+            'content'           => ['nullable','string'], // LIQUID: nội dung template
+            'placeholders_json' => ['nullable','json'],
+            'is_default'        => ['boolean'],
+            'is_active'         => ['boolean'],
+            'description'       => ['nullable','string'],
         ];
     }
 
@@ -31,10 +33,12 @@ class ContractTemplateRequest extends FormRequest
     {
         return [
             'name.required'          => 'Tên mẫu là bắt buộc.',
-            'code.required'          => 'Mã mẫu là bắt buộc.',
-            'code.unique'            => 'Mã mẫu đã tồn tại.',
-            'type.required' => 'Loại hợp đồng là bắt buộc.',
-            'body_path.required'    => 'Đường dẫn blade là bắt buộc.',
+            'type.required'          => 'Loại hợp đồng là bắt buộc.',
+            'type.in'                => 'Loại hợp đồng không hợp lệ.',
+            'engine.required'        => 'Engine là bắt buộc.',
+            'engine.in'              => 'Engine không hợp lệ.',
+            'content.required_if'    => 'Nội dung template là bắt buộc khi dùng LIQUID.',
+            'body_path.required_if'  => 'Đường dẫn blade là bắt buộc khi dùng BLADE.',
         ];
     }
 }

@@ -24,10 +24,12 @@ class ContractTemplateController extends Controller
         return Inertia::render('ContractTemplateIndex', [
             'templates' => ContractTemplateResource::collection($templates)->resolve(),
             'contractTypeOptions' => $this->contractTypeOptions(),
+            'engineOptions'       => $this->engineOptions(),
             'statusOptions'       => [
                 ['value' => 1, 'label' => 'Hoạt động'],
                 ['value' => 0, 'label' => 'Ngừng dùng'],
             ],
+            'placeholdersList'    => $this->placeholdersList(),
         ]);
     }
 
@@ -132,6 +134,40 @@ class ContractTemplateController extends Controller
             ['value' => 'FIXED_TERM',  'label' => 'Xác định thời hạn'],
             ['value' => 'INDEFINITE',  'label' => 'Không xác định thời hạn'],
             ['value' => 'SERVICE',     'label' => 'Cộng tác/Dịch vụ'],
+            ['value' => 'INTERNSHIP',  'label' => 'Thực tập'],
+            ['value' => 'PARTTIME',    'label' => 'Bán thời gian'],
+        ];
+    }
+
+    private function engineOptions(): array
+    {
+        return [
+            ['value' => 'LIQUID',       'label' => 'Liquid Template'],
+            ['value' => 'BLADE',        'label' => 'Blade View'],
+            ['value' => 'HTML_TO_PDF',  'label' => 'HTML to PDF'],
+            ['value' => 'DOCX_MERGE',   'label' => 'DOCX Merge'],
+        ];
+    }
+
+    private function placeholdersList(): array
+    {
+        return [
+            ['name' => 'employee.full_name',        'description' => 'Họ tên nhân viên'],
+            ['name' => 'employee.employee_code',    'description' => 'Mã nhân viên'],
+            ['name' => 'employee.id_number',        'description' => 'Số CMND/CCCD'],
+            ['name' => 'employee.date_of_birth',    'description' => 'Ngày sinh'],
+            ['name' => 'employee.address',          'description' => 'Địa chỉ'],
+            ['name' => 'department.name',           'description' => 'Tên phòng ban'],
+            ['name' => 'position.title',            'description' => 'Chức danh'],
+            ['name' => 'contract.contract_number',  'description' => 'Số hợp đồng'],
+            ['name' => 'contract.start_date',       'description' => 'Ngày bắt đầu'],
+            ['name' => 'contract.end_date',         'description' => 'Ngày kết thúc'],
+            ['name' => 'terms.base_salary',         'description' => 'Lương cơ bản'],
+            ['name' => 'terms.insurance_salary',    'description' => 'Lương BHXH'],
+            ['name' => 'terms.position_allowance',  'description' => 'Phụ cấp vị trí'],
+            ['name' => 'terms.working_time',        'description' => 'Thời gian làm việc'],
+            ['name' => 'terms.work_location',       'description' => 'Địa điểm làm việc'],
+            ['name' => 'terms.other_allowances',    'description' => 'Các phụ cấp khác (array)'],
         ];
     }
 }
