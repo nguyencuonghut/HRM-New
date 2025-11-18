@@ -57,6 +57,15 @@ return [
          */
         'font_cache' => storage_path('fonts'),
 
+        'fonts' => [
+            'dejavu sans' => [
+                'normal'      => storage_path('fonts/DejaVuSans.ttf'),
+                'bold'        => storage_path('fonts/DejaVuSans-Bold.ttf'),
+                'italic'      => storage_path('fonts/DejaVuSans-Oblique.ttf'),
+                'bold_italic' => storage_path('fonts/DejaVuSans-BoldOblique.ttf'),
+            ],
+        ],
+
         /**
          * The location of a temporary directory.
          *
@@ -179,7 +188,7 @@ return [
          *
          * @var string
          */
-        'default_font' => 'serif',
+        'default_font' => 'dejavu sans',
 
         /**
          * Image DPI setting

@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Requests\ContractTemplateRequest;
 use App\Http\Resources\ContractTemplateResource;
 use App\Models\ContractTemplate;
+use App\Services\TemplateUploadService;
 use Illuminate\Http\Request;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Inertia\Inertia;
@@ -39,9 +40,9 @@ class ContractTemplateController extends Controller
 
         $data = $request->validated();
 
-        // nếu is_default = true, bỏ default các template cùng contract_type khác
+        // nếu is_default = true, bỏ default các template cùng type khác
         if (!empty($data['is_default'])) {
-            ContractTemplate::where('contract_type', $data['contract_type'])
+            ContractTemplate::where('type', $data['type'])
                 ->update(['is_default' => false]);
         }
 
@@ -66,7 +67,7 @@ class ContractTemplateController extends Controller
         $data = $request->validated();
 
         if (!empty($data['is_default'])) {
-            ContractTemplate::where('contract_type', $data['contract_type'])
+            ContractTemplate::where('type', $data['type'])
                 ->where('id', '!=', $template->id)
                 ->update(['is_default' => false]);
         }
@@ -91,6 +92,11 @@ class ContractTemplateController extends Controller
     {
         $this->authorize('delete', $template);
 
+        // Delete DOCX file if exists
+        if ($template->engine === 'DOCX_MERGE' && $template->body_path) {
+            TemplateUploadService::deleteDocxTemplate($template->body_path);
+        }
+
         $snapshot = $template->toArray();
         $template->delete();
 
@@ -112,6 +118,11 @@ class ContractTemplateController extends Controller
         $items = ContractTemplate::whereIn('id', $ids)->get();
 
         foreach ($items as $item) {
+            // Delete DOCX file if exists
+            if ($item->engine === 'DOCX_MERGE' && $item->body_path) {
+                TemplateUploadService::deleteDocxTemplate($item->body_path);
+            }
+
             $snapshot = $item->toArray();
             $item->delete();
 
@@ -124,6 +135,40 @@ class ContractTemplateController extends Controller
 
         return redirect()->route('contract-templates.index')
             ->with('success', 'Đã xóa các mẫu hợp đồng đã chọn.');
+    }
+
+    /**
+     * Upload DOCX template file.
+     *
+     * POST /contract-templates/upload
+     * Body: form-data with 'file' and 'contract_type'
+     */
+    public function upload(Request $request)
+    {
+        $this->authorize('create', ContractTemplate::class);
+
+        $request->validate([
+            'file' => 'required|file|mimes:docx',
+            'contract_type' => 'required|string|in:PROBATION,FIXED_TERM,INDEFINITE,SERVICE,INTERNSHIP,PARTTIME',
+        ]);
+
+        try {
+            $uploadResult = TemplateUploadService::uploadDocxTemplate(
+                $request->file('file'),
+                $request->input('contract_type')
+            );
+
+            return response()->json([
+                'success' => true,
+                'data' => $uploadResult,
+                'message' => 'Tải file mẫu DOCX thành công.',
+            ]);
+        } catch (\RuntimeException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage(),
+            ], 422);
+        }
     }
 
     private function contractTypeOptions(): array

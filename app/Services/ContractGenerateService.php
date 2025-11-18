@@ -2,83 +2,83 @@
 
 namespace App\Services;
 
-use App\Models\{Contract, ContractTemplate};
+use App\Models\Contract;
+use App\Models\ContractTemplate;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Support\Facades\Storage;
 
 class ContractGenerateService
 {
-    public function __construct(private TemplateRenderService $renderer) {}
+    public function __construct(
+        protected TemplateRenderService $renderer
+    ) {
+    }
 
     /**
-     * Render hợp đồng ra PDF từ template (BLADE hoặc LIQUID) và lưu vào storage.
-     * @return array ['path' => '...', 'url' => '...']
+     * Entry point dùng trong controller:
+     * ContractGenerateService::generate($contract, $templateOptional)
      */
     public static function generate(Contract $contract, ?ContractTemplate $template = null): array
     {
-        $template = $template
-            ?: ($contract->template_id
-                ? ContractTemplate::find($contract->template_id)
-                : null);
+        return app(self::class)->doGenerate($contract, $template);
+    }
 
-        if (!$template) {
-            // fallback theo contract_type
-            $template = ContractTemplate::where('type', $contract->contract_type)
-                ->where('is_active', true)
-                ->latest('version')
-                ->firstOrFail();
+    /**
+     * Thực hiện generate thực sự (instance, dùng được $this->renderer)
+     */
+    protected function doGenerate(Contract $contract, ?ContractTemplate $template = null): array
+    {
+        $template = $template ?: $this->resolveTemplate($contract);
+
+        // 1) Template DOCX -> giao cho ContractDocxGenerateService
+        if ($template->engine === 'DOCX_MERGE') {
+            return ContractDocxGenerateService::generate($contract, $template);
         }
 
+        // 2) Template LIQUID / BLADE -> render HTML rồi convert PDF
         $employee   = $contract->employee;
         $department = $contract->department;
         $position   = $contract->position;
-
-        // Lấy bộ terms (base_salary, insurance_salary, allowances...)
         $terms      = CurrentContractTermsService::build($contract);
 
-        /* -------------------------------------------------------
-         | 1. Build context dùng chung cho cả Blade và Liquid
-         -------------------------------------------------------*/
-        $context = [
-            'employee'   => $employee,
-            'department' => $department,
-            'position'   => $position,
-            'contract'   => $contract,
-            'terms'      => $terms,
-            'template'   => $template,
-        ];
+        // Tùy bạn định nghĩa config company, demo:
+        $company = config('company', [
+            'name' => config('app.name'),
+        ]);
 
-        /* -------------------------------------------------------
-         | 2. Render template theo engine
-         -------------------------------------------------------*/
-        if ($template->engine === 'LIQUID') {
+        $data = compact('employee', 'department', 'position', 'contract', 'terms', 'company');
 
-            // Đọc nội dung template .liquid từ storage/app
-            $raw = Storage::get($template->body_path);
+        // Quan trọng: dùng TemplateRenderService
+        $html = $this->renderer->renderContractTemplate($template, $data);
 
-            // Gọi TemplateRenderService để parse Liquid
-            $html = app(TemplateRenderService::class)->renderLiquid($raw, $context);
-
-        } else {
-            // Mặc định = BLADE
-            $view = $template->viewPath(); // ví dụ: "contracts/templates/probation"
-            $html = view($view, $context)->render();
-        }
-
-        /* -------------------------------------------------------
-         | 3. Sinh PDF
-         -------------------------------------------------------*/
         $pdf = Pdf::loadHTML($html)->setPaper('a4');
 
-        $fileName = "contract_{$contract->id}_v{$template->version}.pdf";
-        $path = "contracts/generated/{$fileName}";
+        $fileName     = 'contract_' . $contract->id . '_v' . $template->version . '.pdf';
+        $relativePath = "contracts/generated/{$fileName}";
 
-        Storage::disk('public')->put($path, $pdf->output());
+        Storage::disk('public')->put($relativePath, $pdf->output());
 
         return [
-            'path' => $path,
-            'url'  => asset("storage/{$path}"),
+            'path' => $relativePath,
+            'url'  => asset("storage/{$relativePath}"),
             'file' => $fileName,
         ];
+    }
+
+    /**
+     * Chọn template mặc định khi contract chưa gắn template_id.
+     * Ưu tiên DOCX_MERGE -> LIQUID -> BLADE -> HTML_TO_PDF
+     */
+    protected function resolveTemplate(Contract $contract): ContractTemplate
+    {
+        if ($contract->template_id) {
+            return ContractTemplate::findOrFail($contract->template_id);
+        }
+
+        return ContractTemplate::where('type', $contract->contract_type)
+            ->where('is_active', true)
+            ->orderByRaw("FIELD(engine, 'DOCX_MERGE', 'LIQUID', 'BLADE', 'HTML_TO_PDF')")
+            ->orderByDesc('version')
+            ->firstOrFail();
     }
 }

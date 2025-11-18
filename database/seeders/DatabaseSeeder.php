@@ -26,7 +26,7 @@ class DatabaseSeeder extends Seeder
             EducationLevelSeeder::class,
             SchoolSeeder::class,
             SkillSeeder::class,
-            ContractTemplateSeeder::class,
+            ContractDocxTemplateSeeder::class,
             ContractAppendixTemplateSeeder::class,
         ]);
     }

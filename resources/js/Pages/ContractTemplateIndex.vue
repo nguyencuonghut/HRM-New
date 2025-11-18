@@ -111,8 +111,43 @@
           <small class="text-red-500" v-if="hasError('body_path')">{{ errors.body_path }}</small>
         </div>
 
-        <!-- Placeholder nếu không phải BLADE -->
-        <div v-if="form.engine !== 'BLADE'"></div>
+        <!-- DOCX_MERGE: file upload -->
+        <div v-if="form.engine === 'DOCX_MERGE'" class="md:col-span-2">
+          <label class="block font-bold mb-2 required-field">File DOCX Template</label>
+          <div class="border-2 border-dashed border-blue-300 rounded-lg p-6 text-center cursor-pointer hover:bg-blue-50 transition"
+               @click="docxUploadInput?.click()"
+               @dragover.prevent="dragOverDocx = true"
+               @dragleave.prevent="dragOverDocx = false"
+               @drop.prevent="handleDocxDrop"
+               :class="{ 'bg-blue-100 border-blue-500': dragOverDocx }">
+            <input
+              ref="docxUploadInput"
+              type="file"
+              accept=".docx"
+              class="hidden"
+              @change="uploadDocxFile"
+            />
+            <div v-if="!docxUploading && !uploadedDocxFile">
+              <i class="pi pi-upload text-3xl text-blue-500 mb-2"></i>
+              <p class="text-gray-700">Kéo thả file .docx hoặc <span class="text-blue-500 font-bold">click để chọn</span></p>
+              <p class="text-sm text-gray-500 mt-1">File phải là .docx hợp lệ với placeholders</p>
+            </div>
+            <div v-else-if="docxUploading" class="flex flex-col items-center gap-2">
+              <ProgressSpinner style="width: 40px; height: 40px" strokeWidth="8" />
+              <p class="text-gray-600">Đang tải lên...</p>
+            </div>
+            <div v-else class="flex flex-col items-center gap-2">
+              <i class="pi pi-check-circle text-2xl text-green-500"></i>
+              <p class="font-bold text-green-600">{{ uploadedDocxFile }}</p>
+              <Button label="Thay đổi" icon="pi pi-refresh" severity="warning" size="small"
+                      @click.stop="docxUploadInput?.click()" />
+            </div>
+          </div>
+          <small v-if="form.body_path" class="text-green-600 block mt-2">✓ Path: {{ form.body_path }}</small>
+          <small class="text-red-500" v-if="submitted && form.engine === 'DOCX_MERGE' && !form.body_path">File DOCX là bắt buộc.</small>
+          <small class="text-red-500" v-if="hasError('body_path')">{{ errors.body_path }}</small>
+          <small v-if="docxUploadError" class="text-red-500 block">{{ docxUploadError }}</small>
+        </div>
 
         <div>
           <label class="block font-bold mb-2">Mặc định theo loại</label>
@@ -155,6 +190,8 @@
 
       <template #footer>
         <Button label="Hủy" icon="pi pi-times" text @click="hideDialog" />
+        <Button v-if="canEdit && form.engine === 'DOCX_MERGE' && form.body_path && form.id"
+                label="Xem trước" icon="pi pi-eye" severity="info" @click="previewDocx" :loading="previewingDocx" />
         <Button label="Lưu" icon="pi pi-check" @click="save" :loading="saving" />
       </template>
     </Dialog>
@@ -218,6 +255,14 @@ const deleting = ref(false)
 const submitted = ref(false)
 const current = ref(null)
 
+// DOCX upload state
+const docxUploadInput = ref()
+const docxUploading = ref(false)
+const dragOverDocx = ref(false)
+const uploadedDocxFile = ref('')
+const docxUploadError = ref('')
+const previewingDocx = ref(false)
+
 const yesNoOptions = [
   { value: true, label: 'Yes' },
   { value: false, label: 'No' }
@@ -257,6 +302,9 @@ function openNew() {
     description: ''
   }
   submitted.value = false
+  docxUploading.value = false
+  uploadedDocxFile.value = ''
+  docxUploadError.value = ''
   dialog.value = true
 }
 
@@ -273,12 +321,23 @@ function edit(row) {
     description: row.description || ''
   }
   submitted.value = false
+  // Reset DOCX upload state for edit
+  docxUploading.value = false
+  docxUploadError.value = ''
+  // Show uploaded filename if body_path exists
+  if (row.engine === 'DOCX_MERGE' && row.body_path) {
+    uploadedDocxFile.value = row.body_path.split('/').pop()
+  } else {
+    uploadedDocxFile.value = ''
+  }
   dialog.value = true
 }
 
 function hideDialog() {
   dialog.value = false
   submitted.value = false
+  uploadedDocxFile.value = ''
+  docxUploadError.value = ''
 }
 
 function save() {
@@ -291,6 +350,9 @@ function save() {
     return
   }
   if (form.value.engine === 'BLADE' && !form.value.body_path) {
+    return
+  }
+  if (form.value.engine === 'DOCX_MERGE' && !form.value.body_path) {
     return
   }
 
@@ -346,8 +408,93 @@ function exportCSV() {
 function openEditor(row) {
   window.location.href = `/contract-templates/${row.id}/editor`
 }
-</script>
 
-<style scoped>
-.required-field::after { content: ' *'; color: red; }
-</style>
+// DOCX Upload Handlers
+async function uploadDocxFile(e) {
+  const files = e.target.files
+  if (!files || files.length === 0) return
+
+  const file = files[0]
+  await performDocxUpload(file)
+}
+
+async function handleDocxDrop(e) {
+  dragOverDocx.value = false
+  const files = e.dataTransfer.files
+  if (!files || files.length === 0) return
+
+  const file = files[0]
+  if (!file.name.endsWith('.docx')) {
+    docxUploadError.value = 'File phải là .docx'
+    return
+  }
+
+  await performDocxUpload(file)
+}
+
+async function performDocxUpload(file) {
+  docxUploadError.value = ''
+  docxUploading.value = true
+
+  const formData = new FormData()
+  formData.append('file', file)
+  formData.append('contract_type', form.value.type)
+
+  try {
+    const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content
+    const response = await fetch('/contract-templates/upload', {
+      method: 'POST',
+      body: formData,
+      headers: {
+        'X-Requested-With': 'XMLHttpRequest',
+        'X-CSRF-TOKEN': csrfToken || '',
+      }
+    })
+
+    const data = await response.json()
+
+    if (!response.ok || !data.success) {
+      throw new Error(data.message || 'Lỗi tải file')
+    }
+
+    // Success
+    form.value.body_path = data.data.body_path
+    uploadedDocxFile.value = file.name
+    docxUploadError.value = ''
+  } catch (error) {
+    docxUploadError.value = error.message || 'Lỗi tải file DOCX'
+    uploadedDocxFile.value = ''
+    form.value.body_path = ''
+  } finally {
+    docxUploading.value = false
+  }
+}
+
+async function previewDocx() {
+  previewingDocx.value = true
+  try {
+    const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content
+    const response = await fetch(`/contract-templates/${form.value.id}/docx-preview`, {
+      method: 'POST',
+      headers: {
+        'X-Requested-With': 'XMLHttpRequest',
+        'X-CSRF-TOKEN': csrfToken || '',
+      }
+    })
+
+    if (!response.ok) {
+      const errorData = await response.text()
+      throw new Error(errorData || 'Lỗi xem trước')
+    }
+
+    // Open PDF in new tab
+    const blob = await response.blob()
+    const url = window.URL.createObjectURL(blob)
+    window.open(url, '_blank')
+  } catch (error) {
+    alert('Lỗi xem trước DOCX: ' + (error.message || 'Vui lòng thử lại'))
+  } finally {
+    previewingDocx.value = false
+  }
+}
+</script>

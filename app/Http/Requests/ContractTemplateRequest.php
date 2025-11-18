@@ -20,7 +20,7 @@ class ContractTemplateRequest extends FormRequest
             'name'              => ['required','string','max:255'],
             'type'              => ['required', Rule::in(['PROBATION','FIXED_TERM','INDEFINITE','SERVICE','INTERNSHIP','PARTTIME'])],
             'engine'            => ['required', Rule::in(['LIQUID','BLADE','HTML_TO_PDF','DOCX_MERGE'])],
-            'body_path'         => ['nullable','string','max:255'], // BLADE: file path, LIQUID: không cần
+            'body_path'         => [Rule::requiredIf(fn()=> in_array($this->engine, ['BLADE', 'DOCX_MERGE'])), 'string','max:255'],
             'content'           => ['nullable','string'], // LIQUID: nội dung template
             'placeholders_json' => ['nullable','json'],
             'is_default'        => ['boolean'],
@@ -38,7 +38,7 @@ class ContractTemplateRequest extends FormRequest
             'engine.required'        => 'Engine là bắt buộc.',
             'engine.in'              => 'Engine không hợp lệ.',
             'content.required_if'    => 'Nội dung template là bắt buộc khi dùng LIQUID.',
-            'body_path.required_if'  => 'Đường dẫn blade là bắt buộc khi dùng BLADE.',
+            'body_path.required'     => 'Đường dẫn file là bắt buộc khi dùng BLADE hoặc DOCX_MERGE.',
         ];
     }
 }

@@ -165,11 +165,13 @@ Route::group(['middleware' => 'auth'], function () {
     Route::put('/contract-templates/{template}', [ContractTemplateController::class, 'update'])->name('contract-templates.update');
     Route::delete('/contract-templates/{template}', [ContractTemplateController::class, 'destroy'])->name('contract-templates.destroy');
     Route::post('/contract-templates/bulk-delete', [ContractTemplateController::class, 'bulkDelete'])->name('contract-templates.bulk-delete');
+    Route::post('/contract-templates/upload', [ContractTemplateController::class, 'upload'])->name('contract-templates.upload');
 
     // Contract Template Editor routes
     Route::get('/contract-templates/{template}/editor', [ContractTemplateEditorController::class, 'editor'])->name('contract-templates.editor');
     Route::put('/contract-templates/{template}/content', [ContractTemplateEditorController::class, 'updateContent'])->name('contract-templates.update-content');
     Route::post('/contract-templates/{template}/preview', [ContractTemplateEditorController::class, 'preview'])->name('contract-templates.preview');
+    Route::post('/contract-templates/{template}/docx-preview', [ContractTemplateEditorController::class, 'docxPreview'])->name('contract-templates.docx-preview');
 
     // Contract Appendix routes (nested under contracts)
     Route::prefix('contracts/{contract}')->group(function () {
