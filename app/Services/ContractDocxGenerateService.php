@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\Storage;
 use PhpOffice\PhpWord\TemplateProcessor;
 use PhpOffice\PhpWord\IOFactory;
 use Dompdf\Dompdf;
+use Dompdf\Options;
 
 class ContractDocxGenerateService
 {
@@ -59,28 +60,23 @@ class ContractDocxGenerateService
         $htmlContent = file_get_contents($htmlFile);
 
         // Add UTF-8 meta and font CSS for proper Vietnamese rendering
-        $vietnameseCss = '<style>
-            body, *, p, td, th, div, span {
-                font-family: "DejaVu Sans", "Times New Roman", serif !important;
-                font-size: 11pt;
-            }
-        </style>';
+        $css = '<meta charset="UTF-8">
+            <style>
+                body, p, td, th, div, span {
+                    font-family: "dejavu sans", "DejaVu Sans", "Times New Roman", sans-serif !important;
+                    font-size: 11pt;
+                }
+            </style>';
 
-        // Ensure UTF-8 meta charset
-        if (strpos($htmlContent, '<meta charset') === false) {
-            $headPos = strpos($htmlContent, '</head>');
-            if ($headPos !== false) {
-                $htmlContent = substr_replace(
-                    $htmlContent,
-                    '<meta charset="UTF-8">' . $vietnameseCss,
-                    $headPos,
-                    0
-                );
-            }
-        }
+        // Insert CSS right after <head>
+        $htmlContent = preg_replace('/<head>/i', '<head>' . $css, $htmlContent, 1);
 
-        // Use DomPDF to convert HTML to PDF
-        $dompdf = new Dompdf();
+        // Use DomPDF with Vietnamese font support
+        $options = new Options();
+        $options->set('isRemoteEnabled', true);
+        $options->set('defaultFont', 'dejavu sans');
+
+        $dompdf = new Dompdf($options);
         $dompdf->loadHtml($htmlContent, 'UTF-8');
         $dompdf->setPaper('A4', 'portrait');
         $dompdf->render();
