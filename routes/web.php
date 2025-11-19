@@ -171,7 +171,15 @@ Route::group(['middleware' => 'auth'], function () {
     Route::get('/contract-templates/{template}/editor', [ContractTemplateEditorController::class, 'editor'])->name('contract-templates.editor');
     Route::put('/contract-templates/{template}/content', [ContractTemplateEditorController::class, 'updateContent'])->name('contract-templates.update-content');
     Route::post('/contract-templates/{template}/preview', [ContractTemplateEditorController::class, 'preview'])->name('contract-templates.preview');
-    Route::post('/contract-templates/{template}/docx-preview', [ContractTemplateEditorController::class, 'docxPreview'])->name('contract-templates.docx-preview');
+    Route::get('/contract-templates/{template}/docx-preview', [ContractTemplateEditorController::class, 'docxPreview'])->name('contract-templates.docx-preview');
+
+    // Placeholder Mapping routes
+    Route::get('/contract-templates/{template}/placeholders', [\App\Http\Controllers\ContractTemplatePlaceholderMappingController::class, 'index'])->name('contract-templates.placeholders.index');
+    Route::put('/contract-templates/{template}/placeholders/{mapping}', [\App\Http\Controllers\ContractTemplatePlaceholderMappingController::class, 'update'])->name('contract-templates.placeholders.update');
+    Route::post('/contract-templates/{template}/placeholders/bulk-update', [\App\Http\Controllers\ContractTemplatePlaceholderMappingController::class, 'bulkUpdate'])->name('contract-templates.placeholders.bulk-update');
+    Route::post('/contract-templates/{template}/placeholders/{mapping}/apply-preset', [\App\Http\Controllers\ContractTemplatePlaceholderMappingController::class, 'applyPreset'])->name('contract-templates.placeholders.apply-preset');
+    Route::post('/contract-templates/{template}/placeholders/resync', [\App\Http\Controllers\ContractTemplatePlaceholderMappingController::class, 'resync'])->name('contract-templates.placeholders.resync');
+    Route::get('/contract-templates/placeholders/presets', [\App\Http\Controllers\ContractTemplatePlaceholderMappingController::class, 'presets'])->name('contract-templates.placeholders.presets');
 
     // Contract Appendix routes (nested under contracts)
     Route::prefix('contracts/{contract}')->group(function () {

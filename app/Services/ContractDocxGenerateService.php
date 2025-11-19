@@ -30,8 +30,8 @@ class ContractDocxGenerateService
             throw new \RuntimeException("Template DOCX not found: {$template->body_path}");
         }
 
-        // 1) Build merge data
-        $data = ContractMergeDataBuilder::build($contract);
+        // 1) Build merge data dynamically from placeholder mappings
+        $data = DynamicPlaceholderResolverService::resolve($contract, $template);
 
         // 2) Fill DOCX
         $processor = new TemplateProcessor($templatePath);

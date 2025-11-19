@@ -129,29 +129,60 @@ class ContractTemplateEditorController extends Controller
         }
 
         try {
-            // 1) Build sample data như cũ
-            $sampleData = [
-                'employee_full_name'    => 'Nguyễn Văn A',
-                'employee_code'         => 'NV001',
-                'department_name'       => 'Phòng Kỹ Thuật',
-                'position_title'        => 'Kỹ Sư Phần Mềm',
-                'contract_number'       => 'HĐ-2025-001',
-                'contract_start_date'   => now()->format('d/m/Y'),
-                'contract_end_date'     => now()->addMonths(12)->format('d/m/Y'),
-                'base_salary'           => number_format(15000000, 0, ',', '.'),
-                'insurance_salary'      => number_format(12000000, 0, ',', '.'),
-                'position_allowance'    => number_format(2000000, 0, ',', '.'),
-                'working_time'          => 'T2–T6 08:00–17:00',
-                'work_location'         => 'Văn phòng Ninh Bình',
-                'other_allowances_text' => "- Ăn ca: 650.000 đ\n- Điện thoại: 200.000 đ",
-                'company_name'          => 'Công ty ABC',
-            ];
+            // 1) Create mock contract with sample data for preview
+            $mockContract = new \stdClass();
+            $mockContract->contract_number = 'HĐ-2025-001';
+            $mockContract->contract_type = 'PROBATION';
+            $mockContract->start_date = now()->toDateString();
+            $mockContract->end_date = now()->addMonths(12)->toDateString();
+            $mockContract->sign_date = now()->toDateString();
+            $mockContract->probation_end_date = now()->addMonths(2)->toDateString();
+            $mockContract->base_salary = 15000000;
+            $mockContract->insurance_salary = 12000000;
+            $mockContract->position_allowance = 2000000;
+            $mockContract->working_time = 'T2–T6 08:00–17:00';
+            $mockContract->work_location = 'Văn phòng Ninh Bình';
+            $mockContract->other_allowances_text = "- Ăn ca: 650.000 đ\n- Điện thoại: 200.000 đ";
 
-            // 2) Merge DOCX
+            // Mock employee
+            $mockEmployee = new \stdClass();
+            $mockEmployee->full_name = 'Nguyễn Văn A';
+            $mockEmployee->code = 'NV001';
+            $mockEmployee->phone = '0123456789';
+            $mockEmployee->email = 'nguyenvana@company.com';
+            $mockEmployee->id_number = '001234567890';
+            $mockEmployee->dob = '1990-05-15'; // date of birth
+            $mockEmployee->address = 'Hà Nội';
+
+            // Mock department
+            $mockDepartment = new \stdClass();
+            $mockDepartment->name = 'Phòng Kỹ Thuật';
+            $mockDepartment->code = 'KT';
+
+            // Mock position
+            $mockPosition = new \stdClass();
+            $mockPosition->title = 'Kỹ Sư Phần Mềm';
+            $mockPosition->code = 'DEV';
+
+            // Mock manager
+            $mockManager = new \stdClass();
+            $mockManager->full_name = 'Trần Văn B';
+
+            // Assign relationships
+            $mockEmployee->manager = $mockManager;
+            $mockContract->employee = $mockEmployee;
+            $mockContract->department = $mockDepartment;
+            $mockContract->position = $mockPosition;
+
+            // 2) Use DynamicPlaceholderResolverService to resolve all placeholders
+            $resolver = app(\App\Services\DynamicPlaceholderResolverService::class);
+            $mergeData = $resolver->resolve($mockContract, $template);
+
+            // 3) Merge DOCX
             $templatePath = Storage::disk('public')->path($template->body_path);
             $processor = new \PhpOffice\PhpWord\TemplateProcessor($templatePath);
 
-            foreach ($sampleData as $key => $value) {
+            foreach ($mergeData as $key => $value) {
                 $processor->setValue($key, $value ?? '');
             }
 

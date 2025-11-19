@@ -4,7 +4,11 @@ namespace App\Services;
 
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Log;
 use PhpOffice\PhpWord\IOFactory;
+use App\Models\ContractTemplate;
+use App\Models\ContractTemplatePlaceholderMapping;
+use Illuminate\Support\Str;
 
 class TemplateUploadService
 {
@@ -68,6 +72,72 @@ class TemplateUploadService
     }
 
     /**
+     * Auto-detect placeholders và tạo default mappings cho template
+     *
+     * @param ContractTemplate $template
+     * @param string $docxPath Full path to DOCX file
+     * @return array ['detected' => int, 'mapped' => int, 'unmapped' => int]
+     */
+    public static function createPlaceholderMappings(ContractTemplate $template, string $docxPath): array
+    {
+        // Extract placeholders từ DOCX
+        $placeholders = PlaceholderExtractorService::extractFromDocx($docxPath);
+
+        // Load presets
+        $presets = config('contract_placeholders.presets', []);
+
+        $mapped = 0;
+        $unmapped = 0;
+        $displayOrder = 0;
+
+        foreach ($placeholders as $placeholder) {
+            $displayOrder++;
+
+            // Check xem đã có mapping chưa
+            $exists = ContractTemplatePlaceholderMapping::where('template_id', $template->id)
+                ->where('placeholder_key', $placeholder)
+                ->exists();
+
+            if ($exists) {
+                continue; // Skip if already mapped
+            }
+
+            // Tìm preset hoặc dùng default
+            if (isset($presets[$placeholder])) {
+                [$dataSource, $sourcePath, $transformer, $defaultValue] = $presets[$placeholder];
+                $mapped++;
+            } else {
+                // Unmapped - tạo mapping trống để user config sau
+                $dataSource = 'MANUAL';
+                $sourcePath = null;
+                $transformer = null;
+                $defaultValue = '';
+                $unmapped++;
+            }
+
+            ContractTemplatePlaceholderMapping::create([
+                'id' => Str::uuid(),
+                'template_id' => $template->id,
+                'placeholder_key' => $placeholder,
+                'data_source' => $dataSource,
+                'source_path' => $sourcePath,
+                'default_value' => $defaultValue,
+                'transformer' => $transformer,
+                'formula' => null,
+                'validation_rules' => null,
+                'is_required' => false,
+                'display_order' => $displayOrder,
+            ]);
+        }
+
+        return [
+            'detected' => count($placeholders),
+            'mapped' => $mapped,
+            'unmapped' => $unmapped,
+        ];
+    }
+
+    /**
      * Delete DOCX template file from storage.
      *
      * @param string $bodyPath relative path (e.g., 'templates/contracts/probation.docx')
@@ -85,7 +155,7 @@ class TemplateUploadService
             }
             return true;
         } catch (\Exception $e) {
-            \Log::warning("Failed to delete template file: {$bodyPath}", ['error' => $e->getMessage()]);
+            Log::warning("Failed to delete template file: {$bodyPath}", ['error' => $e->getMessage()]);
             return true; // silent fail - don't block deletion
         }
     }

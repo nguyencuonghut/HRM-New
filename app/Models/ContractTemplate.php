@@ -38,6 +38,12 @@ class ContractTemplate extends Model
         return $this->hasMany(Contract::class, 'template_id');
     }
 
+    // Placeholder mappings cho template này
+    public function placeholderMappings()
+    {
+        return $this->hasMany(ContractTemplatePlaceholderMapping::class, 'template_id')->orderBy('display_order');
+    }
+
     /* ----------------- Scopes tiện dụng ----------------- */
     public function scopeActive($q)
     {

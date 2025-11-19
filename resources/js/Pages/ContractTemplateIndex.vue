@@ -64,11 +64,13 @@
         </Column>
         <Column field="created_at" header="Tạo lúc" sortable headerStyle="min-width:12rem;"></Column>
 
-        <Column v-if="canEdit || canDelete" header="Thao tác" headerStyle="min-width:16rem;">
+        <Column v-if="canEdit || canDelete" header="Thao tác" headerStyle="min-width:20rem;">
           <template #body="sp">
             <div class="flex gap-2">
               <Button v-if="canEdit && sp.data.engine === 'LIQUID'" icon="pi pi-file-edit" outlined severity="info" rounded
                       @click="openEditor(sp.data)" v-tooltip.top="'Chỉnh sửa Liquid'" />
+              <Button v-if="canEdit && sp.data.engine === 'DOCX_MERGE'" icon="pi pi-cog" outlined severity="secondary" rounded
+                      @click="managePlaceholders(sp.data)" v-tooltip.top="'Quản lý Placeholders'" />
               <Button v-if="canEdit" icon="pi pi-pencil" outlined severity="success" rounded @click="edit(sp.data)" />
               <Button v-if="canDelete" icon="pi pi-trash" outlined severity="danger" rounded @click="confirmDelete(sp.data)" />
             </div>
@@ -191,7 +193,7 @@
       <template #footer>
         <Button label="Hủy" icon="pi pi-times" text @click="hideDialog" />
         <Button v-if="canEdit && form.engine === 'DOCX_MERGE' && form.body_path && form.id"
-                label="Xem trước" icon="pi pi-eye" severity="info" @click="previewDocx" :loading="previewingDocx" />
+                label="Xem trước" icon="pi pi-eye" severity="info" @click="previewDocx" />
         <Button label="Lưu" icon="pi pi-check" @click="save" :loading="saving" />
       </template>
     </Dialog>
@@ -219,6 +221,14 @@
         <Button label="Có" icon="pi pi-check" severity="danger" @click="removeMany" :loading="deleting" />
       </template>
     </Dialog>
+
+    <!-- Placeholder Manager Dialog -->
+    <ContractTemplatePlaceholderManager
+      v-if="currentTemplate"
+      v-model:visible="placeholderDialog"
+      :template="currentTemplate"
+      @saved="onPlaceholdersSaved"
+    />
   </div>
 </template>
 
@@ -230,6 +240,7 @@ import Textarea from 'primevue/textarea'
 import { useFormValidation } from '@/composables/useFormValidation'
 import { usePermission } from '@/composables/usePermission'
 import { ContractTemplateService } from '@/services/ContractTemplateService'
+import ContractTemplatePlaceholderManager from '@/Components/ContractTemplatePlaceholderManager.vue'
 
 const { errors, hasError } = useFormValidation()
 const { can } = usePermission()
@@ -261,7 +272,10 @@ const docxUploading = ref(false)
 const dragOverDocx = ref(false)
 const uploadedDocxFile = ref('')
 const docxUploadError = ref('')
-const previewingDocx = ref(false)
+
+// Placeholder management
+const placeholderDialog = ref(false)
+const currentTemplate = ref(null)
 
 const yesNoOptions = [
   { value: true, label: 'Yes' },
@@ -409,6 +423,16 @@ function openEditor(row) {
   window.location.href = `/contract-templates/${row.id}/editor`
 }
 
+function managePlaceholders(row) {
+  currentTemplate.value = row
+  placeholderDialog.value = true
+}
+
+function onPlaceholdersSaved() {
+  // Reload data if needed
+  console.log('Placeholders saved')
+}
+
 // DOCX Upload Handlers
 async function uploadDocxFile(e) {
   const files = e.target.files
@@ -470,31 +494,14 @@ async function performDocxUpload(file) {
   }
 }
 
-async function previewDocx() {
-  previewingDocx.value = true
-  try {
-    const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content
-    const response = await fetch(`/contract-templates/${form.value.id}/docx-preview`, {
-      method: 'POST',
-      headers: {
-        'X-Requested-With': 'XMLHttpRequest',
-        'X-CSRF-TOKEN': csrfToken || '',
-      }
-    })
-
-    if (!response.ok) {
-      const errorData = await response.text()
-      throw new Error(errorData || 'Lỗi xem trước')
-    }
-
-    // Open PDF in new tab
-    const blob = await response.blob()
-    const url = window.URL.createObjectURL(blob)
-    window.open(url, '_blank')
-  } catch (error) {
-    alert('Lỗi xem trước DOCX: ' + (error.message || 'Vui lòng thử lại'))
-  } finally {
-    previewingDocx.value = false
+function previewDocx() {
+  if (!form.value.id) {
+    alert('Vui lòng lưu template trước khi xem trước')
+    return
   }
+
+  // Mở URL trực tiếp trong tab mới - Laravel sẽ xử lý session và return PDF
+  const url = `/contract-templates/${form.value.id}/docx-preview`
+  window.open(url, '_blank')
 }
 </script>

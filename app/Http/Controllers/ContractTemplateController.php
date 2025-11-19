@@ -7,6 +7,7 @@ use App\Http\Resources\ContractTemplateResource;
 use App\Models\ContractTemplate;
 use App\Services\TemplateUploadService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Inertia\Inertia;
 
@@ -48,6 +49,14 @@ class ContractTemplateController extends Controller
 
         $template = ContractTemplate::create($data);
 
+        // Auto-create placeholder mappings nếu là DOCX_MERGE
+        if ($template->engine === 'DOCX_MERGE' && $template->body_path) {
+            $docxPath = Storage::disk('public')->path($template->body_path);
+            if (file_exists($docxPath)) {
+                TemplateUploadService::createPlaceholderMappings($template, $docxPath);
+            }
+        }
+
         activity()
             ->causedBy($request->user())
             ->performedOn($template)
@@ -74,6 +83,16 @@ class ContractTemplateController extends Controller
 
         $before = $template->getOriginal();
         $template->update($data);
+
+        // Re-sync placeholder mappings nếu body_path thay đổi
+        if ($template->engine === 'DOCX_MERGE' && $template->body_path && $template->wasChanged('body_path')) {
+            $docxPath = Storage::disk('public')->path($template->body_path);
+            if (file_exists($docxPath)) {
+                // Xóa mappings cũ và tạo mới
+                $template->placeholderMappings()->delete();
+                TemplateUploadService::createPlaceholderMappings($template, $docxPath);
+            }
+        }
 
         activity()
             ->causedBy($request->user())

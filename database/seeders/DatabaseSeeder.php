@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use App\Models\Contract;
 use App\Models\User;
 // use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
@@ -27,6 +28,7 @@ class DatabaseSeeder extends Seeder
             SchoolSeeder::class,
             SkillSeeder::class,
             ContractDocxTemplateSeeder::class,
+            ContractTemplatePlaceholderMappingSeeder::class,
             ContractAppendixTemplateSeeder::class,
         ]);
     }
