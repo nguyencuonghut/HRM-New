@@ -221,13 +221,8 @@ class ContractTemplateEditorController extends Controller
             $resolver = app(\App\Services\DynamicPlaceholderResolverService::class);
             $mergeData = $resolver->resolve($mockContract, $template);
 
-            // 3) Merge DOCX
+            // 3) Merge DOCX using custom method that preserves list formatting
             $templatePath = Storage::disk('public')->path($template->body_path);
-            $processor = new \PhpOffice\PhpWord\TemplateProcessor($templatePath);
-
-            foreach ($mergeData as $key => $value) {
-                $processor->setValue($key, $value ?? '');
-            }
 
             $tmpDir = storage_path('app/tmp/contracts');
             if (!is_dir($tmpDir)) {
@@ -236,42 +231,56 @@ class ContractTemplateEditorController extends Controller
 
             $timestamp = time();
             $tmpDocx = $tmpDir . "/preview_{$timestamp}.docx";
-            $processor->saveAs($tmpDocx);
 
-            // 3) DOCX -> HTML
-            $phpWord   = IOFactory::load($tmpDocx);
-            $htmlFile  = $tmpDir . "/preview_{$timestamp}.html";
-            $htmlWriter = IOFactory::createWriter($phpWord, 'HTML');
-            $htmlWriter->save($htmlFile);
+            // Use DocxMergeService to preserve list formatting
+            \App\Services\DocxMergeService::merge($templatePath, $mergeData, $tmpDocx);
 
-            $htmlContent = file_get_contents($htmlFile);
+            // 3) Convert DOCX to PDF using LibreOffice (preserves all formatting)
+            $tmpPdf = $tmpDir . "/preview_{$timestamp}.pdf";
 
-            // 4) Bơm meta UTF-8 + CSS font Unicode
-            $css = '<meta charset="UTF-8">
-                <style>
-                    body, p, td, th, div, span {
-                        font-family: "dejavu sans", "DejaVu Sans", "Times New Roman", sans-serif !important;
-                        font-size: 11pt;
-                    }
-                </style>';
+            // Try LibreOffice first (best quality, preserves all formatting)
+            $libreOfficePath = $this->findLibreOfficePath();
 
-            // chèn ngay sau <head>
-            $htmlContent = preg_replace('/<head>/i', '<head>' . $css, $htmlContent, 1);
+            if ($libreOfficePath) {
+                // Use LibreOffice for conversion (preserves numbering, bullets, formatting)
+                // Set proper environment variables for headless operation
+                $envVars = [
+                    'HOME=' . escapeshellarg(sys_get_temp_dir()),
+                    'LANG=en_US.UTF-8',
+                    'LC_ALL=en_US.UTF-8',
+                ];
 
-            // 5) Dompdf với defaultFont = 'dejavu sans'
-            $options = new Options();
-            $options->set('isRemoteEnabled', true);
-            $options->set('defaultFont', 'dejavu sans'); // trùng tên đã config ở config/dompdf.php
+                $command = sprintf(
+                    '%s %s --headless --convert-to pdf:writer_pdf_Export --outdir %s %s 2>&1',
+                    implode(' ', $envVars),
+                    escapeshellarg($libreOfficePath),
+                    escapeshellarg($tmpDir),
+                    escapeshellarg($tmpDocx)
+                );
 
-            $dompdf = new Dompdf($options);
-            $dompdf->loadHtml($htmlContent, 'UTF-8');
-            $dompdf->setPaper('A4', 'portrait');
-            $dompdf->render();
-            $pdfContent = $dompdf->output();
+                exec($command, $output, $returnCode);
 
-            // cleanup
-            @unlink($tmpDocx);
-            @unlink($htmlFile);
+                if ($returnCode === 0 && file_exists($tmpPdf)) {
+                    $pdfContent = file_get_contents($tmpPdf);
+
+                    // cleanup
+                    @unlink($tmpDocx);
+                    @unlink($tmpPdf);
+                } else {
+                    // Log error for debugging
+                    \Illuminate\Support\Facades\Log::warning('LibreOffice conversion failed', [
+                        'command' => $command,
+                        'output' => $output,
+                        'return_code' => $returnCode
+                    ]);
+
+                    // Fallback to HTML method
+                    $pdfContent = $this->convertViaHtml($tmpDocx, $tmpDir, $timestamp);
+                }
+            } else {
+                // Fallback to HTML method if LibreOffice not available
+                $pdfContent = $this->convertViaHtml($tmpDocx, $tmpDir, $timestamp);
+            }
 
             return response($pdfContent, 200)
                 ->header('Content-Type', 'application/pdf')
@@ -280,5 +289,100 @@ class ContractTemplateEditorController extends Controller
         } catch (\Throwable $e) {
             return response('Lỗi preview: ' . $e->getMessage(), 422);
         }
+    }
+
+    /**
+     * Find LibreOffice executable path
+     */
+    private function findLibreOfficePath(): ?string
+    {
+        $possiblePaths = [
+            '/usr/bin/libreoffice',           // Linux standard
+            '/usr/bin/soffice',                // Linux alternative
+            '/snap/bin/libreoffice',           // Snap package
+            '/usr/local/bin/libreoffice',      // Custom install
+            'C:\\Program Files\\LibreOffice\\program\\soffice.exe',  // Windows
+            'C:\\Program Files (x86)\\LibreOffice\\program\\soffice.exe',
+        ];
+
+        foreach ($possiblePaths as $path) {
+            if (file_exists($path)) {
+                return $path;
+            }
+        }
+
+        // Try which/where command
+        $command = PHP_OS_FAMILY === 'Windows' ? 'where libreoffice' : 'which libreoffice';
+        $output = shell_exec($command);
+        if ($output && trim($output)) {
+            $path = trim(explode("\n", $output)[0]);
+            if (file_exists($path)) {
+                return $path;
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * Fallback: Convert DOCX to PDF via HTML (lower quality)
+     */
+    private function convertViaHtml(string $docxPath, string $tmpDir, int $timestamp): string
+    {
+        // DOCX -> HTML
+        $phpWord   = IOFactory::load($docxPath);
+        $htmlFile  = $tmpDir . "/preview_{$timestamp}.html";
+        $htmlWriter = IOFactory::createWriter($phpWord, 'HTML');
+        $htmlWriter->save($htmlFile);
+
+        $htmlContent = file_get_contents($htmlFile);
+
+        // Bơm meta UTF-8 + CSS font Unicode
+        $css = '<meta charset="UTF-8">
+            <style>
+                body, p, td, th, div, span, li {
+                    font-family: "dejavu sans", "DejaVu Sans", "Times New Roman", sans-serif !important;
+                    font-size: 11pt;
+                    line-height: 1.5;
+                }
+                ol, ul {
+                    margin-left: 20px;
+                    padding-left: 20px;
+                }
+                ol li {
+                    list-style-type: decimal;
+                    margin-bottom: 8px;
+                }
+                p {
+                    margin: 6px 0;
+                }
+                table {
+                    border-collapse: collapse;
+                    width: 100%;
+                }
+                table td, table th {
+                    border: 1px solid #000;
+                    padding: 4px 8px;
+                }
+            </style>';
+
+        $htmlContent = preg_replace('/<head>/i', '<head>' . $css, $htmlContent, 1);
+
+        // Dompdf
+        $options = new Options();
+        $options->set('isRemoteEnabled', true);
+        $options->set('defaultFont', 'dejavu sans');
+
+        $dompdf = new Dompdf($options);
+        $dompdf->loadHtml($htmlContent, 'UTF-8');
+        $dompdf->setPaper('A4', 'portrait');
+        $dompdf->render();
+        $pdfContent = $dompdf->output();
+
+        // cleanup
+        @unlink($docxPath);
+        @unlink($htmlFile);
+
+        return $pdfContent;
     }
 }

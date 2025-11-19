@@ -33,66 +33,57 @@ class ContractDocxGenerateService
         // 1) Build merge data dynamically from placeholder mappings
         $data = DynamicPlaceholderResolverService::resolve($contract, $template);
 
-        // 2) Fill DOCX
-        $processor = new TemplateProcessor($templatePath);
-        foreach ($data as $key => $value) {
-            $processor->setValue($key, $value);
-        }
-
-        // 3) Lưu DOCX tạm
+        // 2) Fill DOCX using custom merge to preserve list formatting
         $tmpDir  = storage_path('app/tmp/contracts');
         if (!is_dir($tmpDir)) {
             mkdir($tmpDir, 0775, true);
         }
 
         $tmpDocx = $tmpDir . '/contract_' . $contract->id . '_v' . $template->version . '.docx';
-        $processor->saveAs($tmpDocx);
 
-        // 4) Convert DOCX -> PDF
-        $phpWord  = IOFactory::load($tmpDocx);
+        // Use DocxMergeService to preserve formatting (PhpWord destroys list formatting)
+        DocxMergeService::merge($templatePath, $data, $tmpDocx);
 
-        // Save to HTML file first
-        $htmlFile = $tmpDir . '/contract_' . $contract->id . '_v' . $template->version . '.html';
-        $htmlWriter = IOFactory::createWriter($phpWord, 'HTML');
-        $htmlWriter->save($htmlFile);
-
-        // Read HTML content and fix encoding for Vietnamese
-        $htmlContent = file_get_contents($htmlFile);
-
-        // Add UTF-8 meta and font CSS for proper Vietnamese rendering
-        $css = '<meta charset="UTF-8">
-            <style>
-                body, p, td, th, div, span {
-                    font-family: "dejavu sans", "DejaVu Sans", "Times New Roman", sans-serif !important;
-                    font-size: 11pt;
-                }
-            </style>';
-
-        // Insert CSS right after <head>
-        $htmlContent = preg_replace('/<head>/i', '<head>' . $css, $htmlContent, 1);
-
-        // Use DomPDF with Vietnamese font support
-        $options = new Options();
-        $options->set('isRemoteEnabled', true);
-        $options->set('defaultFont', 'dejavu sans');
-
-        $dompdf = new Dompdf($options);
-        $dompdf->loadHtml($htmlContent, 'UTF-8');
-        $dompdf->setPaper('A4', 'portrait');
-        $dompdf->render();
-
+        // 4) Convert DOCX -> PDF using LibreOffice (preserves formatting)
         $relativePdfPath = 'contracts/generated/contract_' . $contract->id . '_v' . $template->version . '.pdf';
         $fullPdfPath     = storage_path('app/public/' . $relativePdfPath);
 
         // Đảm bảo thư mục tồn tại
         Storage::disk('public')->makeDirectory('contracts/generated');
 
-        // Save PDF
-        file_put_contents($fullPdfPath, $dompdf->output());
+        // Try LibreOffice first (best quality)
+        $libreOfficePath = self::findLibreOfficePath();
 
-        // Cleanup
-        if (is_file($htmlFile)) {
-            unlink($htmlFile);
+        if ($libreOfficePath) {
+            // Use LibreOffice for conversion
+            $envVars = [
+                'HOME=' . escapeshellarg(sys_get_temp_dir()),
+                'LANG=en_US.UTF-8',
+                'LC_ALL=en_US.UTF-8',
+            ];
+
+            $outDir = dirname($fullPdfPath);
+            $command = sprintf(
+                '%s %s --headless --convert-to pdf:writer_pdf_Export --outdir %s %s 2>&1',
+                implode(' ', $envVars),
+                escapeshellarg($libreOfficePath),
+                escapeshellarg($outDir),
+                escapeshellarg($tmpDocx)
+            );
+
+            exec($command, $output, $returnCode);
+
+            if ($returnCode !== 0 || !file_exists($fullPdfPath)) {
+                // Fallback to HTML method
+                self::convertViaHtml($tmpDocx, $fullPdfPath);
+            }
+
+            // Cleanup DOCX
+            @unlink($tmpDocx);
+        } else {
+            // Fallback if LibreOffice not available
+            self::convertViaHtml($tmpDocx, $fullPdfPath);
+            @unlink($tmpDocx);
         }
 
         return [
@@ -113,5 +104,71 @@ class ContractDocxGenerateService
             ->where('is_active', true)
             ->orderByDesc('version')
             ->firstOrFail();
+    }
+
+    /**
+     * Find LibreOffice executable path
+     */
+    protected static function findLibreOfficePath(): ?string
+    {
+        $possiblePaths = [
+            '/usr/bin/libreoffice',
+            '/usr/bin/soffice',
+            '/usr/local/bin/libreoffice',
+            '/usr/local/bin/soffice',
+            '/opt/libreoffice/program/soffice',
+            'C:\Program Files\LibreOffice\program\soffice.exe',
+        ];
+
+        foreach ($possiblePaths as $path) {
+            if (file_exists($path) && is_executable($path)) {
+                return $path;
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * Fallback: Convert DOCX to PDF via HTML using PhpWord + DomPDF
+     */
+    protected static function convertViaHtml(string $docxPath, string $pdfPath): void
+    {
+        $phpWord = IOFactory::load($docxPath);
+
+        $tmpHtml = sys_get_temp_dir() . '/contract_' . uniqid() . '.html';
+        $htmlWriter = IOFactory::createWriter($phpWord, 'HTML');
+        $htmlWriter->save($tmpHtml);
+
+        $htmlContent = file_get_contents($tmpHtml);
+
+        // Add UTF-8 meta and font CSS
+        $css = '<meta charset="UTF-8">
+            <style>
+                body, p, td, th, div, span, li {
+                    font-family: "dejavu sans", "DejaVu Sans", "Times New Roman", sans-serif !important;
+                    font-size: 11pt;
+                    line-height: 1.5;
+                }
+                ol, ul {
+                    margin-left: 20px;
+                    padding-left: 20px;
+                }
+            </style>';
+
+        $htmlContent = preg_replace('/<head>/i', '<head>' . $css, $htmlContent, 1);
+
+        $options = new Options();
+        $options->set('isRemoteEnabled', true);
+        $options->set('defaultFont', 'dejavu sans');
+
+        $dompdf = new Dompdf($options);
+        $dompdf->loadHtml($htmlContent, 'UTF-8');
+        $dompdf->setPaper('A4', 'portrait');
+        $dompdf->render();
+
+        file_put_contents($pdfPath, $dompdf->output());
+
+        @unlink($tmpHtml);
     }
 }
