@@ -129,40 +129,83 @@ class ContractTemplateEditorController extends Controller
         }
 
         try {
-            // 1) Create mock contract with sample data for preview
+            // 1) Create mock contract with sample data for preview (all fields from migration)
             $mockContract = new \stdClass();
+            // Contract basic info
             $mockContract->contract_number = 'HĐ-2025-001';
             $mockContract->contract_type = 'PROBATION';
+            $mockContract->status = 'ACTIVE';
+            $mockContract->source = 'LEGACY';
+
+            // Contract dates
+            $mockContract->sign_date = now()->toDateString();
             $mockContract->start_date = now()->toDateString();
             $mockContract->end_date = now()->addMonths(12)->toDateString();
-            $mockContract->sign_date = now()->toDateString();
             $mockContract->probation_end_date = now()->addMonths(2)->toDateString();
+            $mockContract->terminated_at = null;
+            $mockContract->approved_at = now()->toDateTimeString();
+
+            // Contract salary & allowances
             $mockContract->base_salary = 15000000;
             $mockContract->insurance_salary = 12000000;
             $mockContract->position_allowance = 2000000;
+
+            // Contract insurance
+            $mockContract->social_insurance = true;
+            $mockContract->health_insurance = true;
+            $mockContract->unemployment_insurance = true;
+
+            // Contract working conditions
             $mockContract->working_time = 'T2–T6 08:00–17:00';
             $mockContract->work_location = 'Văn phòng Ninh Bình';
-            $mockContract->other_allowances_text = "- Ăn ca: 650.000 đ\n- Điện thoại: 200.000 đ";
+            $mockContract->note = 'Hợp đồng mẫu cho preview';
+            $mockContract->approval_note = 'Đã được phê duyệt';
+            $mockContract->termination_reason = null;
 
-            // Mock employee
+            // Mock employee (all fields from migration)
             $mockEmployee = new \stdClass();
+            // Employee basic info
             $mockEmployee->full_name = 'Nguyễn Văn A';
-            $mockEmployee->code = 'NV001';
+            $mockEmployee->employee_code = 'NV001';
             $mockEmployee->phone = '0123456789';
-            $mockEmployee->email = 'nguyenvana@company.com';
-            $mockEmployee->id_number = '001234567890';
-            $mockEmployee->dob = '1990-05-15'; // date of birth
-            $mockEmployee->address = 'Hà Nội';
+            $mockEmployee->emergency_contact_phone = '0987654321';
+            $mockEmployee->personal_email = 'nguyenvana@gmail.com';
+            $mockEmployee->company_email = 'nguyenvana@company.com';
 
-            // Mock department
+            // Employee identification
+            $mockEmployee->cccd = '001234567890';
+            $mockEmployee->cccd_issued_on = '2020-01-15';
+            $mockEmployee->cccd_issued_by = 'Cục Cảnh sát ĐKQL cư trú và DLQG về dân cư';
+            $mockEmployee->si_number = 'BHXH001234567890';
+
+            // Employee personal info
+            $mockEmployee->dob = '1990-05-15';
+            $mockEmployee->gender = 'MALE';
+            $mockEmployee->marital_status = 'SINGLE';
+
+            // Employee addresses
+            $mockEmployee->address_street = '123 Trần Hưng Đạo, Hà Nội';
+            $mockEmployee->temp_address_street = '456 Lê Lợi, Hà Nội';
+
+            // Employee work info
+            $mockEmployee->hire_date = '2024-01-15';
+            $mockEmployee->status = 'ACTIVE';
+
+            // Mock department (all fields from migration)
             $mockDepartment = new \stdClass();
             $mockDepartment->name = 'Phòng Kỹ Thuật';
             $mockDepartment->code = 'KT';
+            $mockDepartment->type = 'DEPARTMENT';
+            $mockDepartment->is_active = true;
 
-            // Mock position
+            // Mock position (all fields from migration)
             $mockPosition = new \stdClass();
             $mockPosition->title = 'Kỹ Sư Phần Mềm';
-            $mockPosition->code = 'DEV';
+            $mockPosition->level = 'Senior';
+            $mockPosition->insurance_base_salary = 12000000;
+            $mockPosition->position_salary = 15000000;
+            $mockPosition->competency_salary = 3000000;
+            $mockPosition->allowance = 2000000;
 
             // Mock manager
             $mockManager = new \stdClass();
