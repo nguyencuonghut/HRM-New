@@ -69,9 +69,9 @@ class EmployeeSeeder extends Seeder
                 'cccd' => $r['cccd'] ?? null,
                 'cccd_issued_on' => $r['cccd_issued_on'] ?? null,
                 'cccd_issued_by' => $r['cccd_issued_by'] ?? null,
-                'ward_id' => 8, // có thể map sau khi seed wards
+                'ward_id' => null, // có thể map sau khi seed wards
                 'address_street' => $r['address_street'] ?? null,
-                'temp_ward_id' => 11,
+                'temp_ward_id' => null,
                 'temp_address_street' => $r['temp_address_street'] ?? null,
                 'phone' => $r['phone'],
                 'emergency_contact_phone' => $r['emergency_contact_phone'] ?? null,
