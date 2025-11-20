@@ -30,6 +30,14 @@ class ContractDocxGenerateService
             throw new \RuntimeException("Template DOCX not found: {$template->body_path}");
         }
 
+        // Eager load necessary relationships for address computation
+        $contract->load([
+            'employee.ward.province',
+            'employee.tempWard.province',
+            'department',
+            'position'
+        ]);
+
         // 1) Build merge data dynamically from placeholder mappings
         $data = DynamicPlaceholderResolverService::resolve($contract, $template);
 

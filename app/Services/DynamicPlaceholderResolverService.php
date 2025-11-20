@@ -46,7 +46,7 @@ class DynamicPlaceholderResolverService
     {
         $value = match ($mapping->data_source) {
             'CONTRACT' => self::extractFromContract($contract, $mapping->source_path),
-            'COMPUTED' => self::computeValue($contract, $mapping->formula),
+            'COMPUTED' => self::computeValue($contract, $mapping->formula ?? $mapping->source_path),
             'MANUAL' => $manualData[$mapping->placeholder_key] ?? $mapping->default_value,
             'SYSTEM' => self::getSystemValue($mapping->source_path),
             default => $mapping->default_value,
@@ -126,6 +126,8 @@ class DynamicPlaceholderResolverService
             'total_salary' => $contract->base_salary + $contract->position_allowance,
             'contract_duration_months' => self::calculateContractDuration($contract),
             'probation_duration_days' => self::calculateProbationDuration($contract),
+            'employee_full_address' => self::buildFullAddress($contract->employee, 'permanent'),
+            'employee_temp_full_address' => self::buildFullAddress($contract->employee, 'temporary'),
             default => null,
         };
     }
@@ -155,12 +157,57 @@ class DynamicPlaceholderResolverService
     {
         return match ($transformer) {
             'number_format' => number_format((float)$value, 0, ',', '.'),
+            'currency_to_words' => \App\Helpers\NumberToWords::convert($value, 'đồng'),
             'date_vn' => $value ? Carbon::parse($value)->format('d/m/Y') : '',
             'datetime_vn' => $value ? Carbon::parse($value)->format('d/m/Y H:i') : '',
+            'gender_vn' => self::transformGender($value),
+            'marital_status_vn' => self::transformMaritalStatus($value),
+            'contract_type_vn' => self::transformContractType($value),
             'uppercase' => mb_strtoupper((string)$value),
             'lowercase' => mb_strtolower((string)$value),
             'ucfirst' => mb_convert_case((string)$value, MB_CASE_TITLE),
             default => $value,
+        };
+    }
+
+    /**
+     * Transform gender enum to Vietnamese
+     */
+    protected static function transformGender($value): string
+    {
+        return match (strtolower((string)$value)) {
+            'male', 'nam' => 'Nam',
+            'female', 'nữ', 'nu' => 'Nữ',
+            'other', 'khác', 'khac' => 'Khác',
+            default => (string)$value,
+        };
+    }
+
+    /**
+     * Transform marital status to Vietnamese
+     */
+    protected static function transformMaritalStatus($value): string
+    {
+        return match (strtolower((string)$value)) {
+            'single', 'độc thân' => 'Độc thân',
+            'married', 'đã kết hôn', 'kết hôn' => 'Đã kết hôn',
+            'divorced', 'ly hôn' => 'Ly hôn',
+            'widowed', 'góa' => 'Góa',
+            default => (string)$value,
+        };
+    }
+
+    /**
+     * Transform contract type to Vietnamese
+     */
+    protected static function transformContractType($value): string
+    {
+        return match (strtolower((string)$value)) {
+            'probation', 'thử việc' => 'Hợp đồng thử việc',
+            'definite', 'xác định' => 'Hợp đồng xác định thời hạn',
+            'indefinite', 'không xác định' => 'Hợp đồng không xác định thời hạn',
+            'seasonal', 'theo mùa' => 'Hợp đồng theo mùa vụ',
+            default => (string)$value,
         };
     }
 
@@ -192,6 +239,81 @@ class DynamicPlaceholderResolverService
         $end = Carbon::parse($contract->probation_end_date);
 
         return $start->diffInDays($end);
+    }
+
+    /**
+     * Build full address from employee ward relationship
+     * Format: street + ', ' + ward.name + ', ' + province.name
+     */
+    protected static function buildFullAddress($employee, string $type = 'permanent'): ?string
+    {
+        if (!$employee) {
+            return null;
+        }
+
+        $parts = [];
+
+        if ($type === 'temporary') {
+            // Temporary address
+            if (!empty($employee->temp_address_street)) {
+                $parts[] = $employee->temp_address_street;
+            }
+
+            // Load temp_ward relationship if available
+            if (!empty($employee->temp_ward_id)) {
+                $ward = $employee->tempWard ?? null;
+                if ($ward) {
+                    if (!empty($ward->full_name)) {
+                        $parts[] = $ward->full_name;
+                    } elseif (!empty($ward->name)) {
+                        $parts[] = $ward->name;
+                    }
+
+                    // Get province from ward
+                    if (!empty($ward->province_id)) {
+                        $province = $ward->province ?? null;
+                        if ($province) {
+                            if (!empty($province->full_name)) {
+                                $parts[] = $province->full_name;
+                            } elseif (!empty($province->name)) {
+                                $parts[] = $province->name;
+                            }
+                        }
+                    }
+                }
+            }
+        } else {
+            // Permanent address
+            if (!empty($employee->address_street)) {
+                $parts[] = $employee->address_street;
+            }
+
+            // Load ward relationship
+            if (!empty($employee->ward_id)) {
+                $ward = $employee->ward ?? null;
+                if ($ward) {
+                    if (!empty($ward->full_name)) {
+                        $parts[] = $ward->full_name;
+                    } elseif (!empty($ward->name)) {
+                        $parts[] = $ward->name;
+                    }
+
+                    // Get province from ward
+                    if (!empty($ward->province_id)) {
+                        $province = $ward->province ?? null;
+                        if ($province) {
+                            if (!empty($province->full_name)) {
+                                $parts[] = $province->full_name;
+                            } elseif (!empty($province->name)) {
+                                $parts[] = $province->name;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        return !empty($parts) ? implode(', ', $parts) : null;
     }
 
     /**

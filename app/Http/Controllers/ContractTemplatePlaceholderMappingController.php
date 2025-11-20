@@ -44,7 +44,7 @@ class ContractTemplatePlaceholderMappingController extends Controller
             'data_source' => 'required|in:CONTRACT,COMPUTED,MANUAL,SYSTEM',
             'source_path' => 'nullable|string|max:255',
             'default_value' => 'nullable|string|max:255',
-            'transformer' => 'nullable|string|in:number_format,date_vn,datetime_vn,uppercase,lowercase,ucfirst',
+            'transformer' => 'nullable|string|in:number_format,currency_to_words,date_vn,datetime_vn,gender_vn,marital_status_vn,contract_type_vn,uppercase,lowercase,ucfirst',
             'formula' => 'nullable|string',
             'is_required' => 'boolean',
         ]);
@@ -185,9 +185,41 @@ class ContractTemplatePlaceholderMappingController extends Controller
                 ->delete();
         }
 
+        $presets = config('contract_placeholders.presets', []);
+
+        // Update existing placeholders if preset has changed
+        $updatedCount = 0;
+        if (!empty($comparison['unchanged'])) {
+            foreach ($comparison['unchanged'] as $key) {
+                if (isset($presets[$key])) {
+                    $mapping = $template->placeholderMappings()
+                        ->where('placeholder_key', $key)
+                        ->first();
+
+                    if ($mapping) {
+                        [$dataSource, $sourcePath, $transformer, $defaultValue] = $presets[$key];
+
+                        // Only update if different from preset
+                        if ($mapping->data_source !== $dataSource
+                            || $mapping->source_path !== $sourcePath
+                            || $mapping->transformer !== $transformer
+                            || $mapping->default_value !== $defaultValue) {
+
+                            $mapping->update([
+                                'data_source' => $dataSource,
+                                'source_path' => $sourcePath,
+                                'transformer' => $transformer,
+                                'default_value' => $defaultValue,
+                            ]);
+                            $updatedCount++;
+                        }
+                    }
+                }
+            }
+        }
+
         // Add new placeholders
         if (!empty($comparison['added'])) {
-            $presets = config('contract_placeholders.presets', []);
             $displayOrder = $template->placeholderMappings()->max('display_order') ?? 0;
 
             foreach ($comparison['added'] as $key) {
@@ -226,6 +258,7 @@ class ContractTemplatePlaceholderMappingController extends Controller
                 'added' => count($comparison['added']),
                 'removed' => count($comparison['removed']),
                 'unchanged' => count($comparison['unchanged']),
+                'updated' => $updatedCount,
             ],
         ]);
     }

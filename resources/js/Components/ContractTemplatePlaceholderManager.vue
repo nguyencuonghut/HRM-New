@@ -122,8 +122,12 @@ const dataSources = [
 const transformerOptions = [
   { value: null, label: 'Không' },
   { value: 'number_format', label: 'Format số' },
+  { value: 'currency_to_words', label: 'Số tiền thành chữ' },
   { value: 'date_vn', label: 'Ngày VN' },
   { value: 'datetime_vn', label: 'Ngày giờ VN' },
+  { value: 'gender_vn', label: 'Giới tính VN' },
+  { value: 'marital_status_vn', label: 'Tình trạng hôn nhân VN' },
+  { value: 'contract_type_vn', label: 'Loại hợp đồng VN' },
   { value: 'uppercase', label: 'CHỮ HOA' },
   { value: 'lowercase', label: 'chữ thường' },
   { value: 'ucfirst', label: 'Viết hoa đầu' }
@@ -192,6 +196,8 @@ const sourcePathSuggestions = {
     { value: 'total_salary', label: 'total_salary - Tổng lương' },
     { value: 'contract_duration_months', label: 'contract_duration_months - Thời hạn HĐ (tháng)' },
     { value: 'probation_duration_days', label: 'probation_duration_days - Thời gian thử việc (ngày)' },
+    { value: 'employee_full_address', label: 'employee_full_address - Địa chỉ đầy đủ (thường trú)' },
+    { value: 'employee_temp_full_address', label: 'employee_temp_full_address - Địa chỉ đầy đủ (tạm trú)' },
   ],
   SYSTEM: [
     { value: 'today', label: 'today - Ngày hôm nay' },

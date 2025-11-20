@@ -33,13 +33,17 @@ return [
         // Employee personal info
         'employee_birthday' => ['CONTRACT', 'employee.dob', 'date_vn', ''],
         'employee_dob' => ['CONTRACT', 'employee.dob', 'date_vn', ''],
-        'employee_gender' => ['CONTRACT', 'employee.gender', null, ''],
-        'employee_marital_status' => ['CONTRACT', 'employee.marital_status', null, ''],
+        'employee_gender' => ['CONTRACT', 'employee.gender', 'gender_vn', ''],
+        'employee_marital_status' => ['CONTRACT', 'employee.marital_status', 'marital_status_vn', ''],
 
-        // Employee addresses
-        'employee_address' => ['CONTRACT', 'employee.address_street', null, ''],
+        // Employee addresses (full with ward, district, province)
+        'employee_address' => ['COMPUTED', 'employee_full_address', null, ''],
+        'employee_full_address' => ['COMPUTED', 'employee_full_address', null, ''],
+        'employee_temp_address' => ['COMPUTED', 'employee_temp_full_address', null, ''],
+        'employee_temp_full_address' => ['COMPUTED', 'employee_temp_full_address', null, ''],
+
+        // Street only (no ward/province)
         'employee_address_street' => ['CONTRACT', 'employee.address_street', null, ''],
-        'employee_temp_address' => ['CONTRACT', 'employee.temp_address_street', null, ''],
         'employee_temp_address_street' => ['CONTRACT', 'employee.temp_address_street', null, ''],
 
         // Employee work info
@@ -62,7 +66,7 @@ return [
 
         // ========== CONTRACT INFO ==========
         'contract_number' => ['CONTRACT', 'contract_number', null, ''],
-        'contract_type' => ['CONTRACT', 'contract_type', null, ''],
+        'contract_type' => ['CONTRACT', 'contract_type', 'contract_type_vn', ''],
         'contract_status' => ['CONTRACT', 'status', null, ''],
         'contract_source' => ['CONTRACT', 'source', null, ''],
 
@@ -81,8 +85,10 @@ return [
         // ========== SALARY & ALLOWANCES ==========
         'base_salary' => ['CONTRACT', 'base_salary', 'number_format', '0'],
         'insurance_salary' => ['CONTRACT', 'insurance_salary', 'number_format', '0'],
+        'insurance_salary_words' => ['CONTRACT', 'insurance_salary', 'currency_to_words', 'Không đồng'],
         'position_allowance' => ['CONTRACT', 'position_allowance', 'number_format', '0'],
         'total_salary' => ['COMPUTED', 'total_salary', 'number_format', '0'],
+        'total_salary_words' => ['COMPUTED', 'total_salary', 'currency_to_words', 'Không đồng'],
 
         // ========== INSURANCE ==========
         'social_insurance' => ['CONTRACT', 'social_insurance', null, 'Có'],
@@ -98,6 +104,8 @@ return [
         // ========== COMPUTED FIELDS ==========
         'contract_duration_months' => ['COMPUTED', 'contract_duration_months', null, ''],
         'probation_duration_days' => ['COMPUTED', 'probation_duration_days', null, ''],
+        'employee_full_address' => ['COMPUTED', 'employee_full_address', null, ''],
+        'employee_temp_full_address' => ['COMPUTED', 'employee_temp_full_address', null, ''],
 
         // ========== SYSTEM VALUES ==========
         'today' => ['SYSTEM', 'today', null, ''],
@@ -117,8 +125,12 @@ return [
 
     'transformers' => [
         'number_format' => 'Format số với dấu phẩy ngăn cách hàng nghìn',
+        'currency_to_words' => 'Chuyển số tiền thành chữ (VD: 6500000 → Sáu triệu năm trăm nghìn đồng)',
         'date_vn' => 'Format ngày theo dd/mm/yyyy',
         'datetime_vn' => 'Format ngày giờ theo dd/mm/yyyy HH:ii',
+        'gender_vn' => 'Chuyển giới tính sang tiếng Việt (male → Nam, female → Nữ)',
+        'marital_status_vn' => 'Chuyển tình trạng hôn nhân sang tiếng Việt',
+        'contract_type_vn' => 'Chuyển loại hợp đồng sang tiếng Việt',
         'uppercase' => 'Chuyển chữ HOA',
         'lowercase' => 'Chuyển chữ thường',
         'ucfirst' => 'Viết hoa chữ cái đầu',

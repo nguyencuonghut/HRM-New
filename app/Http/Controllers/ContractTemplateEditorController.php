@@ -184,8 +184,30 @@ class ContractTemplateEditorController extends Controller
             $mockEmployee->marital_status = 'SINGLE';
 
             // Employee addresses
-            $mockEmployee->address_street = '123 Trần Hưng Đạo, Hà Nội';
-            $mockEmployee->temp_address_street = '456 Lê Lợi, Hà Nội';
+            $mockEmployee->address_street = '123 Trần Hưng Đạo';
+            $mockEmployee->temp_address_street = '456 Lê Lợi';
+            $mockEmployee->ward_id = 'mock-ward-id';
+            $mockEmployee->temp_ward_id = 'mock-temp-ward-id';
+
+            // Mock ward for permanent address
+            $mockWard = new \stdClass();
+            $mockWard->name = 'Phường Đồng Xuân';
+            $mockWard->full_name = 'Phường Đồng Xuân';
+            $mockWard->province_id = 'mock-province-id';
+
+            $mockProvince = new \stdClass();
+            $mockProvince->name = 'Hà Nội';
+            $mockProvince->full_name = 'Thành phố Hà Nội';
+            $mockWard->province = $mockProvince;
+            $mockEmployee->ward = $mockWard;
+
+            // Mock temp ward
+            $mockTempWard = new \stdClass();
+            $mockTempWard->name = 'Phường Hoàn Kiếm';
+            $mockTempWard->full_name = 'Phường Hoàn Kiếm';
+            $mockTempWard->province_id = 'mock-province-id';
+            $mockTempWard->province = $mockProvince;
+            $mockEmployee->tempWard = $mockTempWard;
 
             // Employee work info
             $mockEmployee->hire_date = '2024-01-15';
