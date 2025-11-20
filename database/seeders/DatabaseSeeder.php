@@ -30,6 +30,7 @@ class DatabaseSeeder extends Seeder
             ContractDocxTemplateSeeder::class,
             ContractTemplatePlaceholderMappingSeeder::class,
             ContractAppendixTemplateSeeder::class,
+            ContractAppendixTemplatePlaceholderMappingSeeder::class,
         ]);
     }
 }

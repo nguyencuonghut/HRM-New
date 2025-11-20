@@ -1,5 +1,5 @@
 <template>
-  <Dialog :visible="visible" :style="{ width: '1200px' }" header="Quản lý Placeholders" :modal="true" @update:visible="$emit('update:visible', $event)">
+  <Dialog :visible="visible" :style="{ width: '1400px' }" header="Quản lý Placeholders" :modal="true" @update:visible="$emit('update:visible', $event)">
     <div class="mb-4">
       <div class="flex justify-between items-center">
         <div>
@@ -24,13 +24,15 @@
         </template>
       </Column>
 
-      <Column field="source_path" header="Đường dẫn" style="min-width: 250px">
+      <Column field="source_path" header="Đường dẫn" style="min-width: 350px">
         <template #body="{ data }">
-          <Select v-model="data.source_path" :options="getSourcePathOptions(data.data_source)"
-                  optionLabel="label" optionValue="value" filter editable showClear
-                  class="w-full" placeholder="Chọn hoặc nhập đường dẫn"
-                  :disabled="data.data_source === 'MANUAL' || data.data_source === 'SYSTEM'"
-                  @change="markChanged(data.id)" />
+          <div v-tooltip.top="data.source_path || 'Chưa có đường dẫn'">
+            <Select v-model="data.source_path" :options="getSourcePathOptions(data.data_source)"
+                    optionLabel="label" optionValue="value" filter editable showClear
+                    class="w-full" placeholder="Chọn hoặc nhập đường dẫn"
+                    :disabled="data.data_source === 'MANUAL' || data.data_source === 'SYSTEM'"
+                    @change="markChanged(data.id)" />
+          </div>
         </template>
       </Column>
 
@@ -95,13 +97,19 @@ import { useToast } from 'primevue/usetoast'
 
 const props = defineProps({
   visible: Boolean,
-  template: Object
+  template: Object,
+  isAppendix: { type: Boolean, default: false }
 })
 
 const emit = defineEmits(['update:visible', 'saved'])
 
 const toast = useToast()
 const loading = ref(false)
+
+// Base URL depends on whether this is appendix or contract template
+const baseUrl = computed(() => {
+  return props.isAppendix ? '/contract-appendix-templates' : '/contract-templates'
+})
 
 // Debug props
 console.log('Component mounted, props:', props)
@@ -133,80 +141,81 @@ const transformerOptions = [
   { value: 'ucfirst', label: 'Viết hoa đầu' }
 ]
 
-// Gợi ý đường dẫn cho từng data source
-const sourcePathSuggestions = {
-  CONTRACT: [
-    // Contract fields
-    { value: 'contract_number', label: 'contract_number - Số hợp đồng' },
-    { value: 'contract_type', label: 'contract_type - Loại hợp đồng' },
-    { value: 'status', label: 'status - Trạng thái HĐ' },
-    { value: 'source', label: 'source - Nguồn gốc HĐ' },
-    { value: 'sign_date', label: 'sign_date - Ngày ký' },
-    { value: 'start_date', label: 'start_date - Ngày bắt đầu' },
-    { value: 'end_date', label: 'end_date - Ngày kết thúc' },
-    { value: 'probation_end_date', label: 'probation_end_date - Ngày hết thử việc' },
-    { value: 'terminated_at', label: 'terminated_at - Ngày chấm dứt' },
-    { value: 'approved_at', label: 'approved_at - Ngày phê duyệt' },
-    { value: 'termination_reason', label: 'termination_reason - Lý do chấm dứt' },
-    { value: 'base_salary', label: 'base_salary - Lương cơ bản' },
-    { value: 'insurance_salary', label: 'insurance_salary - Lương BHXH' },
-    { value: 'position_allowance', label: 'position_allowance - Phụ cấp vị trí' },
-    { value: 'social_insurance', label: 'social_insurance - BHXH' },
-    { value: 'health_insurance', label: 'health_insurance - BHYT' },
-    { value: 'unemployment_insurance', label: 'unemployment_insurance - BHTN' },
-    { value: 'working_time', label: 'working_time - Thời gian làm việc' },
-    { value: 'work_location', label: 'work_location - Địa điểm làm việc' },
-    { value: 'note', label: 'note - Ghi chú HĐ' },
-    { value: 'approval_note', label: 'approval_note - Ghi chú phê duyệt' },
+// Gợi ý đường dẫn cho từng data source - dynamic based on isAppendix
+const sourcePathSuggestions = computed(() => {
+  const prefix = props.isAppendix ? 'contractAppendix.contract.' : ''
 
-    // Employee fields
-    { value: 'employee.full_name', label: 'employee.full_name - Họ tên NV' },
-    { value: 'employee.employee_code', label: 'employee.employee_code - Mã NV' },
-    { value: 'employee.phone', label: 'employee.phone - SĐT NV' },
-    { value: 'employee.emergency_contact_phone', label: 'employee.emergency_contact_phone - SĐT khẩn cấp' },
-    { value: 'employee.personal_email', label: 'employee.personal_email - Email cá nhân' },
-    { value: 'employee.company_email', label: 'employee.company_email - Email công ty' },
-    { value: 'employee.cccd', label: 'employee.cccd - CCCD/CMND' },
-    { value: 'employee.cccd_issued_on', label: 'employee.cccd_issued_on - Ngày cấp CCCD' },
-    { value: 'employee.cccd_issued_by', label: 'employee.cccd_issued_by - Nơi cấp CCCD' },
-    { value: 'employee.si_number', label: 'employee.si_number - Mã số BHXH' },
-    { value: 'employee.dob', label: 'employee.dob - Ngày sinh' },
-    { value: 'employee.gender', label: 'employee.gender - Giới tính' },
-    { value: 'employee.marital_status', label: 'employee.marital_status - Tình trạng hôn nhân' },
-    { value: 'employee.address_street', label: 'employee.address_street - Địa chỉ thường trú' },
-    { value: 'employee.temp_address_street', label: 'employee.temp_address_street - Địa chỉ tạm trú' },
-    { value: 'employee.hire_date', label: 'employee.hire_date - Ngày vào làm' },
-    { value: 'employee.status', label: 'employee.status - Trạng thái NV' },
+  return {
+    CONTRACT: [
+      // Contract fields
+      ...(props.isAppendix ? [
+        { value: 'contractAppendix.appendix_number', label: 'contractAppendix.appendix_number - Số phụ lục' },
+        { value: 'contractAppendix.appendix_type', label: 'contractAppendix.appendix_type - Loại phụ lục' },
+        { value: 'contractAppendix.effective_date', label: 'contractAppendix.effective_date - Ngày hiệu lực' },
+        { value: 'contractAppendix.sign_date', label: 'contractAppendix.sign_date - Ngày ký PL' },
+      ] : []),
+      { value: prefix + 'contract_number', label: prefix + 'contract_number - Số hợp đồng' },
+      { value: prefix + 'contract_type', label: prefix + 'contract_type - Loại hợp đồng' },
+      { value: prefix + 'status', label: prefix + 'status - Trạng thái HĐ' },
+      { value: prefix + 'source', label: prefix + 'source - Nguồn gốc HĐ' },
+      { value: prefix + 'sign_date', label: prefix + 'sign_date - Ngày ký' },
+      { value: prefix + 'start_date', label: prefix + 'start_date - Ngày bắt đầu' },
+      { value: prefix + 'end_date', label: prefix + 'end_date - Ngày kết thúc' },
+      { value: prefix + 'probation_end_date', label: prefix + 'probation_end_date - Ngày hết thử việc' },
+      { value: prefix + 'base_salary', label: prefix + 'base_salary - Lương cơ bản' },
+      { value: prefix + 'insurance_salary', label: prefix + 'insurance_salary - Lương BHXH' },
+      { value: prefix + 'position_allowance', label: prefix + 'position_allowance - Phụ cấp vị trí' },
+      { value: prefix + 'working_time', label: prefix + 'working_time - Thời gian làm việc' },
+      { value: prefix + 'work_location', label: prefix + 'work_location - Địa điểm làm việc' },
 
-    // Department fields
-    { value: 'department.name', label: 'department.name - Tên phòng ban' },
-    { value: 'department.code', label: 'department.code - Mã phòng ban' },
-    { value: 'department.type', label: 'department.type - Loại đơn vị' },
-    { value: 'department.is_active', label: 'department.is_active - Trạng thái hoạt động' },
+      // Employee fields
+      { value: prefix + 'employee.full_name', label: prefix + 'employee.full_name - Họ tên NV' },
+      { value: prefix + 'employee.employee_code', label: prefix + 'employee.employee_code - Mã NV' },
+      { value: prefix + 'employee.phone', label: prefix + 'employee.phone - SĐT NV' },
+      { value: prefix + 'employee.emergency_contact_phone', label: prefix + 'employee.emergency_contact_phone - SĐT khẩn cấp' },
+      { value: prefix + 'employee.personal_email', label: prefix + 'employee.personal_email - Email cá nhân' },
+      { value: prefix + 'employee.company_email', label: prefix + 'employee.company_email - Email công ty' },
+      { value: prefix + 'employee.cccd', label: prefix + 'employee.cccd - CCCD/CMND' },
+      { value: prefix + 'employee.cccd_issued_on', label: prefix + 'employee.cccd_issued_on - Ngày cấp CCCD' },
+      { value: prefix + 'employee.cccd_issued_by', label: prefix + 'employee.cccd_issued_by - Nơi cấp CCCD' },
+      { value: prefix + 'employee.si_number', label: prefix + 'employee.si_number - Mã số BHXH' },
+      { value: prefix + 'employee.dob', label: prefix + 'employee.dob - Ngày sinh' },
+      { value: prefix + 'employee.gender', label: prefix + 'employee.gender - Giới tính' },
+      { value: prefix + 'employee.marital_status', label: prefix + 'employee.marital_status - Tình trạng hôn nhân' },
+      { value: prefix + 'employee.address_street', label: prefix + 'employee.address_street - Địa chỉ thường trú' },
+      { value: prefix + 'employee.temp_address_street', label: prefix + 'employee.temp_address_street - Địa chỉ tạm trú' },
+      { value: prefix + 'employee.hire_date', label: prefix + 'employee.hire_date - Ngày vào làm' },
+      { value: prefix + 'employee.status', label: prefix + 'employee.status - Trạng thái NV' },
 
-    // Position fields
-    { value: 'position.title', label: 'position.title - Chức danh' },
-    { value: 'position.level', label: 'position.level - Cấp bậc' },
-    { value: 'position.insurance_base_salary', label: 'position.insurance_base_salary - Lương BHXH chức danh' },
-    { value: 'position.position_salary', label: 'position.position_salary - Lương vị trí' },
-    { value: 'position.competency_salary', label: 'position.competency_salary - Lương năng lực' },
-    { value: 'position.allowance', label: 'position.allowance - Phụ cấp chức danh' },
-  ],
-  COMPUTED: [
-    { value: 'total_salary', label: 'total_salary - Tổng lương' },
-    { value: 'contract_duration_months', label: 'contract_duration_months - Thời hạn HĐ (tháng)' },
-    { value: 'probation_duration_days', label: 'probation_duration_days - Thời gian thử việc (ngày)' },
-    { value: 'employee_full_address', label: 'employee_full_address - Địa chỉ đầy đủ (thường trú)' },
-    { value: 'employee_temp_full_address', label: 'employee_temp_full_address - Địa chỉ đầy đủ (tạm trú)' },
-  ],
-  SYSTEM: [
-    { value: 'today', label: 'today - Ngày hôm nay' },
-    { value: 'now', label: 'now - Ngày giờ hiện tại' },
-    { value: 'current_year', label: 'current_year - Năm hiện tại' },
-    { value: 'company_name', label: 'company_name - Tên công ty' },
-  ],
-  MANUAL: []
-}
+      // Department fields
+      { value: prefix + 'department.name', label: prefix + 'department.name - Tên phòng ban' },
+      { value: prefix + 'department.code', label: prefix + 'department.code - Mã phòng ban' },
+      { value: prefix + 'department.type', label: prefix + 'department.type - Loại đơn vị' },
+
+      // Position fields
+      { value: prefix + 'position.title', label: prefix + 'position.title - Chức danh' },
+      { value: prefix + 'position.level', label: prefix + 'position.level - Cấp bậc' },
+      { value: prefix + 'position.insurance_base_salary', label: prefix + 'position.insurance_base_salary - Lương BHXH chức danh' },
+      { value: prefix + 'position.position_salary', label: prefix + 'position.position_salary - Lương vị trí' },
+      { value: prefix + 'position.competency_salary', label: prefix + 'position.competency_salary - Lương năng lực' },
+      { value: prefix + 'position.allowance', label: prefix + 'position.allowance - Phụ cấp chức danh' },
+    ],
+    COMPUTED: [
+      { value: 'total_salary', label: 'total_salary - Tổng lương' },
+      { value: 'contract_duration_months', label: 'contract_duration_months - Thời hạn HĐ (tháng)' },
+      { value: 'probation_duration_days', label: 'probation_duration_days - Thời gian thử việc (ngày)' },
+      { value: 'employee_full_address', label: 'employee_full_address - Địa chỉ đầy đủ (thường trú)' },
+      { value: 'employee_temp_full_address', label: 'employee_temp_full_address - Địa chỉ đầy đủ (tạm trú)' },
+    ],
+    SYSTEM: [
+      { value: 'today', label: 'today - Ngày hôm nay' },
+      { value: 'now', label: 'now - Ngày giờ hiện tại' },
+      { value: 'current_year', label: 'current_year - Năm hiện tại' },
+      { value: 'company_name', label: 'company_name - Tên công ty' },
+    ],
+    MANUAL: []
+  }
+})
 
 // Helper function to clean source_path (remove label part if user typed it)
 function cleanSourcePath(path) {
@@ -228,7 +237,7 @@ watch(() => props.visible, (val) => {
 async function loadMappings() {
   loading.value = true
   try {
-    const response = await fetch(`/contract-templates/${props.template.id}/placeholders`)
+    const response = await fetch(`${baseUrl.value}/${props.template.id}/placeholders`)
     console.log('Response status:', response.status)
 
     if (!response.ok) {
@@ -253,7 +262,7 @@ async function loadMappings() {
 
 async function loadPresets() {
   try {
-    const response = await fetch('/contract-templates/placeholders/presets')
+    const response = await fetch(`${baseUrl.value}/placeholders/presets`)
     const result = await response.json()
     presets.value = result.data.presets
   } catch (error) {
@@ -270,7 +279,7 @@ function hasPreset(key) {
 }
 
 function getSourcePathOptions(dataSource) {
-  return sourcePathSuggestions[dataSource] || []
+  return sourcePathSuggestions.value[dataSource] || []
 }
 
 async function resyncPlaceholders() {
@@ -280,7 +289,7 @@ async function resyncPlaceholders() {
 
   syncing.value = true
   try {
-    const response = await fetch(`/contract-templates/${props.template.id}/placeholders/resync`, {
+    const response = await fetch(`${baseUrl.value}/${props.template.id}/placeholders/resync`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -308,7 +317,7 @@ async function resyncPlaceholders() {
 
 async function applyPreset(mapping) {
   try {
-    const response = await fetch(`/contract-templates/${props.template.id}/placeholders/${mapping.id}/apply-preset`, {
+    const response = await fetch(`${baseUrl.value}/${props.template.id}/placeholders/${mapping.id}/apply-preset`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -329,7 +338,7 @@ async function applyPreset(mapping) {
 
 async function saveOne(mapping) {
   try {
-    const response = await fetch(`/contract-templates/${props.template.id}/placeholders/${mapping.id}`, {
+    const response = await fetch(`${baseUrl.value}/${props.template.id}/placeholders/${mapping.id}`, {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json',
@@ -361,7 +370,7 @@ async function saveAll() {
   try {
     const changedMappings = mappings.value.filter(m => changedIds.value.has(m.id))
 
-    const response = await fetch(`/contract-templates/${props.template.id}/placeholders/bulk-update`, {
+    const response = await fetch(`${baseUrl.value}/${props.template.id}/placeholders/bulk-update`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

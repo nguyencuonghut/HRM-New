@@ -138,6 +138,15 @@ const model = computed(() => {
         });
     }
 
+    // Appendix Templates - check permission
+    if (can('view appendix templates')) {
+        systemMenuItems.push({
+            label: 'Mẫu phụ lục',
+            icon: 'pi pi-fw pi-file-edit',
+            to: '/contract-appendix-templates'
+        });
+    }
+
     // Backup menu - check permission
     if (canViewBackups()) {
         systemMenuItems.push({

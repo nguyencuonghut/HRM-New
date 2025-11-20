@@ -9,72 +9,58 @@ class ContractAppendixTemplateSeeder extends Seeder
 {
     public function run(): void
     {
-        // Xoá để tránh trùng code khi seed lại (tuỳ môi trường)
-        // ContractAppendixTemplate::truncate();
-
         $templates = [
             [
-                'name'          => 'PL Điều chỉnh lương cơ bản',
-                'code'          => 'PL-SALARY-01',
-                'appendix_type' => 'SALARY',
-                'blade_view'    => 'contracts.appendixes.default',
-                'description'   => 'Phụ lục điều chỉnh lương cơ bản, lương BH và phụ cấp vị trí.',
-                'is_default'    => true,
-                'is_active'     => true,
+                'name'              => 'Phụ lục điều chỉnh lương',
+                'code'              => 'PL-LUONG-01',
+                'appendix_type'     => 'SALARY',
+                'engine'            => 'DOCX_MERGE',
+                'body_path'         => 'templates/appendixes/salary_adjustment.docx',
+                'content'           => null,
+                'placeholders_json' => ['employee_full_name', 'employee_code', 'contract_number', 'old_salary', 'new_salary', 'adjustment_reason', 'effective_date'],
+                'is_default'        => true,
+                'is_active'         => true,
+                'version'           => 1,
+                'description'       => 'Mẫu phụ lục điều chỉnh mức lương, phụ cấp',
             ],
             [
-                'name'          => 'PL Điều chỉnh phụ cấp',
-                'code'          => 'PL-ALLOWANCE-01',
-                'appendix_type' => 'ALLOWANCE',
-                'blade_view'    => 'contracts.appendixes.default',
-                'description'   => 'Phụ lục điều chỉnh các khoản phụ cấp.',
-                'is_default'    => true,
-                'is_active'     => true,
+                'name'              => 'Phụ lục điều chỉnh phụ cấp',
+                'code'              => 'PL-PHUCAP-01',
+                'appendix_type'     => 'ALLOWANCE',
+                'engine'            => 'DOCX_MERGE',
+                'body_path'         => 'templates/appendixes/allowance_adjustment.docx',
+                'content'           => null,
+                'placeholders_json' => ['employee_full_name', 'employee_code', 'allowance_name', 'old_amount', 'new_amount', 'effective_date'],
+                'is_default'        => true,
+                'is_active'         => true,
+                'version'           => 1,
+                'description'       => 'Mẫu phụ lục điều chỉnh các khoản phụ cấp',
             ],
             [
-                'name'          => 'PL Điều chỉnh chức danh',
-                'code'          => 'PL-POSITION-01',
-                'appendix_type' => 'POSITION',
-                'blade_view'    => 'contracts.appendixes.default',
-                'description'   => 'Phụ lục thay đổi chức danh công việc của người lao động.',
-                'is_default'    => true,
-                'is_active'     => true,
+                'name'              => 'Phụ lục điều chuyển vị trí',
+                'code'              => 'PL-VITRI-01',
+                'appendix_type'     => 'POSITION',
+                'engine'            => 'DOCX_MERGE',
+                'body_path'         => 'templates/appendixes/position_change.docx',
+                'content'           => null,
+                'placeholders_json' => ['employee_full_name', 'employee_code', 'old_position', 'new_position', 'old_department', 'new_department', 'effective_date'],
+                'is_default'        => true,
+                'is_active'         => true,
+                'version'           => 1,
+                'description'       => 'Mẫu phụ lục thay đổi chức danh, phòng ban',
             ],
             [
-                'name'          => 'PL Điều chuyển đơn vị',
-                'code'          => 'PL-DEPT-01',
-                'appendix_type' => 'DEPARTMENT',
-                'blade_view'    => 'contracts.appendixes.default',
-                'description'   => 'Phụ lục điều chuyển người lao động sang đơn vị/phòng ban khác.',
-                'is_default'    => true,
-                'is_active'     => true,
-            ],
-            [
-                'name'          => 'PL Điều chỉnh thời gian/địa điểm làm việc',
-                'code'          => 'PL-WORKTERMS-01',
-                'appendix_type' => 'WORKING_TERMS',
-                'blade_view'    => 'contracts.appendixes.default',
-                'description'   => 'Phụ lục thay đổi thời gian làm việc hoặc địa điểm làm việc.',
-                'is_default'    => true,
-                'is_active'     => true,
-            ],
-            [
-                'name'          => 'PL Gia hạn hợp đồng',
-                'code'          => 'PL-EXT-01',
-                'appendix_type' => 'EXTENSION',
-                'blade_view'    => 'contracts.appendixes.default',
-                'description'   => 'Phụ lục gia hạn thời hạn của hợp đồng lao động.',
-                'is_default'    => true,
-                'is_active'     => true,
-            ],
-            [
-                'name'          => 'PL Khác (tuỳ chỉnh)',
-                'code'          => 'PL-OTHER-01',
-                'appendix_type' => 'OTHER',
-                'blade_view'    => 'contracts.appendixes.default',
-                'description'   => 'Phụ lục dùng cho các điều chỉnh khác không nằm trong các loại chuẩn.',
-                'is_default'    => true,
-                'is_active'     => true,
+                'name'              => 'Phụ lục điều chuyển phòng ban',
+                'code'              => 'PL-PHONGBAN-01',
+                'appendix_type'     => 'DEPARTMENT',
+                'engine'            => 'DOCX_MERGE',
+                'body_path'         => 'templates/appendixes/department_transfer.docx',
+                'content'           => null,
+                'placeholders_json' => ['employee_full_name', 'employee_code', 'old_department', 'new_department', 'effective_date'],
+                'is_default'        => true,
+                'is_active'         => true,
+                'version'           => 1,
+                'description'       => 'Mẫu phụ lục điều chuyển đơn vị làm việc',
             ],
         ];
 
@@ -84,5 +70,7 @@ class ContractAppendixTemplateSeeder extends Seeder
                 $tpl
             );
         }
+
+        $this->command->info('✓ Seeded ' . count($templates) . ' appendix templates');
     }
 }

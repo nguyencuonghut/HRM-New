@@ -181,6 +181,26 @@ Route::group(['middleware' => 'auth'], function () {
     Route::post('/contract-templates/{template}/placeholders/resync', [\App\Http\Controllers\ContractTemplatePlaceholderMappingController::class, 'resync'])->name('contract-templates.placeholders.resync');
     Route::get('/contract-templates/placeholders/presets', [\App\Http\Controllers\ContractTemplatePlaceholderMappingController::class, 'presets'])->name('contract-templates.placeholders.presets');
 
+    // Contract Appendix Template routes
+    Route::get('/contract-appendix-templates', [\App\Http\Controllers\ContractAppendixTemplateController::class, 'index'])->name('contract-appendix-templates.index');
+    Route::post('/contract-appendix-templates', [\App\Http\Controllers\ContractAppendixTemplateController::class, 'store'])->name('contract-appendix-templates.store');
+    Route::put('/contract-appendix-templates/{template}', [\App\Http\Controllers\ContractAppendixTemplateController::class, 'update'])->name('contract-appendix-templates.update');
+    Route::delete('/contract-appendix-templates/{template}', [\App\Http\Controllers\ContractAppendixTemplateController::class, 'destroy'])->name('contract-appendix-templates.destroy');
+    Route::post('/contract-appendix-templates/bulk-delete', [\App\Http\Controllers\ContractAppendixTemplateController::class, 'bulkDelete'])->name('contract-appendix-templates.bulk-delete');
+    Route::post('/contract-appendix-templates/upload', [\App\Http\Controllers\ContractAppendixTemplateController::class, 'upload'])->name('contract-appendix-templates.upload');
+
+    // Contract Appendix Template Editor routes
+    Route::get('/contract-appendix-templates/{template}/editor', [\App\Http\Controllers\ContractAppendixTemplateEditorController::class, 'editor'])->name('contract-appendix-templates.editor');
+    Route::get('/contract-appendix-templates/{template}/docx-preview', [\App\Http\Controllers\ContractAppendixTemplateEditorController::class, 'docxPreview'])->name('contract-appendix-templates.docx-preview');
+
+    // Appendix Template Placeholder Mapping routes
+    Route::get('/contract-appendix-templates/{template}/placeholders', [\App\Http\Controllers\ContractAppendixTemplatePlaceholderMappingController::class, 'index'])->name('contract-appendix-templates.placeholders.index');
+    Route::put('/contract-appendix-templates/{template}/placeholders/{mapping}', [\App\Http\Controllers\ContractAppendixTemplatePlaceholderMappingController::class, 'update'])->name('contract-appendix-templates.placeholders.update');
+    Route::post('/contract-appendix-templates/{template}/placeholders/bulk-update', [\App\Http\Controllers\ContractAppendixTemplatePlaceholderMappingController::class, 'bulkUpdate'])->name('contract-appendix-templates.placeholders.bulk-update');
+    Route::post('/contract-appendix-templates/{template}/placeholders/{mapping}/apply-preset', [\App\Http\Controllers\ContractAppendixTemplatePlaceholderMappingController::class, 'applyPreset'])->name('contract-appendix-templates.placeholders.apply-preset');
+    Route::post('/contract-appendix-templates/{template}/placeholders/resync', [\App\Http\Controllers\ContractAppendixTemplatePlaceholderMappingController::class, 'resync'])->name('contract-appendix-templates.placeholders.resync');
+    Route::get('/contract-appendix-templates/placeholders/presets', [\App\Http\Controllers\ContractAppendixTemplatePlaceholderMappingController::class, 'presets'])->name('contract-appendix-templates.placeholders.presets');
+
     // Contract Appendix routes (nested under contracts)
     Route::prefix('contracts/{contract}')->group(function () {
         Route::get('appendixes', [ContractAppendixController::class,'index'])->name('contracts.appendixes.index');

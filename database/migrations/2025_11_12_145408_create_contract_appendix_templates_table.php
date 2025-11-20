@@ -23,14 +23,28 @@ return new class extends Migration {
                 'OTHER',           // Khác
             ])->default('SALARY');
 
-            // Tên view Blade sẽ dùng để render PDF, ví dụ: 'contracts.appendixes.salary'
-            $table->string('blade_view')->default('contracts.appendixes.default');
-
+            // Engine - chỉ sử dụng DOCX_MERGE cho appendix templates
+            $table->enum('engine', ['DOCX_MERGE'])->default('DOCX_MERGE');
+            
+            // Đường dẫn file DOCX template
+            $table->string('body_path')->nullable(); // ví dụ: 'templates/appendixes/salary.docx'
+            
+            // Nội dung template (có thể dùng cho các engine khác trong tương lai)
+            $table->longText('content')->nullable();
+            
+            // Danh sách biến hỗ trợ render (extracted placeholders)
+            $table->json('placeholders_json')->nullable();
+            
             $table->string('description')->nullable();
             $table->boolean('is_default')->default(false);
             $table->boolean('is_active')->default(true);
+            $table->unsignedInteger('version')->default(1);
+            $table->unsignedBigInteger('updated_by')->nullable(); // Ai sửa lần cuối
 
             $table->timestamps();
+
+            $table->index(['appendix_type', 'is_active']);
+            $table->index('engine');
         });
     }
 

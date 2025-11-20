@@ -231,15 +231,73 @@
     </template>
   </Dialog>
 
-  <!-- Dialog xác nhận xóa nhiều -->
+  <!-- Dialog xóa nhiều -->
   <Dialog v-model:visible="deleteManyDialog" :style="{ width: '450px' }" header="Xác nhận" :modal="true">
     <div class="flex items-center gap-4">
       <i class="pi pi-exclamation-triangle !text-3xl" />
-      <span>Bạn có chắc muốn xóa các phụ lục đã chọn?</span>
+      <span>Bạn có chắc xóa {{ selected.length }} phụ lục đã chọn?</span>
     </div>
     <template #footer>
       <Button label="Không" icon="pi pi-times" text @click="deleteManyDialog=false" />
       <Button label="Có" icon="pi pi-check" severity="danger" @click="removeMany" :loading="deleting" />
+    </template>
+  </Dialog>
+
+  <!-- Dialog chọn template để sinh PDF -->
+  <Dialog v-model:visible="generateDialog" :style="{ width: '600px' }" header="Xác nhận sinh PDF" :modal="true">
+    <div class="mb-4">
+      <div class="flex items-center gap-3 mb-4 p-3 bg-blue-50 rounded">
+        <i class="pi pi-info-circle text-blue-600 text-xl"></i>
+        <div>
+          <div class="font-semibold text-gray-800">Phụ lục: {{ currentAppendix?.appendix_no }}</div>
+          <div class="text-sm text-gray-600">Loại: {{ currentAppendix?.appendix_type_label }}</div>
+        </div>
+      </div>
+
+      <div v-if="defaultTemplate" class="mb-3">
+        <p class="text-sm text-gray-700 mb-2">Mẫu được chọn:</p>
+        <div class="p-3 border rounded bg-gray-50">
+          <div class="font-semibold">{{ defaultTemplate.name }}</div>
+          <div class="text-sm text-gray-600">{{ defaultTemplate.code }}</div>
+          <div v-if="defaultTemplate.is_default" class="text-xs text-green-600 mt-1">
+            <i class="pi pi-check-circle"></i> Mẫu mặc định
+          </div>
+        </div>
+      </div>
+
+      <details class="mt-4">
+        <summary class="cursor-pointer text-sm text-primary hover:underline">
+          Hoặc chọn mẫu khác...
+        </summary>
+        <Select
+          v-model="selectedTemplateId"
+          :options="availableTemplates"
+          optionLabel="name"
+          optionValue="id"
+          placeholder="-- Chọn mẫu khác --"
+          showClear
+          fluid
+          :loading="loadingTemplates"
+          class="mt-3"
+        >
+          <template #option="slotProps">
+            <div>
+              <div class="font-semibold">{{ slotProps.option.name }}</div>
+              <div class="text-sm text-gray-600">{{ slotProps.option.code }}</div>
+            </div>
+          </template>
+        </Select>
+      </details>
+    </div>
+    <template #footer>
+      <Button label="Hủy" icon="pi pi-times" text @click="generateDialog=false" />
+      <Button
+        label="Sinh PDF"
+        icon="pi pi-file-pdf"
+        severity="success"
+        @click="confirmGenerate"
+        :loading="generating"
+      />
     </template>
   </Dialog>
 </template>
@@ -257,8 +315,7 @@ const { errors, hasError } = useFormValidation()
 
 const props = defineProps({
   contractId: { type: String, required: true },
-  appendixes: { type: Array, default: () => [] },
-  appendixTemplates: { type: Array, default: () => [] }
+  appendixes: { type: Array, default: () => [] }
 })
 
 const rows = computed(() => props.appendixes || [])
@@ -274,6 +331,12 @@ const deleteManyDialog = ref(false)
 const filters = ref({ global: { value: null, matchMode: 'contains' } })
 
 const generating = ref(false)
+const generateDialog = ref(false)
+const currentAppendix = ref(null)
+const selectedTemplateId = ref(null)
+const availableTemplates = ref([])
+const loadingTemplates = ref(false)
+const defaultTemplate = ref(null)
 
 const form = ref({
   id: null,
@@ -446,12 +509,44 @@ function removeAllowance(idx) {
   form.value.other_allowances.splice(idx, 1)
 }
 
-// Generate appendix PDF – BE sẽ tự chọn template theo appendix_type
-function generateAppendix(row) {
+// Generate appendix PDF - auto-select default template based on appendix_type
+async function generateAppendix(row) {
+  currentAppendix.value = row
+  selectedTemplateId.value = null
+  defaultTemplate.value = null
+  generateDialog.value = true
+
+  // Load available templates for this appendix type
+  loadingTemplates.value = true
+  try {
+    const response = await fetch(`/contract-appendix-templates?appendix_type=${row.appendix_type}`)
+    const data = await response.json()
+    availableTemplates.value = data.data || []
+
+    // Auto-select default template
+    defaultTemplate.value = availableTemplates.value.find(t => t.is_default) || availableTemplates.value[0]
+    if (defaultTemplate.value) {
+      selectedTemplateId.value = defaultTemplate.value.id
+    }
+  } catch (error) {
+    console.error('Failed to load templates:', error)
+    availableTemplates.value = []
+  } finally {
+    loadingTemplates.value = false
+  }
+}
+
+// Confirm and generate PDF with selected template
+function confirmGenerate() {
+  if (!currentAppendix.value) return
+
   generating.value = true
-  ContractAppendixService.generate(props.contractId, row.id, {}, {
+  const payload = selectedTemplateId.value ? { template_id: selectedTemplateId.value } : {}
+
+  ContractAppendixService.generate(props.contractId, currentAppendix.value.id, payload, {
     onFinish: () => {
       generating.value = false
+      generateDialog.value = false
     }
   })
 }

@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Models\Contract;
 use App\Models\ContractTemplate;
 use App\Models\ContractTemplatePlaceholderMapping;
+use App\Models\ContractAppendixTemplate;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Log;
 
@@ -13,12 +14,12 @@ class DynamicPlaceholderResolverService
     /**
      * Resolve tất cả placeholders cho contract dựa theo mappings
      *
-     * @param Contract|object $contract Contract model hoặc mock object (stdClass)
-     * @param ContractTemplate $template
+     * @param Contract|ContractAppendix|object $contract Contract/Appendix model hoặc mock object (stdClass)
+     * @param ContractTemplate|ContractAppendixTemplate|object $template Template có placeholderMappings relationship
      * @param array $manualData Data người dùng nhập cho MANUAL placeholders
      * @return array Key-value pairs để merge vào DOCX
      */
-    public static function resolve(object $contract, ContractTemplate $template, array $manualData = []): array
+    public static function resolve(object $contract, object $template, array $manualData = []): array
     {
         $mappings = $template->placeholderMappings;
         $resolvedData = [];
@@ -42,7 +43,7 @@ class DynamicPlaceholderResolverService
     /**
      * Resolve 1 mapping cụ thể
      */
-    protected static function resolveMapping(object $contract, ContractTemplatePlaceholderMapping $mapping, array $manualData)
+    protected static function resolveMapping(object $contract, object $mapping, array $manualData)
     {
         $value = match ($mapping->data_source) {
             'CONTRACT' => self::extractFromContract($contract, $mapping->source_path),
@@ -77,6 +78,20 @@ class DynamicPlaceholderResolverService
     {
         if (empty($path)) {
             return null;
+        }
+
+        // Detect if this is ContractAppendix
+        $isAppendix = isset($contract->contract);
+
+        // Auto-fix path for appendix context:
+        // 1. If path starts with 'contractAppendix.', strip it (since $contract IS the appendix)
+        if ($isAppendix && str_starts_with($path, 'contractAppendix.')) {
+            $path = substr($path, strlen('contractAppendix.'));
+        }
+
+        // 2. If path starts with employee/department/position but object is appendix, prepend 'contract.'
+        if ($isAppendix && preg_match('/^(employee|department|position)\./', $path)) {
+            $path = 'contract.' . $path;
         }
 
         // For Eloquent models, data_get works fine
@@ -118,16 +133,22 @@ class DynamicPlaceholderResolverService
             return null;
         }
 
-        // Simple formula evaluation
-        // TODO: Implement safe expression evaluator hoặc dùng symfony/expression-language
+        // Detect if this is ContractAppendix or Contract
+        // ContractAppendix has $contract property, Contract doesn't
+        $isAppendix = isset($contract->contract);
 
-        // Temporary: support một số computed fields phổ biến
+        // Get employee reference based on object type
+        $employee = $isAppendix
+            ? ($contract->contract->employee ?? null)
+            : ($contract->employee ?? null);
+
+        // Simple formula evaluation
         return match ($formula) {
             'total_salary' => $contract->base_salary + $contract->position_allowance,
             'contract_duration_months' => self::calculateContractDuration($contract),
             'probation_duration_days' => self::calculateProbationDuration($contract),
-            'employee_full_address' => self::buildFullAddress($contract->employee, 'permanent'),
-            'employee_temp_full_address' => self::buildFullAddress($contract->employee, 'temporary'),
+            'employee_full_address' => $employee ? self::buildFullAddress($employee, 'permanent') : null,
+            'employee_temp_full_address' => $employee ? self::buildFullAddress($employee, 'temporary') : null,
             default => null,
         };
     }
