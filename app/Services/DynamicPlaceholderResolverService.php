@@ -53,18 +53,9 @@ class DynamicPlaceholderResolverService
             default => $mapping->default_value,
         };
 
-        // Debug logging
-        Log::debug("Resolving placeholder: {$mapping->placeholder_key}", [
-            'data_source' => $mapping->data_source,
-            'source_path' => $mapping->source_path,
-            'raw_value' => $value,
-            'transformer' => $mapping->transformer,
-        ]);
-
         // Apply transformer nếu có
         if ($mapping->transformer && $value !== null) {
             $value = self::transform($value, $mapping->transformer);
-            Log::debug("After transform: {$mapping->placeholder_key} = {$value}");
         }
 
         return $value ?? $mapping->default_value ?? '';

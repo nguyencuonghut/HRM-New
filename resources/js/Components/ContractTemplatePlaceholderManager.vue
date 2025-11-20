@@ -111,8 +111,6 @@ const baseUrl = computed(() => {
   return props.isAppendix ? '/contract-appendix-templates' : '/contract-templates'
 })
 
-// Debug props
-console.log('Component mounted, props:', props)
 const saving = ref(false)
 const syncing = ref(false)
 const mappings = ref([])
@@ -226,9 +224,7 @@ function cleanSourcePath(path) {
 }
 
 watch(() => props.visible, (val) => {
-  console.log('Watch triggered - visible:', val, 'template:', props.template)
   if (val && props.template) {
-    console.log('Loading mappings for template ID:', props.template.id)
     loadMappings()
     loadPresets()
   }
@@ -238,7 +234,6 @@ async function loadMappings() {
   loading.value = true
   try {
     const response = await fetch(`${baseUrl.value}/${props.template.id}/placeholders`)
-    console.log('Response status:', response.status)
 
     if (!response.ok) {
       const errorText = await response.text()
@@ -247,7 +242,6 @@ async function loadMappings() {
     }
 
     const result = await response.json()
-    console.log('Mappings loaded:', result)
 
     mappings.value = result.data
     meta.value = result.meta

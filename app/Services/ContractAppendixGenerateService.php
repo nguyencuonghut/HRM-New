@@ -53,14 +53,6 @@ class ContractAppendixGenerateService
         $resolver = app(DynamicPlaceholderResolverService::class);
         $mergeData = $resolver->resolve($appendix, $template);
 
-        // Debug: Log merge data
-        Log::info('ContractAppendixGenerateService - Merge Data', [
-            'appendix_id' => $appendix->id,
-            'template_id' => $template->id,
-            'merge_data_count' => count($mergeData),
-            'merge_data' => $mergeData,
-        ]);
-
         // Prepare temp path for merged DOCX
         $mergedDocxPath = storage_path('app/temp/' . uniqid('appendix_') . '.docx');
         if (!file_exists(dirname($mergedDocxPath))) {
