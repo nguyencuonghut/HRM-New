@@ -9,8 +9,8 @@ return new class extends Migration {
         Schema::create('contract_templates', function (Blueprint $t) {
             $t->uuid('id')->primary();
             $t->string('name');
-            $t->enum('type', ['PROBATION','FIXED_TERM','INDEFINITE','SERVICE','INTERNSHIP','PARTTIME']);
-            $t->enum('engine', ['LIQUID','BLADE','HTML_TO_PDF','DOCX_MERGE'])->default('DOCX_MERGE'); // trước mắt dùng Blade
+            $t->enum('type', ['PROBATION','FIXED_TERM','INDEFINITE','SEASONAL','SERVICE','INTERNSHIP','PARTTIME']);
+            $t->enum('engine', ['LIQUID','BLADE','HTML_TO_PDF','DOCX_MERGE'])->default('DOCX_MERGE');
             $t->string('body_path')->nullable();                 // ví dụ: 'contracts/templates/probation.blade.php'
             $t->longText('content')->nullable(); // Nội dung template dạng Liquid (user chỉnh sửa trên UI)
             $t->json('placeholders_json')->nullable(); // danh sách biến hỗ trợ render

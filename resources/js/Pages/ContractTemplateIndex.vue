@@ -41,15 +41,12 @@
         <Column v-if="canDelete" selectionMode="multiple" headerStyle="width: 3rem"></Column>
         <Column field="name" header="Tên mẫu" sortable headerStyle="min-width:14rem;"></Column>
         <Column field="type_label" header="Loại HĐ" sortable headerStyle="min-width:12rem;"></Column>
-        <Column field="engine_label" header="Engine" sortable headerStyle="min-width:12rem;">
+        <Column field="body_path" header="File Template" headerStyle="min-width:20rem;">
           <template #body="sp">
-            <Tag :value="sp.data.engine_label" :severity="sp.data.engine === 'LIQUID' ? 'info' : 'secondary'" />
-          </template>
-        </Column>
-        <Column field="body_path" header="Path/Content" headerStyle="min-width:14rem;">
-          <template #body="sp">
-            <span v-if="sp.data.engine === 'BLADE'">{{ sp.data.body_path || '-' }}</span>
-            <span v-else class="text-gray-500 text-sm italic">Nội dung Liquid</span>
+            <div v-if="sp.data.body_path" class="flex items-center gap-2">
+              <span class="text-sm text-gray-600">{{ sp.data.body_path }}</span>
+            </div>
+            <span v-else class="text-gray-400 text-sm">Chưa có file</span>
           </template>
         </Column>
         <Column field="is_default" header="Mặc định" headerStyle="min-width:8rem;">

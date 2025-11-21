@@ -34,6 +34,7 @@ class ContractTemplateResource extends JsonResource
             'PROBATION'  => 'Thử việc',
             'FIXED_TERM' => 'Xác định thời hạn',
             'INDEFINITE' => 'Không xác định thời hạn',
+            'SEASONAL'   => 'Thời vụ',
             'SERVICE'    => 'Cộng tác/Dịch vụ',
             'INTERNSHIP' => 'Thực tập',
             'PARTTIME'   => 'Bán thời gian',

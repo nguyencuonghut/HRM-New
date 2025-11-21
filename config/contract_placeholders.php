@@ -25,8 +25,8 @@ return [
 
         // Employee identification
         'employee_cccd' => ['CONTRACT', 'employee.cccd', null, ''],
-        'employee_id_number' => ['CONTRACT', 'employee.cccd', null, ''],
-        'employee_cccd_issued_date' => ['CONTRACT', 'employee.cccd_issued_on', 'date_vn', ''],
+        'employee_cccd' => ['CONTRACT', 'employee.cccd', null, ''],
+        'employee_cccd_issued_on' => ['CONTRACT', 'employee.cccd_issued_on', 'date_vn', ''],
         'employee_cccd_issued_by' => ['CONTRACT', 'employee.cccd_issued_by', null, ''],
         'employee_si_number' => ['CONTRACT', 'employee.si_number', null, ''],
 

@@ -5,6 +5,7 @@ enum ContractType: string {
     case PROBATION  = 'PROBATION';
     case FIXED_TERM = 'FIXED_TERM';
     case INDEFINITE = 'INDEFINITE';
+    case SEASONAL   = 'SEASONAL';
     case SERVICE    = 'SERVICE';
     case INTERNSHIP = 'INTERNSHIP';
     case PARTTIME   = 'PARTTIME';
@@ -14,6 +15,7 @@ enum ContractType: string {
             self::PROBATION  => 'Thử việc',
             self::FIXED_TERM => 'Xác định thời hạn',
             self::INDEFINITE => 'Không xác định thời hạn',
+            self::SEASONAL   => 'Thời vụ',
             self::SERVICE    => 'Dịch vụ',
             self::INTERNSHIP => 'Thực tập',
             self::PARTTIME   => 'Bán thời gian',

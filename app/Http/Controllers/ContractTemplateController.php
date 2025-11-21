@@ -19,10 +19,26 @@ class ContractTemplateController extends Controller
     {
         $this->authorize('viewAny', ContractTemplate::class);
 
-        $templates = ContractTemplate::query()
-            ->orderBy('created_at', 'desc')
-            ->get();
+        $query = ContractTemplate::query()
+            ->where('is_active', true)
+            ->orderBy('is_default', 'desc')
+            ->orderBy('created_at', 'desc');
 
+        // Filter by type if provided (for API calls)
+        if ($request->has('type')) {
+            $query->where('type', $request->input('type'));
+        }
+
+        $templates = $query->get();
+
+        // Return JSON if requested (for API calls from frontend)
+        if ($request->wantsJson() || $request->expectsJson() || $request->has('type')) {
+            return response()->json([
+                'data' => ContractTemplateResource::collection($templates)->resolve(),
+            ]);
+        }
+
+        // Return Inertia page for normal web requests
         return Inertia::render('ContractTemplateIndex', [
             'templates' => ContractTemplateResource::collection($templates)->resolve(),
             'contractTypeOptions' => $this->contractTypeOptions(),

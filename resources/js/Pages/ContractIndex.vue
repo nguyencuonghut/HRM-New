@@ -232,19 +232,64 @@
     </Dialog>
 
     <!-- Dialog sinh hợp đồng (chọn template nhanh) -->
-    <Dialog v-model:visible="generateDialog" :style="{ width: '520px' }" header="Sinh hợp đồng (PDF)" :modal="true">
-      <div class="flex flex-col gap-4">
-        <div>
-          <label class="block font-bold mb-2">Chọn mẫu</label>
-          <Select v-model="generateTemplateId" :options="templates" optionLabel="name" optionValue="id" filter showClear fluid />
+    <Dialog v-model:visible="generateDialog" :style="{ width: '600px' }" header="Xác nhận sinh PDF" :modal="true">
+      <div class="mb-4">
+        <div class="flex items-center gap-3 mb-4 p-3 bg-blue-50 rounded">
+          <i class="pi pi-info-circle text-blue-600 text-xl"></i>
+          <div>
+            <div class="font-semibold text-gray-800">Hợp đồng: {{ current?.contract_number }}</div>
+            <div class="text-sm text-gray-600">Loại: {{ current?.contract_type_label }}</div>
+          </div>
         </div>
-        <div class="text-sm text-gray-600">
+
+        <div v-if="defaultContractTemplate" class="mb-3">
+          <p class="text-sm text-gray-700 mb-2">Mẫu được chọn:</p>
+          <div class="p-3 border rounded bg-gray-50">
+            <div class="font-semibold">{{ defaultContractTemplate.name }}</div>
+            <div v-if="defaultContractTemplate.is_default" class="text-xs text-green-600 mt-1">
+              <i class="pi pi-check-circle"></i> Mẫu mặc định
+            </div>
+          </div>
+        </div>
+
+        <details class="mt-4">
+          <summary class="cursor-pointer text-sm text-primary hover:underline">
+            Hoặc chọn mẫu khác...
+          </summary>
+          <Select
+            v-model="generateTemplateId"
+            :options="availableContractTemplates"
+            optionLabel="name"
+            optionValue="id"
+            placeholder="-- Chọn mẫu khác --"
+            showClear
+            fluid
+            :loading="loadingContractTemplates"
+            class="mt-3"
+          >
+            <template #option="slotProps">
+              <div>
+                <div class="font-semibold">{{ slotProps.option.name }}</div>
+                <div class="text-sm text-gray-600">{{ slotProps.option.type_label }}</div>
+              </div>
+            </template>
+          </Select>
+        </details>
+
+        <div class="text-sm text-gray-600 mt-4">
+          <i class="pi pi-info-circle mr-2"></i>
           Sau khi sinh, tệp PDF sẽ lưu vào hệ thống và hiển thị link tải ở danh sách.
         </div>
       </div>
       <template #footer>
-        <Button label="Đóng" icon="pi pi-times" text @click="generateDialog=false" />
-        <Button label="Sinh hợp đồng" icon="pi pi-file" @click="doGenerate" :loading="generating" />
+        <Button label="Hủy" icon="pi pi-times" text @click="generateDialog=false" />
+        <Button
+          label="Sinh PDF"
+          icon="pi pi-file-pdf"
+          severity="success"
+          @click="doGenerate"
+          :loading="generating"
+        />
       </template>
     </Dialog>
 
@@ -315,6 +360,9 @@ const generating = ref(false)
 const submitted = ref(false)
 const current = ref(null)
 const generateTemplateId = ref(null)
+const availableContractTemplates = ref([])
+const loadingContractTemplates = ref(false)
+const defaultContractTemplate = ref(null)
 
 // Form model
 const form = ref({
@@ -491,19 +539,43 @@ function removeAllowance(idx) {
   form.value.other_allowances.splice(idx, 1)
 }
 
-// Generate PDF
-function openGenerate(row) {
+// Generate PDF - auto-select default template based on contract_type
+async function openGenerate(row) {
   current.value = row
-  generateTemplateId.value = row.template_id || null
+  generateTemplateId.value = null
+  defaultContractTemplate.value = null
   generateDialog.value = true
+
+  // Load available templates for this contract type
+  loadingContractTemplates.value = true
+  try {
+    const response = await fetch(`/contract-templates?type=${row.contract_type}`)
+    const data = await response.json()
+    availableContractTemplates.value = data.data || []
+
+    // Auto-select default template
+    defaultContractTemplate.value = availableContractTemplates.value.find(t => t.is_default) || availableContractTemplates.value[0]
+    if (defaultContractTemplate.value) {
+      generateTemplateId.value = defaultContractTemplate.value.id
+    }
+  } catch (error) {
+    console.error('Failed to load templates:', error)
+    availableContractTemplates.value = []
+  } finally {
+    loadingContractTemplates.value = false
+  }
 }
+
 function doGenerate() {
+  if (!current.value) return
+
   generating.value = true
-  ContractService.generate(current.value.id, { template_id: generateTemplateId.value }, {
+  const payload = generateTemplateId.value ? { template_id: generateTemplateId.value } : {}
+
+  ContractService.generate(current.value.id, payload, {
     onFinish: () => {
       generating.value = false
       generateDialog.value = false
-      current.value = null
     }
   })
 }
