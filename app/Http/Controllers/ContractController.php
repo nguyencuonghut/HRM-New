@@ -33,14 +33,12 @@ class ContractController extends Controller
         $employees   = Employee::select('id','full_name','employee_code')->orderBy('full_name')->get();
         $departments = Department::select('id','name')->orderBy('name')->get();
         $positions   = Position::select('id','title')->orderBy('title')->get();
-        $templates   = ContractTemplate::select('id','name','type','version','is_active')->where('is_active',true)->orderBy('name')->get();
 
         return Inertia::render('ContractIndex', [
             'contracts'  => ContractResource::collection($contracts)->resolve(),
             'employees'  => $employees,
             'departments'=> $departments,
             'positions'  => $positions,
-            'templates'  => $templates,
             'contractTypeOptions' => collect(ContractType::cases())->map(fn($c)=>['value'=>$c->value,'label'=>$c->label()])->values(),
             'statusOptions' => collect(ContractStatus::cases())->map(fn($c)=>['value'=>$c->value,'label'=>$c->label()])->values(),
             'sourceOptions' => collect(ContractSource::cases())->map(fn($c)=>['value'=>$c->value,'label'=>$c->label()])->values(),

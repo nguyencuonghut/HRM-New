@@ -209,14 +209,8 @@
           <small class="text-red-500" v-if="hasError('source_id')">{{ errors.source_id }}</small>
         </div>
 
-        <div>
-          <label class="block font-bold mb-2">Mẫu hợp đồng</label>
-          <Select v-model="form.template_id" :options="templates" optionLabel="name" optionValue="id" filter showClear fluid />
-          <small class="text-red-500" v-if="hasError('template_id')">{{ errors.template_id }}</small>
-        </div>
-        <div class="flex items-center gap-2">
-          <Checkbox v-model="form.created_from_offer" :binary="true" inputId="cfo" />
-          <label for="cfo">Tạo từ Offer (tuyển dụng)</label>
+        <div class="md:col-span-2">
+          <!-- Template sẽ được chọn tự động khi sinh PDF -->
         </div>
 
         <div class="md:col-span-2">
@@ -337,7 +331,6 @@ const definePropsData = defineProps({
   employees: { type: Array, default: () => [] },
   departments: { type: Array, default: () => [] },
   positions: { type: Array, default: () => [] },
-  templates: { type: Array, default: () => [] },
   contractTypeOptions: { type: Array, default: () => [] },
   statusOptions: { type: Array, default: () => [] },
   sourceOptions: { type: Array, default: () => [] },
@@ -383,8 +376,6 @@ const form = ref({
   status: 'DRAFT',
   source: 'LEGACY',
   source_id: '',
-  template_id: null,
-  created_from_offer: false,
   note: ''
 })
 
@@ -395,7 +386,6 @@ const sourceOptions = computed(() => definePropsData.sourceOptions || [])
 const employees = computed(() => definePropsData.employees || [])
 const departments = computed(() => definePropsData.departments || [])
 const positions = computed(() => definePropsData.positions || [])
-const templates = computed(() => definePropsData.templates || [])
 
 // Helpers
 const statusSeverity = (s) => ({
@@ -431,8 +421,6 @@ function openNew() {
     status: 'DRAFT',
     source: 'LEGACY',
     source_id: '',
-    template_id: null,
-    created_from_offer: false,
     note: ''
   }
   submitted.value = false
@@ -457,8 +445,6 @@ function edit(row) {
     status: row.status || 'DRAFT',
     source: row.source || 'LEGACY',
     source_id: row.source_id || '',
-    template_id: row.template_id || null,
-    created_from_offer: !!row.created_from_offer,
     note: row.note || ''
   }
   submitted.value = false
