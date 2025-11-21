@@ -112,7 +112,7 @@
 
         <div>
           <label class="block font-bold mb-2 required-field">Đơn vị</label>
-          <Select v-model="form.department_id" :options="departments" optionLabel="name" optionValue="id" filter showClear fluid :invalid="submitted && !form.department_id" />
+          <Select v-model="form.department_id" :options="departments" optionLabel="name" optionValue="id" filter showClear fluid :invalid="submitted && !form.department_id" @change="onDepartmentChange" />
           <small class="text-red-500" v-if="submitted && !form.department_id">Đơn vị là bắt buộc.</small>
           <small class="text-red-500" v-if="hasError('department_id')">{{ errors.department_id }}</small>
         </div>
@@ -385,7 +385,15 @@ const statusOptions = computed(() => definePropsData.statusOptions || [])
 const sourceOptions = computed(() => definePropsData.sourceOptions || [])
 const employees = computed(() => definePropsData.employees || [])
 const departments = computed(() => definePropsData.departments || [])
-const positions = computed(() => definePropsData.positions || [])
+const allPositions = computed(() => definePropsData.positions || [])
+
+// Filter positions theo department đã chọn
+const positions = computed(() => {
+  if (!form.value.department_id) {
+    return allPositions.value
+  }
+  return allPositions.value.filter(p => p.department_id === form.value.department_id)
+})
 
 // Helpers
 const statusSeverity = (s) => ({
@@ -523,6 +531,17 @@ function addAllowance() {
 }
 function removeAllowance(idx) {
   form.value.other_allowances.splice(idx, 1)
+}
+
+// Auto-clear position khi đổi department
+function onDepartmentChange() {
+  // Nếu position hiện tại không thuộc department mới, clear nó
+  if (form.value.position_id) {
+    const currentPosition = allPositions.value.find(p => p.id === form.value.position_id)
+    if (currentPosition && currentPosition.department_id !== form.value.department_id) {
+      form.value.position_id = null
+    }
+  }
 }
 
 // Generate PDF - auto-select default template based on contract_type

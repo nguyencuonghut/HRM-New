@@ -32,7 +32,7 @@ class ContractController extends Controller
 
         $employees   = Employee::select('id','full_name','employee_code')->orderBy('full_name')->get();
         $departments = Department::select('id','name')->orderBy('name')->get();
-        $positions   = Position::select('id','title')->orderBy('title')->get();
+        $positions   = Position::select('id','title','department_id')->orderBy('title')->get();
 
         return Inertia::render('ContractIndex', [
             'contracts'  => ContractResource::collection($contracts)->resolve(),
