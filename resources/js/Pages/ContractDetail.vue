@@ -9,9 +9,17 @@
         <h2 class="text-xl font-semibold">
           Hợp đồng: {{ contract.contract_number }} - {{ contract.employee?.full_name }}
         </h2>
-        <p class="text-sm text-gray-600">
-          Loại: {{ contract.contract_type_label }} | Trạng thái: {{ contract.status_label }}
-        </p>
+        <div class="flex items-center gap-3 mt-2">
+          <div class="flex items-center gap-2">
+            <span class="text-sm text-gray-600">Loại:</span>
+            <Tag :value="contract.contract_type_label" :severity="getContractTypeSeverity(contract.contract_type)" />
+          </div>
+          |
+          <div class="flex items-center gap-2">
+            <span class="text-sm text-gray-600">Trạng thái:</span>
+            <Tag :value="contract.status_label" :severity="getContractStatusSeverity(contract.status)" />
+          </div>
+        </div>
       </div>
       <Button label="Quay lại" icon="pi pi-arrow-left" outlined @click="goBack" />
     </div>
@@ -137,6 +145,30 @@ const activeTabIndex = computed(() => {
 
 function goBack() {
   router.visit('/contracts')
+}
+
+// Contract type severity
+function getContractTypeSeverity(type) {
+  const severities = {
+    INDEFINITE: 'success',
+    FIXED_TERM: 'info',
+    SEASONAL: 'warn',
+    PROBATION: 'secondary',
+  }
+  return severities[type] || 'info'
+}
+
+// Contract status severity
+function getContractStatusSeverity(status) {
+  const severities = {
+    DRAFT: 'secondary',
+    PENDING_APPROVAL: 'warn',
+    ACTIVE: 'success',
+    EXPIRED: 'danger',
+    TERMINATED: 'danger',
+    REJECTED: 'danger',
+  }
+  return severities[status] || 'info'
 }
 
 // Timeline helper methods
