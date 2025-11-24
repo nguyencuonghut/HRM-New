@@ -18,6 +18,7 @@ class PositionSeeder extends Seeder
         $deptKSNB = DB::table('departments')->where('name','Phòng Kiểm Soát Nội Bộ')->first();
         $deptIT = DB::table('departments')->where('name','Bộ phận IT')->first();
         $deptHC = DB::table('departments')->where('name','Phòng Hành Chính')->first();
+        $deptLX = DB::table('departments')->where('name','Tổ Lái Xe')->first();
         $deptNS = DB::table('departments')->where('name','Phòng Nhân Sự')->first();
         $deptCL = DB::table('departments')->where('name','Phòng Chất Lượng')->first();
         $deptPPT = DB::table('departments')->where('name','Bộ Phận Phân Tích')->first();
@@ -34,7 +35,8 @@ class PositionSeeder extends Seeder
             // HC
             ['department_id'=>$deptHC->id,'title'=>'Giám đốc Hành Chính','level'=>null,'insurance_base_salary'=>35000000,'position_salary'=>38000000,'competency_salary'=>38000000,'allowance' => 3000000],
             ['department_id'=>$deptHC->id,'title'=>'Nhân viên Hành Chính','level'=>null,'insurance_base_salary'=>10000000,'position_salary'=>9000000,'competency_salary'=>9000000,'allowance' => 1500000],
-            ['department_id'=>$deptHC->id,'title'=>'Nhân viên Lái Xe','level'=>null,'insurance_base_salary'=>8000000,'position_salary'=>8000000,'competency_salary'=>8000000,'allowance' => 400000],
+            ['department_id'=>$deptLX->id,'title'=>'Nhân viên Lái Xe','level'=>null,'insurance_base_salary'=>8000000,'position_salary'=>8000000,'competency_salary'=>8000000,'allowance' => 400000],
+
             // NS
             ['department_id'=>$deptNS->id,'title'=>'Trưởng phòng Nhân Sự','level'=>null,'insurance_base_salary'=>35000000,'position_salary'=>38000000,'competency_salary'=>38000000,'allowance' => 3000000],
             ['department_id'=>$deptNS->id,'title'=>'Trưởng nhóm Nhân Sự Kinh Doanh','level'=>null,'insurance_base_salary'=>13000000,'position_salary'=>15000000,'competency_salary'=>15000000,'allowance' => 2500000],

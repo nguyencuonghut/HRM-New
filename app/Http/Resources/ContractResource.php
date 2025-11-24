@@ -59,6 +59,22 @@ class ContractResource extends JsonResource
             'signed_file_path'   => $this->signed_file_path ? asset("storage/{$this->signed_file_path}") : null,
             'note' => $this->note,
             'created_at' => optional($this->created_at)->toDateTimeString(),
+
+            // Approval workflow data
+            'approvals' => $this->whenLoaded('approvals', function () {
+                return ContractApprovalResource::collection($this->approvals);
+            }),
+            'current_approval_step' => $this->when(
+                $this->relationLoaded('approvals'),
+                function () {
+                    $current = $this->getCurrentApprovalStep();
+                    return $current ? new ContractApprovalResource($current) : null;
+                }
+            ),
+            'approval_progress' => $this->when(
+                $this->relationLoaded('approvals'),
+                fn() => $this->getApprovalProgress()
+            ),
         ];
     }
 }

@@ -31,6 +31,7 @@ class DatabaseSeeder extends Seeder
             ContractTemplatePlaceholderMappingSeeder::class,
             ContractAppendixTemplateSeeder::class,
             ContractAppendixTemplatePlaceholderMappingSeeder::class,
+            ContractApprovalSeeder::class, // Setup HR Head cho phê duyệt hợp đồng
         ]);
     }
 }

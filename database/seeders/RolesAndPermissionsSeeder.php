@@ -98,7 +98,9 @@ class RolesAndPermissionsSeeder extends Seeder
             'create contracts',
             'edit contracts',
             'delete contracts',
-            'approve contracts',
+            'submit contracts', // Gửi phê duyệt
+            'approve contracts', // Phê duyệt
+            'recall contracts', // Thu hồi
 
             // Contract Template
             'view contract templates',
@@ -140,7 +142,7 @@ class RolesAndPermissionsSeeder extends Seeder
             'delete departments',
         ]);
 
-        // Director - can manage users and backups
+        // Director - can approve contracts at director level, manage users
         $director = Role::create(['name' => 'Director']);
         $director->givePermissionTo([
             'view users',
@@ -149,15 +151,21 @@ class RolesAndPermissionsSeeder extends Seeder
             'view departments',
             'create departments',
             'edit departments',
+            'view contracts',
+            'approve contracts', // Director có quyền approve
+            'view employees',
         ]);
 
-        // Manager - can manage users and backups
+        // Manager - can approve contracts at manager level, manage departments
         $manager = Role::create(['name' => 'Manager']);
         $manager->givePermissionTo([
             'view users',
             'create users',
             'edit users',
             'view departments',
+            'view contracts',
+            'approve contracts', // Manager có quyền approve
+            'view employees',
         ]);
 
         // User - basic permissions

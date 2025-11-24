@@ -315,7 +315,8 @@ const { errors, hasError } = useFormValidation()
 
 const props = defineProps({
   contractId: { type: String, required: true },
-  appendixes: { type: Array, default: () => [] }
+  appendixes: { type: Array, default: () => [] },
+  appendixTemplates: { type: Array, default: () => [] }
 })
 
 const rows = computed(() => props.appendixes || [])

@@ -29,6 +29,14 @@ class UserSeeder extends Seeder
         ]);
         $admin->assignRole('Admin');
 
+        // Create director user
+        $director = User::factory()->create([
+            'name' => 'Director User',
+            'email' => 'director@example.com',
+            'password' => bcrypt('password'),
+        ]);
+        $director->assignRole('Director');
+
         // Create manager user
         $manager = User::factory()->create([
             'name' => 'Manager User',

@@ -42,6 +42,7 @@ class Contract extends Model
     public function attachments(){ return $this->hasMany(ContractAttachment::class); }
     public function template(){ return $this->belongsTo(ContractTemplate::class, 'template_id'); }
     public function appendixes(){ return $this->hasMany(ContractAppendix::class, 'contract_id'); }
+    public function approvals(){ return $this->hasMany(ContractApproval::class)->orderBy('order'); }
 
 
     public function scopeActive($q){
@@ -62,5 +63,46 @@ class Contract extends Model
             : $this->generated_pdf_path;
 
         return Storage::url($path);
+    }
+
+    // Approval workflow helpers
+    public function isPendingApproval(): bool
+    {
+        return $this->status === 'PENDING_APPROVAL';
+    }
+
+    public function isDraft(): bool
+    {
+        return $this->status === 'DRAFT';
+    }
+
+    public function isActive(): bool
+    {
+        return $this->status === 'ACTIVE';
+    }
+
+    public function getCurrentApprovalStep(): ?ContractApproval
+    {
+        return $this->approvals()
+            ->where('status', \App\Enums\ApprovalStatus::PENDING)
+            ->orderBy('order')
+            ->first();
+    }
+
+    public function hasApprovalLevel(\App\Enums\ApprovalLevel $level): bool
+    {
+        return $this->approvals()->where('level', $level)->exists();
+    }
+
+    public function getApprovalProgress(): array
+    {
+        $total = $this->approvals()->count();
+        $approved = $this->approvals()->where('status', \App\Enums\ApprovalStatus::APPROVED)->count();
+
+        return [
+            'total' => $total,
+            'approved' => $approved,
+            'percentage' => $total > 0 ? round(($approved / $total) * 100) : 0,
+        ];
     }
 }

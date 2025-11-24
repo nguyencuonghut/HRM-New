@@ -67,9 +67,15 @@
         <Column field="end_date" header="Kết thúc" sortable headerStyle="min-width:10rem;">
           <template #body="sp">{{ formatDate(sp.data.end_date) || '—' }}</template>
         </Column>
-        <Column field="status_label" header="Trạng thái" headerStyle="min-width:10rem;">
+        <Column field="status_label" header="Trạng thái" headerStyle="min-width:14rem;">
           <template #body="sp">
-            <Tag :value="sp.data.status_label" :severity="statusSeverity(sp.data.status)" />
+            <div class="flex items-center gap-2">
+              <Tag :value="sp.data.status_label" :severity="statusSeverity(sp.data.status)" />
+              <Tag v-if="sp.data.approval_progress && sp.data.status === 'PENDING_APPROVAL'"
+                   :value="`${sp.data.approval_progress.approved}/${sp.data.approval_progress.total}`"
+                   severity="info"
+                   v-tooltip="'Tiến trình phê duyệt'" />
+            </div>
           </template>
         </Column>
         <Column header="Tệp sinh ra" headerStyle="min-width:12rem;">
@@ -78,13 +84,31 @@
             <span v-else>—</span>
           </template>
         </Column>
-        <Column header="Thao tác" headerStyle="min-width:18rem;">
+        <Column header="Thao tác" headerStyle="min-width:24rem;">
           <template #body="sp">
             <div class="flex gap-2">
-              <Button icon="pi pi-pencil" outlined severity="success" rounded @click="edit(sp.data)" v-tooltip="'Chỉnh sửa hợp đồng'" />
-              <Button icon="pi pi-trash" outlined severity="danger" rounded @click="confirmDelete(sp.data)" v-tooltip="'Xóa hợp đồng'" />
-              <Button icon="pi pi-file" outlined rounded @click="openGenerate(sp.data)" v-tooltip="'Sinh hợp đồng (PDF)'" />
-              <Button icon="pi pi-list" outlined rounded @click="goToAppendixes(sp.data)" v-tooltip="'Xem chi tiết & phụ lục'" />
+              <!-- Actions for DRAFT status -->
+              <template v-if="sp.data.status === 'DRAFT'">
+                <Button icon="pi pi-pencil" outlined severity="success" rounded @click="edit(sp.data)" v-tooltip="'Chỉnh sửa'" />
+                <Button icon="pi pi-trash" outlined severity="danger" rounded @click="confirmDelete(sp.data)" v-tooltip="'Xóa'" />
+                <Button icon="pi pi-send" outlined severity="info" rounded @click="confirmSubmitForApproval(sp.data)" v-tooltip="'Gửi phê duyệt'" />
+                <Button icon="pi pi-file" outlined rounded @click="openGenerate(sp.data)" v-tooltip="'Sinh PDF'" />
+              </template>
+
+              <!-- Actions for PENDING_APPROVAL status -->
+              <template v-else-if="sp.data.status === 'PENDING_APPROVAL'">
+                <Button icon="pi pi-check" outlined severity="success" rounded @click="openApproveDialog(sp.data)" v-tooltip="'Phê duyệt'" />
+                <Button icon="pi pi-times" outlined severity="danger" rounded @click="openRejectDialog(sp.data)" v-tooltip="'Từ chối'" />
+                <Button icon="pi pi-replay" outlined severity="warning" rounded @click="confirmRecall(sp.data)" v-tooltip="'Thu hồi'" />
+              </template>
+
+              <!-- Actions for ACTIVE status -->
+              <template v-else-if="sp.data.status === 'ACTIVE'">
+                <Button icon="pi pi-file" outlined rounded @click="openGenerate(sp.data)" v-tooltip="'Sinh PDF'" />
+              </template>
+
+              <!-- Common action -->
+              <Button icon="pi pi-list" outlined rounded @click="goToAppendixes(sp.data)" v-tooltip="'Phụ lục'" />
             </div>
           </template>
         </Column>
@@ -310,6 +334,98 @@
         <Button label="Có" icon="pi pi-check" severity="danger" @click="removeMany" :loading="deleting" />
       </template>
     </Dialog>
+
+    <!-- Dialog gửi phê duyệt -->
+    <Dialog v-model:visible="submitApprovalDialog" :style="{ width: '500px' }" header="Xác nhận gửi phê duyệt" :modal="true">
+      <div class="mb-4">
+        <div class="flex items-center gap-3 mb-3 p-3 bg-blue-50 rounded">
+          <i class="pi pi-info-circle text-blue-600 text-xl"></i>
+          <div>
+            <div class="font-semibold text-gray-800">{{ current?.contract_number }}</div>
+            <div class="text-sm text-gray-600">{{ current?.employee?.full_name }}</div>
+          </div>
+        </div>
+        <p class="text-sm text-gray-700">
+          Hợp đồng sẽ được gửi phê duyệt cho:<br/>
+          <span class="font-semibold">Giám đốc (Director)</span>
+        </p>
+      </div>
+      <template #footer>
+        <Button label="Hủy" icon="pi pi-times" text @click="submitApprovalDialog=false" />
+        <Button label="Gửi phê duyệt" icon="pi pi-send" severity="info" @click="doSubmitForApproval" :loading="submitting" />
+      </template>
+    </Dialog>
+
+    <!-- Dialog phê duyệt -->
+    <Dialog v-model:visible="approveDialog" :style="{ width: '600px' }" header="Phê duyệt hợp đồng" :modal="true">
+      <div class="mb-4">
+        <div class="flex items-center gap-3 mb-4 p-3 bg-green-50 rounded">
+          <i class="pi pi-check-circle text-green-600 text-xl"></i>
+          <div>
+            <div class="font-semibold text-gray-800">{{ current?.contract_number }}</div>
+            <div class="text-sm text-gray-600">{{ current?.employee?.full_name }}</div>
+          </div>
+        </div>
+
+        <div v-if="current?.current_approval_step" class="mb-4 p-3 bg-gray-50 rounded">
+          <div class="text-sm font-semibold text-gray-700 mb-1">Bước phê duyệt hiện tại:</div>
+          <div class="text-sm text-gray-600">{{ current.current_approval_step.level_label }}</div>
+        </div>
+
+        <div>
+          <label class="block font-bold mb-2">Ý kiến phê duyệt</label>
+          <Textarea v-model="approvalComments" autoResize rows="3" class="w-full" placeholder="Nhập ý kiến (không bắt buộc)..." />
+        </div>
+      </div>
+      <template #footer>
+        <Button label="Hủy" icon="pi pi-times" text @click="approveDialog=false" />
+        <Button label="Phê duyệt" icon="pi pi-check" severity="success" @click="doApprove" :loading="approving" />
+      </template>
+    </Dialog>
+
+    <!-- Dialog từ chối -->
+    <Dialog v-model:visible="rejectDialog" :style="{ width: '600px' }" header="Từ chối hợp đồng" :modal="true">
+      <div class="mb-4">
+        <div class="flex items-center gap-3 mb-4 p-3 bg-red-50 rounded">
+          <i class="pi pi-times-circle text-red-600 text-xl"></i>
+          <div>
+            <div class="font-semibold text-gray-800">{{ current?.contract_number }}</div>
+            <div class="text-sm text-gray-600">{{ current?.employee?.full_name }}</div>
+          </div>
+        </div>
+
+        <div v-if="current?.current_approval_step" class="mb-4 p-3 bg-gray-50 rounded">
+          <div class="text-sm font-semibold text-gray-700 mb-1">Bước phê duyệt hiện tại:</div>
+          <div class="text-sm text-gray-600">{{ current.current_approval_step.level_label }}</div>
+        </div>
+
+        <div>
+          <label class="block font-bold mb-2 required-field">Lý do từ chối</label>
+          <Textarea v-model="rejectComments" autoResize rows="4" class="w-full" placeholder="Nhập lý do từ chối (bắt buộc)..." :invalid="rejectSubmitted && !rejectComments" />
+          <small class="text-red-500" v-if="rejectSubmitted && !rejectComments">Vui lòng nhập lý do từ chối.</small>
+        </div>
+      </div>
+      <template #footer>
+        <Button label="Hủy" icon="pi pi-times" text @click="rejectDialog=false" />
+        <Button label="Từ chối" icon="pi pi-times-circle" severity="danger" @click="doReject" :loading="rejecting" />
+      </template>
+    </Dialog>
+
+    <!-- Dialog thu hồi -->
+    <Dialog v-model:visible="recallDialog" :style="{ width: '500px' }" header="Xác nhận thu hồi" :modal="true">
+      <div class="flex items-center gap-4 mb-3">
+        <i class="pi pi-exclamation-triangle text-orange-500 !text-3xl" />
+        <div>
+          <div class="font-semibold">{{ current?.contract_number }}</div>
+          <div class="text-sm text-gray-600">Bạn có chắc muốn thu hồi yêu cầu phê duyệt?</div>
+        </div>
+      </div>
+      <p class="text-sm text-gray-600">Hợp đồng sẽ quay về trạng thái Nháp và cần gửi phê duyệt lại.</p>
+      <template #footer>
+        <Button label="Không" icon="pi pi-times" text @click="recallDialog=false" />
+        <Button label="Thu hồi" icon="pi pi-replay" severity="warning" @click="doRecall" :loading="recalling" />
+      </template>
+    </Dialog>
   </div>
 </template>
 
@@ -347,15 +463,31 @@ const dialog = ref(false)
 const deleteDialog = ref(false)
 const deleteManyDialog = ref(false)
 const generateDialog = ref(false)
+const submitApprovalDialog = ref(false)
+const approveDialog = ref(false)
+const rejectDialog = ref(false)
+const recallDialog = ref(false)
+
 const saving = ref(false)
 const deleting = ref(false)
 const generating = ref(false)
+const submitting = ref(false)
+const approving = ref(false)
+const rejecting = ref(false)
+const recalling = ref(false)
+
 const submitted = ref(false)
+const rejectSubmitted = ref(false)
+
 const current = ref(null)
 const generateTemplateId = ref(null)
 const availableContractTemplates = ref([])
 const loadingContractTemplates = ref(false)
 const defaultContractTemplate = ref(null)
+
+// Approval workflow state
+const approvalComments = ref('')
+const rejectComments = ref('')
 
 // Form model
 const form = ref({
@@ -398,7 +530,7 @@ const positions = computed(() => {
 // Helpers
 const statusSeverity = (s) => ({
   DRAFT: 'secondary',
-  PENDING_APPROVAL: 'warning',
+  PENDING_APPROVAL: 'warn',
   ACTIVE: 'success',
   REJECTED: 'danger',
   SUSPENDED: 'contrast',
@@ -589,6 +721,96 @@ function goToAppendixes(row) {
 }
 function goToGeneral(row) {
   router.get(`/contracts/${row.id}`, { tab: 'general' })
+}
+
+// ==================== APPROVAL WORKFLOW FUNCTIONS ====================
+
+function confirmSubmitForApproval(row) {
+  current.value = row
+  submitApprovalDialog.value = true
+}
+
+function doSubmitForApproval() {
+  if (!current.value) return
+
+  submitting.value = true
+  ContractService.submitForApproval(current.value.id, {
+    onFinish: () => {
+      submitting.value = false
+      submitApprovalDialog.value = false
+      current.value = null
+    }
+  })
+}
+
+function openApproveDialog(row) {
+  current.value = row
+  approvalComments.value = ''
+  approveDialog.value = true
+}
+
+function doApprove() {
+  if (!current.value) return
+
+  approving.value = true
+  const payload = { comments: approvalComments.value || null }
+
+  ContractService.approve(current.value.id, payload, {
+    onFinish: () => {
+      approving.value = false
+      approveDialog.value = false
+      current.value = null
+      approvalComments.value = ''
+    }
+  })
+}
+
+function openRejectDialog(row) {
+  current.value = row
+  rejectComments.value = ''
+  rejectSubmitted.value = false
+  rejectDialog.value = true
+}
+
+function doReject() {
+  if (!current.value) return
+
+  rejectSubmitted.value = true
+
+  if (!rejectComments.value) {
+    return
+  }
+
+  rejecting.value = true
+  const payload = { comments: rejectComments.value }
+
+  ContractService.reject(current.value.id, payload, {
+    onFinish: () => {
+      rejecting.value = false
+      rejectDialog.value = false
+      current.value = null
+      rejectComments.value = ''
+      rejectSubmitted.value = false
+    }
+  })
+}
+
+function confirmRecall(row) {
+  current.value = row
+  recallDialog.value = true
+}
+
+function doRecall() {
+  if (!current.value) return
+
+  recalling.value = true
+  ContractService.recall(current.value.id, {
+    onFinish: () => {
+      recalling.value = false
+      recallDialog.value = false
+      current.value = null
+    }
+  })
 }
 </script>
 

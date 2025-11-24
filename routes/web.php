@@ -155,8 +155,13 @@ Route::group(['middleware' => 'auth'], function () {
     Route::delete('contracts/{contract}', [ContractController::class,'destroy'])->name('contracts.destroy');
     Route::post('contracts/bulk-delete', [ContractController::class,'bulkDelete'])->name('contracts.bulk-delete');
 
+    // Approval workflow routes
+    Route::post('contracts/{contract}/submit-for-approval', [ContractController::class,'submitForApproval'])->name('contracts.submitForApproval');
     Route::post('contracts/{contract}/approve', [ContractController::class,'approve'])->name('contracts.approve');
     Route::post('contracts/{contract}/reject', [ContractController::class,'reject'])->name('contracts.reject');
+    Route::post('contracts/{contract}/recall', [ContractController::class,'recall'])->name('contracts.recall');
+    Route::get('contracts/pending-approvals', [ContractController::class,'pendingApprovals'])->name('contracts.pendingApprovals');
+
     Route::post('contracts/{contract}/generate', [ContractGenerateController::class, 'generate'])->name('contracts.generate');
 
     // Contract Template routes

@@ -6,13 +6,16 @@ use App\Http\Requests\StoreContractRequest;
 use App\Http\Requests\UpdateContractRequest;
 use App\Http\Resources\ContractResource;
 use App\Http\Resources\ContractAppendixResource;
+use App\Http\Resources\ContractTimelineResource;
 use App\Models\{Contract, ContractTemplate, Employee, Department, Position};
 use App\Enums\{ContractType, ContractStatus, ContractSource};
+use App\Services\ContractApprovalService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\ValidationException;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Inertia\Inertia;
+use Spatie\Activitylog\Models\Activity;
 
 class ContractController extends Controller
 {
@@ -25,7 +28,8 @@ class ContractController extends Controller
         $contracts = Contract::with([
                 'employee:id,full_name,employee_code',
                 'department:id,name,code',
-                'position:id,title'
+                'position:id,title',
+                'approvals.approver:id,name,email'
             ])
             ->latest('created_at')
             ->get();
@@ -154,7 +158,7 @@ class ContractController extends Controller
         $this->authorize('view', $contract);
 
         // Load các quan hệ cần cho header hồ sơ HĐ
-        $contract->load(['employee', 'department', 'position']);
+        $contract->load(['employee', 'department', 'position', 'approvals.approver:id,name,email']);
 
         // Lấy danh sách phụ lục theo HĐ
         $appendixes = $contract->appendixes()
@@ -162,11 +166,18 @@ class ContractController extends Controller
             ->orderByDesc('created_at')
             ->get();
 
+        // Load activity log timeline
+        $timeline = Activity::forSubject($contract)
+            ->with('causer:id,name,email')
+            ->orderBy('created_at', 'asc')
+            ->get();
+
         $activeTab = request('tab', 'general'); // default nếu không truyền
 
         return \Inertia\Inertia::render('ContractDetail', [
             'contract'   => new ContractResource($contract)->resolve(),
             'appendixes' => ContractAppendixResource::collection($appendixes)->resolve(),
+            'timeline'   => ContractTimelineResource::collection($timeline)->resolve(),
             'activeTab'   => $activeTab,
         ]);
     }
@@ -288,75 +299,127 @@ class ContractController extends Controller
         }
     }
 
-    // Phê duyệt
-    public function approve(Request $request, Contract $contract)
+    // ==================== APPROVAL WORKFLOW ====================
+
+    /**
+     * Gửi hợp đồng để phê duyệt
+     */
+    public function submitForApproval(Request $request, Contract $contract, ContractApprovalService $approvalService)
     {
-        $this->authorize('approve', $contract);
+        $this->authorize('submit', $contract);
 
-        // Kiểm tra overlap trước khi approve
-        $this->ensureNoActiveOverlap(
-            $contract->employee_id,
-            $contract->start_date?->format('Y-m-d'),
-            $contract->end_date?->format('Y-m-d'),
-            $contract->id
-        );
+        try {
+            $approvalService->submitForApproval($contract);
 
-        $contract->load(['employee:id,full_name,employee_code']);
-        $employee = $contract->employee;
-
-        $contract->update([
-            'status' => 'ACTIVE',
-            'approver_id' => $request->user()->id,
-            'approved_at' => now(),
-            'rejected_at' => null,
-            'approval_note' => $request->input('approval_note')
-        ]);
-
-        activity('contract')
-            ->performedOn($contract)
-            ->causedBy($request->user())
-            ->withProperties([
-                'contract_number' => $contract->contract_number,
-                'employee' => $employee ? $employee->full_name . ' (' . $employee->employee_code . ')' : null,
-                'action' => 'approved',
-                'status' => 'Hiệu lực',
-                'approval_note' => $request->input('approval_note'),
-            ])->log('approved');
-
-        return redirect()->route('contracts.index')->with([
-            'message' => 'Đã phê duyệt hợp đồng.',
-            'type'    => 'success'
-        ]);
+            return redirect()->route('contracts.index')->with([
+                'message' => 'Đã gửi hợp đồng để phê duyệt.',
+                'type'    => 'success'
+            ]);
+        } catch (ValidationException $e) {
+            return back()->withErrors($e->errors())->with([
+                'message' => $e->getMessage(),
+                'type' => 'error'
+            ]);
+        }
     }
 
-    public function reject(Request $request, Contract $contract)
+    /**
+     * Phê duyệt hợp đồng (workflow mới)
+     */
+    public function approve(Request $request, Contract $contract, ContractApprovalService $approvalService)
     {
         $this->authorize('approve', $contract);
 
-        $contract->load(['employee:id,full_name,employee_code']);
-        $employee = $contract->employee;
-
-        $contract->update([
-            'status' => 'DRAFT',
-            'approver_id' => $request->user()->id,
-            'rejected_at' => now(),
-            'approval_note' => $request->input('approval_note')
+        $request->validate([
+            'comments' => 'nullable|string|max:1000',
         ]);
 
-        activity('contract')
-            ->performedOn($contract)
-            ->causedBy($request->user())
-            ->withProperties([
-                'contract_number' => $contract->contract_number,
-                'employee' => $employee ? $employee->full_name . ' (' . $employee->employee_code . ')' : null,
-                'action' => 'rejected',
-                'status' => 'Nháp',
-                'approval_note' => $request->input('approval_note'),
-            ])->log('rejected');
+        try {
+            // Kiểm tra overlap trước khi approve (chỉ ở bước cuối)
+            $currentStep = $contract->getCurrentApprovalStep();
+            if ($currentStep && $currentStep->level->value === 'DIRECTOR') {
+                $this->ensureNoActiveOverlap(
+                    $contract->employee_id,
+                    $contract->start_date?->format('Y-m-d'),
+                    $contract->end_date?->format('Y-m-d'),
+                    $contract->id
+                );
+            }
 
-        return redirect()->route('contracts.index')->with([
-            'message' => 'Đã từ chối hợp đồng.',
-            'type'    => 'success'
+            $approvalService->approve($contract, $request->user(), $request->input('comments'));
+
+            return redirect()->route('contracts.index')->with([
+                'message' => 'Đã phê duyệt hợp đồng.',
+                'type'    => 'success'
+            ]);
+        } catch (ValidationException $e) {
+            return back()->withErrors($e->errors())->with([
+                'message' => $e->getMessage(),
+                'type' => 'error'
+            ]);
+        }
+    }
+
+    /**
+     * Từ chối hợp đồng (workflow mới)
+     */
+    public function reject(Request $request, Contract $contract, ContractApprovalService $approvalService)
+    {
+        $this->authorize('approve', $contract);
+
+        $request->validate([
+            'comments' => 'required|string|max:1000',
+        ], [
+            'comments.required' => 'Vui lòng nhập lý do từ chối.'
+        ]);
+
+        try {
+            $approvalService->reject($contract, $request->user(), $request->input('comments'));
+
+            return redirect()->route('contracts.index')->with([
+                'message' => 'Đã từ chối hợp đồng.',
+                'type'    => 'success'
+            ]);
+        } catch (ValidationException $e) {
+            return back()->withErrors($e->errors())->with([
+                'message' => $e->getMessage(),
+                'type' => 'error'
+            ]);
+        }
+    }
+
+    /**
+     * Thu hồi yêu cầu phê duyệt
+     */
+    public function recall(Request $request, Contract $contract, ContractApprovalService $approvalService)
+    {
+        $this->authorize('recall', $contract);
+
+        try {
+            $approvalService->recall($contract);
+
+            return redirect()->route('contracts.index')->with([
+                'message' => 'Đã thu hồi yêu cầu phê duyệt.',
+                'type'    => 'success'
+            ]);
+        } catch (ValidationException $e) {
+            return back()->withErrors($e->errors())->with([
+                'message' => $e->getMessage(),
+                'type' => 'error'
+            ]);
+        }
+    }
+
+    /**
+     * Lấy danh sách hợp đồng chờ phê duyệt của user hiện tại
+     */
+    public function pendingApprovals(Request $request, ContractApprovalService $approvalService)
+    {
+        $contracts = $approvalService->getPendingContractsForUser($request->user());
+
+        return response()->json([
+            'data' => ContractResource::collection($contracts),
+            'count' => $contracts->count(),
         ]);
     }
 }
