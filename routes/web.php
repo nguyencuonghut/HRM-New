@@ -249,4 +249,10 @@ Route::group(['middleware' => 'auth'], function () {
     Route::put('schools/{school}', [SchoolController::class, 'update'])->name('schools.update');
     Route::delete('schools/{school}', [SchoolController::class, 'destroy'])->name('schools.destroy');
     Route::post('schools/bulk-delete', [SchoolController::class, 'bulkDelete'])->name('schools.bulk-delete');
+
+    // Notification routes
+    Route::get('/notifications', [\App\Http\Controllers\NotificationController::class, 'index'])->name('notifications.index');
+    Route::post('/notifications/{id}/mark-as-read', [\App\Http\Controllers\NotificationController::class, 'markAsRead'])->name('notifications.mark-as-read');
+    Route::post('/notifications/mark-all-as-read', [\App\Http\Controllers\NotificationController::class, 'markAllAsRead'])->name('notifications.mark-all-as-read');
+    Route::delete('/notifications/{id}', [\App\Http\Controllers\NotificationController::class, 'destroy'])->name('notifications.destroy');
 });

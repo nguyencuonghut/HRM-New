@@ -125,22 +125,19 @@ class RolesAndPermissionsSeeder extends Seeder
         $superAdmin = Role::create(['name' => 'Super Admin']);
         $superAdmin->givePermissionTo(Permission::all());
 
-        // Admin - has most permissions except some critical ones
+        // Admin - has all permissions except Permission Management and Backup Management
         $admin = Role::create(['name' => 'Admin']);
-        $admin->givePermissionTo([
-            'view users',
-            'create users',
-            'edit users',
-            'view roles',
+        $excludedPermissions = [
             'view permissions',
+            'assign permissions',
             'view backups',
             'create backups',
-            'view activity logs',
-            'view departments',
-            'create departments',
-            'edit departments',
-            'delete departments',
-        ]);
+            'restore backups',
+            'delete backups',
+            'configure backups',
+        ];
+        $adminPermissions = Permission::whereNotIn('name', $excludedPermissions)->pluck('name');
+        $admin->givePermissionTo($adminPermissions);
 
         // Director - can approve contracts at director level, manage users
         $director = Role::create(['name' => 'Director']);

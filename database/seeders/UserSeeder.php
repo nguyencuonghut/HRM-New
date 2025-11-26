@@ -23,17 +23,17 @@ class UserSeeder extends Seeder
 
         // Create admin user
         $admin = User::factory()->create([
-            'name' => 'Admin User',
-            'email' => 'admin@example.com',
-            'password' => bcrypt('password'),
+            'name' => 'Nguyễn Thị Ngọc Lan',
+            'email' => 'ns@honghafeed.com.vn',
+            'password' => bcrypt('Hongha@123'),
         ]);
         $admin->assignRole('Admin');
 
         // Create director user
         $director = User::factory()->create([
-            'name' => 'Director User',
-            'email' => 'director@example.com',
-            'password' => bcrypt('password'),
+            'name' => 'Tạ Văn Toại',
+            'email' => 'gd@honghafeed.com.vn',
+            'password' => bcrypt('Hongha@123'),
         ]);
         $director->assignRole('Director');
 

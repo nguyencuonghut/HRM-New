@@ -46,44 +46,27 @@ class ContractApprovalSeeder extends Seeder
         }
         $this->command->info("✓ HR Department: {$hrDepartment->name}");
 
-        // 3. Tìm hoặc tạo Director user
-        $directorEmail = 'director@example.com';
+        // 3. Tìm Director user từ UserSeeder
+        $directorEmail = 'gd@honghafeed.com.vn';
         $directorUser = User::where('email', $directorEmail)->first();
 
         if (!$directorUser) {
-            $this->command->warn("⚠ Không tìm thấy user {$directorEmail}, tạo mới...");
-            $directorUser = User::create([
-                'name' => 'Trưởng phòng Nhân Sự',
-                'email' => $directorEmail,
-                'password' => bcrypt('password'),
-                'email_verified_at' => now(),
-            ]);
+            $this->command->error("✗ Không tìm thấy user {$directorEmail}. Chạy UserSeeder trước!");
+            return;
         }
 
-        // Assign Director role
+        // Assign Director role nếu chưa có
         if (!$directorUser->hasRole('Director')) {
             $directorUser->assignRole('Director');
             $this->command->info("✓ Assigned Director role to: {$directorUser->email}");
         }
 
-        // 4. Tạo hoặc lấy Employee record
+        // 4. Lấy Employee record từ EmployeeSeeder
         $directorEmployee = Employee::where('user_id', $directorUser->id)->first();
 
         if (!$directorEmployee) {
-            $this->command->warn('⚠ Tạo Employee record cho Director...');
-            $directorEmployee = Employee::create([
-                'id' => Str::uuid(),
-                'user_id' => $directorUser->id,
-                'employee_code' => 'DIR001',
-                'full_name' => 'Trưởng phòng Nhân Sự',
-                'dob' => '1980-01-01',
-                'gender' => 'MALE',
-                'phone' => '0900000001',
-                'personal_email' => $directorEmail,
-                'company_email' => $directorEmail,
-                'hire_date' => now()->subYears(5),
-                'status' => 'ACTIVE',
-            ]);
+            $this->command->error('✗ Không tìm thấy Employee record cho Director. Chạy EmployeeSeeder trước!');
+            return;
         }
         $this->command->info("✓ Director Employee: {$directorEmployee->full_name} ({$directorEmployee->employee_code})");
 
@@ -191,7 +174,8 @@ class ContractApprovalSeeder extends Seeder
         $this->command->info('═══════════════════════════════════════════════');
         $this->command->info("Department: {$hrDepartment->name}");
         $this->command->info("Director: {$directorUser->name} ({$directorUser->email})");
-        $this->command->info("Password: password");
+        $this->command->info("Employee: {$directorEmployee->full_name} (Code: {$directorEmployee->employee_code})");
+        $this->command->info("Password: Hongha@123");
         $this->command->info('');
         $this->command->info('Workflow: HR Staff → Submit → HR Head (Director) → Active');
         $this->command->info('═══════════════════════════════════════════════');

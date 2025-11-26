@@ -15,9 +15,13 @@ class EmployeeSeeder extends Seeder
     {
         $now = now();
 
+        // Lấy user_id từ UserSeeder
+        $directorUser = DB::table('users')->where('email', 'gd@honghafeed.com.vn')->first();
+        $adminUser = DB::table('users')->where('email', 'ns@honghafeed.com.vn')->first();
+
         $list = [
             // KSNB
-            ['employee_code'=>'312','full_name'=>'Tạ Văn Toại','phone'=>'0901000001','company_email'=>'tavantoai@honghafeed.com.vn','status'=>'ACTIVE'],
+            ['employee_code'=>'312','full_name'=>'Tạ Văn Toại','phone'=>'0901000001','company_email'=>'tavantoai@honghafeed.com.vn','status'=>'ACTIVE','user_id'=>$directorUser?->id],
             ['employee_code'=>'2142','full_name'=>'Bùi Thị Nụ','phone'=>'0901000002','company_email'=>'buitinu@honghafeed.com.vn','status'=>'ACTIVE'],
             ['employee_code'=>'2272','full_name'=>'Trần Xuân Trường','phone'=>'0901000003','company_email'=>'tranxuantruong@honghafeed.com.vn','status'=>'ACTIVE'],
             ['employee_code'=>'912','full_name'=>'Nguyễn Văn Cường','phone'=>'0901000003','company_email'=>'nguyenvancuong@honghafeed.com.vn','status'=>'ACTIVE'],
@@ -42,7 +46,7 @@ class EmployeeSeeder extends Seeder
                 'status'=>'ACTIVE'],
             // NS
             ['employee_code'=>'481','full_name'=>'Trần Thị Bích Phương','phone'=>'0901000005','company_email'=>'tranthibichphuong@honghafeed.com.vn','status'=>'ACTIVE'],
-            ['employee_code'=>'2411','full_name'=>'Nguyễn Thị Ngọc Lan','phone'=>'0901000006','company_email'=>'nguyenthingoclan@honghafeed.com.vn','status'=>'ACTIVE'],
+            ['employee_code'=>'2411','full_name'=>'Nguyễn Thị Ngọc Lan','phone'=>'0901000006','company_email'=>'nguyenthingoclan@honghafeed.com.vn','status'=>'ACTIVE','user_id'=>$adminUser?->id],
             // Chất lượng
             ['employee_code'=>'468','full_name'=>'Phạm Thành Thứ','phone'=>'0901000007','company_email'=>'phamthanhthu@honghafeed.com.vn','status'=>'ACTIVE'],
             ['employee_code'=>'353','full_name'=>'Ngô Tiến Trung','phone'=>'0901000008','company_email'=>'ngotientrung@honghafeed.com.vn','status'=>'ACTIVE'],
@@ -59,7 +63,7 @@ class EmployeeSeeder extends Seeder
         foreach ($list as $r) {
             DB::table('employees')->insert([
                 'id' => (string) Str::uuid(),
-                'user_id' => null, // có thể map sau
+                'user_id' => $r['user_id'] ?? null,
                 'employee_code' => $r['employee_code'],
                 'full_name' => $r['full_name'],
                 'dob' => $r['dob'] ?? null,

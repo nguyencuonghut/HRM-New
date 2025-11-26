@@ -8,6 +8,7 @@ use App\Models\User;
 use App\Enums\ApprovalLevel;
 use App\Enums\ApprovalStatus;
 use App\Enums\ContractStatus;
+use App\Events\{ContractSubmitted, ContractApproved, ContractRejected};
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 
@@ -40,6 +41,7 @@ class ContractApprovalService
                     'action' => 'submitted_for_approval',
                 ])
                 ->log('Gửi phê duyệt');
+            event(new ContractSubmitted($contract));
         });
     }
 
@@ -118,6 +120,9 @@ class ContractApprovalService
                         'level' => $currentStep->level->label(),
                     ])
                     ->log('Phê duyệt hoàn tất - Hợp đồng hiệu lực');
+
+                // Dispatch event để gửi notification
+                event(new ContractApproved($contract, $approver, $comments));
             } else {
                 activity('contract')
                     ->performedOn($contract)
@@ -129,6 +134,9 @@ class ContractApprovalService
                         'next_level' => $nextStep->level->label(),
                     ])
                     ->log('Phê duyệt bước ' . $currentStep->level->label());
+
+                // Dispatch event cho approval bước hiện tại
+                event(new ContractApproved($contract, $approver, $comments));
             }
         });
     }
@@ -190,6 +198,9 @@ class ContractApprovalService
                     'comments' => $comments,
                 ])
                 ->log('Từ chối phê duyệt');
+
+            // Dispatch event để gửi notification
+            event(new ContractRejected($contract, $approver, $comments));
         });
     }
 
