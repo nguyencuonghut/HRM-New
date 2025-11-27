@@ -296,7 +296,13 @@ function openNew() {
 }
 function edit(row) {
   submitted.value = false
-  form.value = { ...row } // row đã ở định dạng Resource
+  form.value = {
+    ...row,
+    // Parse ISO date strings to Date objects for DatePicker
+    dob: row.dob ? new Date(row.dob) : null,
+    cccd_issued_on: row.cccd_issued_on ? new Date(row.cccd_issued_on) : null,
+    hire_date: row.hire_date ? new Date(row.hire_date) : null,
+  }
   dialog.value = true
 }
 function hideDialog() { dialog.value = false }

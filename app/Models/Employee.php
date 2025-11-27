@@ -33,6 +33,12 @@ class Employee extends Model
         'si_number',
     ]; // Các trường cho phép gán hàng loạt
 
+    protected $casts = [
+        'dob' => 'date',
+        'cccd_issued_on' => 'date',
+        'hire_date' => 'date',
+    ];
+
     // Quan hệ: tài khoản đăng nhập (nếu có)
     public function user() { return $this->belongsTo(\App\Models\User::class); }
 

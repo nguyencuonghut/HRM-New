@@ -274,8 +274,10 @@ class ContractController extends Controller
     {
         // Overlap khi: existing.start <= new.end AND new.start <= existing.end
         // Với xử lý null (end_date = null nghĩa là vô thời hạn)
+        // Loại trừ các hợp đồng đã TERMINATED (không tính overlap)
 
         $exists = Contract::where('employee_id', $employeeId)
+            ->where('status', '!=', 'TERMINATED') // Loại trừ hợp đồng đã chấm dứt
             ->when($ignoreId, fn($q) => $q->where('id', '!=', $ignoreId))
             ->where(function($query) use ($start, $end) {
                 // Điều kiện 1: existing.start_date <= new.end_date (hoặc new.end_date là null/vô hạn)

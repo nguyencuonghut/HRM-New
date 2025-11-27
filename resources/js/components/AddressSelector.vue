@@ -84,7 +84,7 @@ watch(() => props.provinceId, (newVal) => {
 async function loadProvinces() {
     loadingProvinces.value = true
     try {
-        const response = await fetch('/provinces')
+        const response = await fetch('/api/provinces')
         provinces.value = await response.json()
     } catch (error) {
         console.error('Error loading provinces:', error)
@@ -101,7 +101,7 @@ async function loadWards(provinceId) {
 
     loadingWards.value = true
     try {
-        const response = await fetch(`/provinces/${provinceId}/wards`)
+        const response = await fetch(`/api/provinces/${provinceId}/wards`)
         wards.value = await response.json()
     } catch (error) {
         console.error('Error loading wards:', error)

@@ -18,16 +18,20 @@ class ContractTerminatedNotification extends Notification implements ShouldQueue
     protected User $terminator;
     protected string $reason;
     protected ?string $note;
+    protected string $recipientType; // 'employee', 'manager', 'head'
+    protected ?string $recipientName; // Tên người nhận (dùng cho AnonymousNotifiable)
 
     /**
      * Create a new notification instance.
      */
-    public function __construct(Contract $contract, User $terminator, string $reason, ?string $note = null)
+    public function __construct(Contract $contract, User $terminator, string $reason, ?string $note = null, string $recipientType = 'employee', ?string $recipientName = null)
     {
         $this->contract = $contract;
         $this->terminator = $terminator;
         $this->reason = $reason;
         $this->note = $note;
+        $this->recipientType = $recipientType;
+        $this->recipientName = $recipientName;
     }
 
     /**
@@ -35,7 +39,25 @@ class ContractTerminatedNotification extends Notification implements ShouldQueue
      */
     public function via(object $notifiable): array
     {
+        // Nếu là AnonymousNotifiable (gửi trực tiếp qua email), chỉ dùng mail
+        if ($notifiable instanceof \Illuminate\Notifications\AnonymousNotifiable) {
+            return ['mail'];
+        }
+
         return ['database', 'mail'];
+    }
+
+    /**
+     * Get the mail recipient's email address.
+     */
+    public function routeNotificationForMail(object $notifiable): array|string
+    {
+        // Nếu là AnonymousNotifiable, email đã được set
+        if ($notifiable instanceof \Illuminate\Notifications\AnonymousNotifiable) {
+            return $notifiable->routeNotificationFor('mail');
+        }
+
+        return $notifiable->email;
     }
 
     /**
@@ -46,10 +68,23 @@ class ContractTerminatedNotification extends Notification implements ShouldQueue
         $reasonEnum = ContractTerminationReason::from($this->reason);
         $reasonLabel = $reasonEnum->label();
 
+        // Xác định tên người nhận
+        if ($notifiable instanceof \Illuminate\Notifications\AnonymousNotifiable) {
+            // Dùng tên đã truyền vào hoặc fallback sang tên employee
+            $recipientName = $this->recipientName ?? $this->contract->employee->full_name;
+        } else {
+            $recipientName = $notifiable->name ?? 'Bạn';
+        }
+
+        // Message khác nhau tùy loại người nhận
+        $messageText = $this->recipientType === 'employee'
+            ? 'Hợp đồng lao động của bạn đã bị chấm dứt.'
+            : 'Hợp đồng lao động dưới đây đã bị chấm dứt.';
+
         $mail = (new MailMessage)
             ->subject('Thông báo chấm dứt hợp đồng lao động')
-            ->greeting('Xin chào ' . $notifiable->name . ',')
-            ->line('Hợp đồng lao động của bạn đã bị chấm dứt.')
+            ->greeting('Xin chào ' . $recipientName . ',')
+            ->line($messageText)
             ->line('**Số hợp đồng:** ' . $this->contract->contract_number)
             ->line('**Nhân viên:** ' . $this->contract->employee->full_name)
             ->line('**Lý do:** ' . $reasonLabel)
@@ -60,8 +95,12 @@ class ContractTerminatedNotification extends Notification implements ShouldQueue
         }
 
         $mail->line('**Người thực hiện:** ' . $this->terminator->name)
-            ->action('Xem chi tiết', url('/contracts/' . $this->contract->id))
-            ->line('Cảm ơn bạn đã đóng góp cho công ty.');
+            ->action('Xem chi tiết', url('/contracts/' . $this->contract->id));
+
+        // Chỉ hiện lời cảm ơn cho employee
+        if ($this->recipientType === 'employee') {
+            $mail->line('Cảm ơn bạn đã đóng góp cho công ty.');
+        }
 
         return $mail;
     }
