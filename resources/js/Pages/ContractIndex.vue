@@ -69,12 +69,17 @@
         </Column>
         <Column field="status_label" header="Trạng thái" headerStyle="min-width:14rem;">
           <template #body="sp">
-            <div class="flex items-center gap-2">
+            <div class="flex items-center gap-2 flex-wrap">
               <Tag :value="sp.data.status_label" :severity="statusSeverity(sp.data.status)" />
               <Tag v-if="sp.data.approval_progress && sp.data.status === 'PENDING_APPROVAL'"
                    :value="`${sp.data.approval_progress.approved}/${sp.data.approval_progress.total}`"
                    severity="info"
                    v-tooltip="'Tiến trình phê duyệt'" />
+              <Tag v-if="isExpiringSoon(sp.data)"
+                   :value="`Còn ${getDaysUntilExpiry(sp.data)} ngày`"
+                   :severity="expiryBadgeSeverity(getDaysUntilExpiry(sp.data))"
+                   v-tooltip="'Hợp đồng sắp hết hạn!'"
+                   icon="pi pi-clock" />
             </div>
           </template>
         </Column>
@@ -105,6 +110,7 @@
               <!-- Actions for ACTIVE status -->
               <template v-else-if="sp.data.status === 'ACTIVE'">
                 <Button icon="pi pi-file" outlined rounded @click="openGenerate(sp.data)" v-tooltip="'Sinh PDF'" />
+                <Button icon="pi pi-refresh" outlined severity="info" rounded @click="openRenewalDialog(sp.data)" v-tooltip="'Gia hạn HĐ'" />
                 <Button icon="pi pi-ban" outlined severity="danger" rounded @click="openTerminateDialog(sp.data)" v-tooltip="'Chấm dứt HĐ'" />
               </template>
 
@@ -439,6 +445,15 @@
       :contract="contractToTerminate"
       @terminated="terminateDialog = false"
     />
+
+    <!-- Renewal Contract Modal -->
+    <ContractRenewalModal
+      v-model="renewalDialog"
+      :contract="current"
+      :departments="departments"
+      :positions="allPositions"
+      @renewed="onContractRenewed"
+    />
   </div>
 </template>
 
@@ -453,6 +468,7 @@ import { ContractService } from '@/services/ContractService'
 import { useFormValidation } from '@/composables/useFormValidation'
 import { formatDate, toYMD } from '@/utils/dateHelper'
 import TerminateContractModal from '@/Components/TerminateContractModal.vue'
+import ContractRenewalModal from '@/Components/ContractRenewalModal.vue'
 
 const { errors, hasError, getError } = useFormValidation()
 
@@ -482,6 +498,7 @@ const approveDialog = ref(false)
 const rejectDialog = ref(false)
 const recallDialog = ref(false)
 const terminateDialog = ref(false)
+const renewalDialog = ref(false)
 
 const saving = ref(false)
 const deleting = ref(false)
@@ -737,6 +754,40 @@ function goToAppendixes(row) {
 }
 function goToGeneral(row) {
   router.get(`/contracts/${row.id}`, { tab: 'general' })
+}
+
+// ==================== RENEWAL FUNCTIONS ====================
+
+function openRenewalDialog(row) {
+  current.value = row
+  renewalDialog.value = true
+}
+
+function onContractRenewed() {
+  router.reload({ only: ['contracts'] })
+}
+
+// Check if contract is expiring soon (within 30 days)
+function isExpiringSoon(row) {
+  if (!row.end_date || row.status !== 'ACTIVE') return false
+  const endDate = new Date(row.end_date)
+  const today = new Date()
+  const daysUntilExpiry = Math.ceil((endDate - today) / (1000 * 60 * 60 * 24))
+  return daysUntilExpiry > 0 && daysUntilExpiry <= 30
+}
+
+function getDaysUntilExpiry(row) {
+  if (!row.end_date) return null
+  const endDate = new Date(row.end_date)
+  const today = new Date()
+  const daysUntilExpiry = Math.ceil((endDate - today) / (1000 * 60 * 60 * 24))
+  return daysUntilExpiry
+}
+
+function expiryBadgeSeverity(days) {
+  if (days <= 7) return 'danger'
+  if (days <= 15) return 'warn'
+  return 'info'
 }
 
 // ==================== APPROVAL WORKFLOW FUNCTIONS ====================

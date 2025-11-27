@@ -543,4 +543,103 @@ class ContractController extends Controller
 
         return response()->json(['data' => $stats]);
     }
+
+    /**
+     * Gia hạn hợp đồng
+     */
+    public function renew(Request $request, Contract $contract, \App\Services\ContractRenewalService $renewalService)
+    {
+        $this->authorize('update', $contract);
+
+        try {
+            $validated = $request->validate([
+                'new_end_date' => 'required|date|after:' . ($contract->end_date ?? $contract->start_date),
+                'title' => 'nullable|string|max:255',
+                'summary' => 'nullable|string',
+                'note' => 'nullable|string',
+                'base_salary' => 'nullable|integer|min:0',
+                'insurance_salary' => 'nullable|integer|min:0',
+                'position_allowance' => 'nullable|integer|min:0',
+                'other_allowances' => 'nullable|array',
+                'department_id' => 'nullable|uuid|exists:departments,id',
+                'position_id' => 'nullable|uuid|exists:positions,id',
+                'working_time' => 'nullable|string|max:255',
+                'work_location' => 'nullable|string|max:500',
+            ]);
+
+            $appendix = $renewalService->renewContract($contract, $validated, $request->user());
+
+            return redirect()->back()->with('success', 'Yêu cầu gia hạn hợp đồng đã được tạo và đang chờ phê duyệt');
+        } catch (\Exception $e) {
+            Log::error('Contract renewal failed', [
+                'contract_id' => $contract->id,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+
+            return redirect()->back()->withErrors(['error' => $e->getMessage()]);
+        }
+    }
+
+    /**
+     * Lấy danh sách hợp đồng sắp hết hạn
+     */
+    public function expiring(Request $request, \App\Services\ContractRenewalService $renewalService)
+    {
+        $this->authorize('viewAny', Contract::class);
+
+        $daysThreshold = $request->input('days', 30);
+        $contracts = $renewalService->getExpiringContracts($daysThreshold);
+
+        return response()->json([
+            'success' => true,
+            'data' => ContractResource::collection($contracts),
+        ]);
+    }
+
+    /**
+     * Phê duyệt phụ lục
+     */
+    public function approveAppendix(Request $request, Contract $contract, $appendixId, \App\Services\ContractRenewalService $renewalService)
+    {
+        $this->authorize('approve', $contract);
+
+        try {
+            $appendix = \App\Models\ContractAppendix::findOrFail($appendixId);
+
+            if ($appendix->contract_id !== $contract->id) {
+                throw new \Exception('Phụ lục không thuộc về hợp đồng này');
+            }
+
+            $validated = $request->validate([
+                'action' => 'required|in:approve,reject',
+                'note' => 'nullable|string',
+            ]);
+
+            if ($validated['action'] === 'approve') {
+                $renewalService->approveRenewal($appendix, $request->user(), $validated['note'] ?? null);
+                $message = 'Phụ lục đã được phê duyệt thành công';
+            } else {
+                $renewalService->rejectRenewal($appendix, $request->user(), $validated['note'] ?? null);
+                $message = 'Phụ lục đã bị từ chối';
+            }
+
+            return response()->json([
+                'success' => true,
+                'message' => $message,
+                'data' => new ContractAppendixResource($appendix->fresh()),
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Appendix approval failed', [
+                'contract_id' => $contract->id,
+                'appendix_id' => $appendixId,
+                'error' => $e->getMessage(),
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage(),
+            ], 422);
+        }
+    }
 }

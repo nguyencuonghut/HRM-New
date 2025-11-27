@@ -157,6 +157,7 @@ Route::group(['middleware' => 'auth'], function () {
     Route::get('contracts/termination-reasons', [ContractController::class,'terminationReasons'])->name('contracts.terminationReasons');
     Route::get('contracts/terminated/list', [ContractController::class,'terminated'])->name('contracts.terminated');
     Route::get('contracts/termination-statistics', [ContractController::class,'terminationStatistics'])->name('contracts.terminationStatistics');
+    Route::get('contracts/expiring', [ContractController::class,'expiring'])->name('contracts.expiring');
 
     // Dynamic routes with {contract} parameter
     Route::get('contracts/{contract}', [ContractController::class, 'show'])->name('contracts.show');
@@ -172,6 +173,10 @@ Route::group(['middleware' => 'auth'], function () {
     // Termination routes
     Route::post('contracts/{contract}/terminate', [ContractController::class,'terminate'])->name('contracts.terminate');
     Route::get('contracts/{contract}/calculate-severance-pay', [ContractController::class,'calculateSeverancePay'])->name('contracts.calculateSeverancePay');
+
+    // Renewal routes
+    Route::post('contracts/{contract}/renew', [ContractController::class,'renew'])->name('contracts.renew');
+    Route::post('contracts/{contract}/appendixes/{appendixId}/approve', [ContractController::class,'approveAppendix'])->name('contracts.appendixes.approve-renewal');
 
     Route::post('contracts/{contract}/generate', [ContractGenerateController::class, 'generate'])->name('contracts.generate');
 

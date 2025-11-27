@@ -207,6 +207,7 @@ function getEventTitle(type) {
     RECALLED: 'Thu hồi',
     GENERATED_PDF: 'Sinh file PDF',
     TERMINATED: 'Chấm dứt hợp đồng',
+    contract_renewal_requested: 'Yêu cầu gia hạn hợp đồng',
   }
   return titles[type] || 'Hành động khác'
 }
@@ -222,6 +223,7 @@ function getEventLabel(type) {
     RECALLED: 'Thu hồi',
     GENERATED_PDF: 'Sinh PDF',
     TERMINATED: 'Đã chấm dứt',
+    contract_renewal_requested: 'Gia hạn',
   }
   return labels[type] || type
 }
