@@ -105,6 +105,12 @@
               <!-- Actions for ACTIVE status -->
               <template v-else-if="sp.data.status === 'ACTIVE'">
                 <Button icon="pi pi-file" outlined rounded @click="openGenerate(sp.data)" v-tooltip="'Sinh PDF'" />
+                <Button icon="pi pi-ban" outlined severity="danger" rounded @click="openTerminateDialog(sp.data)" v-tooltip="'Chấm dứt HĐ'" />
+              </template>
+
+              <!-- Actions for TERMINATED status -->
+              <template v-else-if="sp.data.status === 'TERMINATED'">
+                <Button icon="pi pi-eye" outlined severity="contrast" rounded @click="goToGeneral(sp.data)" v-tooltip="'Xem chi tiết chấm dứt'" />
               </template>
 
               <!-- Common action -->
@@ -426,6 +432,13 @@
         <Button label="Thu hồi" icon="pi pi-replay" severity="warning" @click="doRecall" :loading="recalling" />
       </template>
     </Dialog>
+
+    <!-- Terminate Contract Modal -->
+    <TerminateContractModal
+      v-model="terminateDialog"
+      :contract="contractToTerminate"
+      @terminated="terminateDialog = false"
+    />
   </div>
 </template>
 
@@ -439,6 +452,7 @@ import Checkbox from 'primevue/checkbox'
 import { ContractService } from '@/services/ContractService'
 import { useFormValidation } from '@/composables/useFormValidation'
 import { formatDate, toYMD } from '@/utils/dateHelper'
+import TerminateContractModal from '@/Components/TerminateContractModal.vue'
 
 const { errors, hasError, getError } = useFormValidation()
 
@@ -467,6 +481,7 @@ const submitApprovalDialog = ref(false)
 const approveDialog = ref(false)
 const rejectDialog = ref(false)
 const recallDialog = ref(false)
+const terminateDialog = ref(false)
 
 const saving = ref(false)
 const deleting = ref(false)
@@ -480,6 +495,7 @@ const submitted = ref(false)
 const rejectSubmitted = ref(false)
 
 const current = ref(null)
+const contractToTerminate = ref(null)
 const generateTemplateId = ref(null)
 const availableContractTemplates = ref([])
 const loadingContractTemplates = ref(false)
@@ -811,6 +827,11 @@ function doRecall() {
       current.value = null
     }
   })
+}
+
+function openTerminateDialog(row) {
+  contractToTerminate.value = row
+  terminateDialog.value = true
 }
 </script>
 

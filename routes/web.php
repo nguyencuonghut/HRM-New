@@ -147,20 +147,31 @@ Route::group(['middleware' => 'auth'], function () {
     // Employee Assignment
     Route::resource('employee-assignments', EmployeeAssignmentController::class)->except(['show']);
 
-    // Contract routes
+    // Contract routes (static routes first to avoid route parameter conflicts)
     Route::get('contracts', [ContractController::class,'index'])->name('contracts.index');
     Route::post('contracts', [ContractController::class,'store'])->name('contracts.store');
-    Route::put('contracts/{contract}', [ContractController::class,'update'])->name('contracts.update');
-    Route::get('contracts/{contract}', [ContractController::class, 'show'])->name('contracts.show');
-    Route::delete('contracts/{contract}', [ContractController::class,'destroy'])->name('contracts.destroy');
     Route::post('contracts/bulk-delete', [ContractController::class,'bulkDelete'])->name('contracts.bulk-delete');
+
+    // Static routes before dynamic {contract} parameter
+    Route::get('contracts/pending-approvals', [ContractController::class,'pendingApprovals'])->name('contracts.pendingApprovals');
+    Route::get('contracts/termination-reasons', [ContractController::class,'terminationReasons'])->name('contracts.terminationReasons');
+    Route::get('contracts/terminated/list', [ContractController::class,'terminated'])->name('contracts.terminated');
+    Route::get('contracts/termination-statistics', [ContractController::class,'terminationStatistics'])->name('contracts.terminationStatistics');
+
+    // Dynamic routes with {contract} parameter
+    Route::get('contracts/{contract}', [ContractController::class, 'show'])->name('contracts.show');
+    Route::put('contracts/{contract}', [ContractController::class,'update'])->name('contracts.update');
+    Route::delete('contracts/{contract}', [ContractController::class,'destroy'])->name('contracts.destroy');
 
     // Approval workflow routes
     Route::post('contracts/{contract}/submit-for-approval', [ContractController::class,'submitForApproval'])->name('contracts.submitForApproval');
     Route::post('contracts/{contract}/approve', [ContractController::class,'approve'])->name('contracts.approve');
     Route::post('contracts/{contract}/reject', [ContractController::class,'reject'])->name('contracts.reject');
     Route::post('contracts/{contract}/recall', [ContractController::class,'recall'])->name('contracts.recall');
-    Route::get('contracts/pending-approvals', [ContractController::class,'pendingApprovals'])->name('contracts.pendingApprovals');
+
+    // Termination routes
+    Route::post('contracts/{contract}/terminate', [ContractController::class,'terminate'])->name('contracts.terminate');
+    Route::get('contracts/{contract}/calculate-severance-pay', [ContractController::class,'calculateSeverancePay'])->name('contracts.calculateSeverancePay');
 
     Route::post('contracts/{contract}/generate', [ContractGenerateController::class, 'generate'])->name('contracts.generate');
 

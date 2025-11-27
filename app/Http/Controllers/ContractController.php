@@ -10,6 +10,8 @@ use App\Http\Resources\ContractTimelineResource;
 use App\Models\{Contract, ContractTemplate, Employee, Department, Position};
 use App\Enums\{ContractType, ContractStatus, ContractSource};
 use App\Services\ContractApprovalService;
+use App\Services\ContractTerminationService;
+use App\Enums\ContractTerminationReason;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\ValidationException;
@@ -421,5 +423,102 @@ class ContractController extends Controller
             'data' => ContractResource::collection($contracts),
             'count' => $contracts->count(),
         ]);
+    }
+
+    /**
+     * Chấm dứt hợp đồng
+     */
+    public function terminate(Request $request, Contract $contract, ContractTerminationService $service)
+    {
+        $this->authorize('update', $contract);
+
+        $validated = $request->validate([
+            'terminated_at' => 'required|date',
+            'termination_reason' => 'required|string|in:' . implode(',', array_column(ContractTerminationReason::cases(), 'value')),
+            'termination_note' => 'nullable|string|max:1000',
+        ]);
+
+        try {
+            $service->terminateContract($contract, $validated, $request->user());
+
+            return redirect()->back()->with([
+                'message' => 'Hợp đồng đã được chấm dứt thành công',
+                'type' => 'success'
+            ]);
+        } catch (\InvalidArgumentException $e) {
+            return redirect()->back()->withErrors([
+                'contract' => $e->getMessage(),
+            ])->with([
+                'message' => $e->getMessage(),
+                'type' => 'error'
+            ]);
+        }
+    }
+
+    /**
+     * Lấy danh sách các lý do chấm dứt hợp đồng (API cho modal)
+     */
+    public function terminationReasons()
+    {
+        return response()->json([
+            'data' => ContractTerminationReason::options(),
+        ]);
+    }
+
+    /**
+     * Tính toán trợ cấp thôi việc (API cho modal)
+     */
+    public function calculateSeverancePay(Request $request, Contract $contract, ContractTerminationService $service)
+    {
+        $this->authorize('view', $contract);
+
+        $reason = $request->input('reason');
+
+        if (!$reason) {
+            return response()->json([
+                'data' => [
+                    'eligible' => false,
+                    'amount' => 0,
+                    'note' => 'Vui lòng chọn lý do chấm dứt để tính trợ cấp',
+                ]
+            ]);
+        }
+
+        return response()->json([
+            'data' => $service->calculateSeverancePay($contract, $reason),
+        ]);
+    }
+
+    /**
+     * Lấy danh sách hợp đồng đã chấm dứt
+     */
+    public function terminated(Request $request, ContractTerminationService $service)
+    {
+        $this->authorize('viewAny', Contract::class);
+
+        $filters = $request->only(['reason', 'from_date', 'to_date', 'department_id']);
+        $contracts = $service->getTerminatedContracts($filters)->paginate(20);
+
+        return response()->json([
+            'data' => ContractResource::collection($contracts),
+            'meta' => [
+                'current_page' => $contracts->currentPage(),
+                'last_page' => $contracts->lastPage(),
+                'total' => $contracts->total(),
+            ],
+        ]);
+    }
+
+    /**
+     * Thống kê chấm dứt hợp đồng
+     */
+    public function terminationStatistics(Request $request, ContractTerminationService $service)
+    {
+        $this->authorize('viewAny', Contract::class);
+
+        $year = $request->input('year', now()->year);
+        $stats = $service->getTerminationStatistics($year);
+
+        return response()->json(['data' => $stats]);
     }
 }

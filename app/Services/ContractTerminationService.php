@@ -1,0 +1,190 @@
+<?php
+
+namespace App\Services;
+
+use App\Models\Contract;
+use App\Models\User;
+use App\Enums\ContractTerminationReason;
+use App\Events\ContractTerminated;
+use Illuminate\Support\Facades\DB;
+use Carbon\Carbon;
+
+class ContractTerminationService
+{
+    /**
+     * Chấm dứt hợp đồng
+     */
+    public function terminateContract(Contract $contract, array $data, User $terminator): Contract
+    {
+        // Validate
+        $this->validateTermination($contract);
+
+        DB::beginTransaction();
+        try {
+            // Update contract status
+            $contract->update([
+                'status' => 'TERMINATED',
+                'terminated_at' => Carbon::parse($data['terminated_at']),
+                'termination_reason' => $data['termination_reason'],
+                'note' => $data['termination_note'] ?? $contract->note,
+            ]);
+
+            // Log activity
+            activity()
+                ->performedOn($contract)
+                ->causedBy($terminator)
+                ->withProperties([
+                    'reason' => $data['termination_reason'],
+                    'terminated_at' => $data['terminated_at'],
+                    'note' => $data['termination_note'] ?? null,
+                ])
+                ->log('Chấm dứt hợp đồng');
+
+            // Dispatch event
+            event(new ContractTerminated(
+                contract: $contract->fresh(),
+                terminator: $terminator,
+                reason: $data['termination_reason'],
+                note: $data['termination_note'] ?? null
+            ));
+
+            DB::commit();
+
+            return $contract->fresh();
+        } catch (\Exception $e) {
+            DB::rollBack();
+            throw $e;
+        }
+    }
+
+    /**
+     * Validate có thể chấm dứt hợp đồng không
+     */
+    public function validateTermination(Contract $contract): void
+    {
+        // Contract phải ở trạng thái ACTIVE
+        if ($contract->status !== 'ACTIVE') {
+            throw new \InvalidArgumentException(
+                'Chỉ có thể chấm dứt hợp đồng đang ở trạng thái ACTIVE. Trạng thái hiện tại: ' . $contract->status
+            );
+        }
+
+        // Không thể chấm dứt hợp đồng đã bị chấm dứt
+        if ($contract->terminated_at !== null) {
+            throw new \InvalidArgumentException(
+                'Hợp đồng này đã bị chấm dứt vào ngày ' . $contract->terminated_at->format('d/m/Y')
+            );
+        }
+    }
+
+    /**
+     * Tính toán trợ cấp thôi việc (nếu có)
+     * Logic đơn giản: 1/2 tháng lương cho mỗi năm làm việc
+     */
+    public function calculateSeverancePay(Contract $contract, ?string $reasonValue = null): array
+    {
+        // Nếu không truyền reason, lấy từ contract (có thể null nếu chưa terminate)
+        $reasonValue = $reasonValue ?? $contract->termination_reason;
+
+        if (!$reasonValue) {
+            return [
+                'eligible' => false,
+                'amount' => 0,
+                'note' => 'Chưa xác định lý do chấm dứt',
+            ];
+        }
+
+        $reason = ContractTerminationReason::from($reasonValue);
+
+        if (!$reason->requiresSeverancePay()) {
+            return [
+                'eligible' => false,
+                'amount' => 0,
+                'note' => 'Không được hưởng trợ cấp thôi việc theo lý do chấm dứt',
+            ];
+        }
+
+        // Tính số năm làm việc
+        $startDate = $contract->start_date;
+        $endDate = $contract->terminated_at ?? now();
+        $yearsWorked = $startDate->diffInYears($endDate);
+        $monthsWorked = $startDate->diffInMonths($endDate) % 12;
+
+        // Công thức: 1/2 tháng lương cho mỗi năm
+        $monthlySalary = $contract->base_salary + $contract->position_allowance;
+        $severancePay = ($yearsWorked * 0.5 + $monthsWorked / 24) * $monthlySalary;
+
+        return [
+            'eligible' => true,
+            'amount' => round($severancePay),
+            'years_worked' => $yearsWorked,
+            'months_worked' => $monthsWorked,
+            'monthly_salary' => $monthlySalary,
+            'formula' => sprintf('(%d năm × 0.5 + %d tháng / 24) × %s',
+                $yearsWorked,
+                $monthsWorked,
+                number_format($monthlySalary)
+            ),
+            'note' => 'Trợ cấp thôi việc theo Bộ luật Lao động',
+        ];
+    }
+
+    /**
+     * Lấy danh sách hợp đồng đã chấm dứt
+     */
+    public function getTerminatedContracts(array $filters = [])
+    {
+        $query = Contract::where('status', 'TERMINATED')
+            ->with(['employee', 'department', 'position']);
+
+        // Filter by reason
+        if (!empty($filters['reason'])) {
+            $query->where('termination_reason', $filters['reason']);
+        }
+
+        // Filter by date range
+        if (!empty($filters['from_date'])) {
+            $query->whereDate('terminated_at', '>=', $filters['from_date']);
+        }
+        if (!empty($filters['to_date'])) {
+            $query->whereDate('terminated_at', '<=', $filters['to_date']);
+        }
+
+        // Filter by department
+        if (!empty($filters['department_id'])) {
+            $query->where('department_id', $filters['department_id']);
+        }
+
+        return $query->orderBy('terminated_at', 'desc');
+    }
+
+    /**
+     * Thống kê chấm dứt hợp đồng theo lý do
+     */
+    public function getTerminationStatistics(string $year = null): array
+    {
+        $year = $year ?? now()->year;
+
+        $stats = Contract::where('status', 'TERMINATED')
+            ->whereYear('terminated_at', $year)
+            ->selectRaw('termination_reason, COUNT(*) as count')
+            ->groupBy('termination_reason')
+            ->get()
+            ->mapWithKeys(function ($item) {
+                $reason = ContractTerminationReason::from($item->termination_reason);
+                return [
+                    $item->termination_reason => [
+                        'label' => $reason->label(),
+                        'count' => $item->count,
+                    ]
+                ];
+            })
+            ->toArray();
+
+        return [
+            'year' => $year,
+            'total' => array_sum(array_column($stats, 'count')),
+            'by_reason' => $stats,
+        ];
+    }
+}
