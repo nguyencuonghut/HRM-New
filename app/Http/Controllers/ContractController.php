@@ -14,6 +14,7 @@ use App\Services\ContractTerminationService;
 use App\Enums\ContractTerminationReason;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\ValidationException;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Inertia\Inertia;
@@ -56,6 +57,7 @@ class ContractController extends Controller
         $this->authorize('create', Contract::class);
 
         $payload = $request->validated();
+        $payload['created_by'] = $request->user()->id;
 
         // Rule: chặn overlap với hợp đồng ACTIVE
         // Kiểm tra cho mọi hợp đồng mới để tránh tạo hợp đồng sẽ overlap khi activate

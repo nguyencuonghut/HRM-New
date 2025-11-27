@@ -17,7 +17,7 @@ class Contract extends Model
         'social_insurance','health_insurance','unemployment_insurance',
         'work_location','working_time','approver_id','approved_at','rejected_at','approval_note',
         'terminated_at','termination_reason','source','source_id','template_id','generated_pdf_path',
-        'signed_file_path','created_from_offer','note',
+        'signed_file_path','created_from_offer','note','created_by',
     ];
 
     protected $casts = [
@@ -39,6 +39,7 @@ class Contract extends Model
     public function department(){ return $this->belongsTo(Department::class); }
     public function position(){ return $this->belongsTo(Position::class); }
     public function approver(){ return $this->belongsTo(User::class,'approver_id'); }
+    public function created_by_user(){ return $this->belongsTo(User::class, 'created_by'); }
     public function attachments(){ return $this->hasMany(ContractAttachment::class); }
     public function template(){ return $this->belongsTo(ContractTemplate::class, 'template_id'); }
     public function appendixes(){ return $this->hasMany(ContractAppendix::class, 'contract_id'); }

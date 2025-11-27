@@ -60,6 +60,9 @@ return new class extends Migration {
             $t->string('signed_file_path')->nullable();     // file scan/ký số (nếu có)
             $t->boolean('created_from_offer')->default(false)->index();
 
+            // Audit
+            $t->uuid('created_by')->nullable()->index();    // User tạo hợp đồng
+
             $t->timestamps();
         });
 
