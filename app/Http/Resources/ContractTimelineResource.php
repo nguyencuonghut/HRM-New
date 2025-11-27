@@ -27,6 +27,16 @@ class ContractTimelineResource extends JsonResource
 
     private function determineType(): string
     {
+        // Check termination first
+        if ($this->description === 'Chấm dứt hợp đồng') {
+            return 'TERMINATED';
+        }
+
+        // Check approval step pattern
+        if (str_contains($this->description, 'Phê duyệt bước')) {
+            return 'APPROVED_STEP';
+        }
+
         return match($this->description) {
             'created' => 'CREATED',
             'updated' => 'UPDATED',
@@ -35,7 +45,7 @@ class ContractTimelineResource extends JsonResource
             'Từ chối phê duyệt' => 'REJECTED',
             'Thu hồi yêu cầu phê duyệt' => 'RECALLED',
             'generated' => 'GENERATED_PDF',
-            default => str_contains($this->description, 'Phê duyệt bước') ? 'APPROVED_STEP' : 'OTHER',
+            default => 'OTHER',
         };
     }
 }

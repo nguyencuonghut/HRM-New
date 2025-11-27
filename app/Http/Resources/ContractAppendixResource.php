@@ -60,9 +60,11 @@ class ContractAppendixResource extends JsonResource
         return match ($this->status) {
             'DRAFT' => 'Nháp',
             'ACTIVE' => 'Đang hiệu lực',
-            'PENDING' => 'Chờ duyệt',
+            'PENDING_APPROVAL' => 'Chờ duyệt',
             'EXPIRED' => 'Hết hiệu lực',
             'TERMINATED' => 'Đã chấm dứt',
+            'CANCELLED' => 'Đã hủy',
+            'REJECTED' => 'Đã từ chối',
             default => null,
         };
     }

@@ -21,13 +21,18 @@ class ContractTerminationService
 
         DB::beginTransaction();
         try {
+            $terminatedAt = Carbon::parse($data['terminated_at']);
+
             // Update contract status
             $contract->update([
                 'status' => 'TERMINATED',
-                'terminated_at' => Carbon::parse($data['terminated_at']),
+                'terminated_at' => $terminatedAt,
                 'termination_reason' => $data['termination_reason'],
                 'note' => $data['termination_note'] ?? $contract->note,
             ]);
+
+            // Xử lý các phụ lục (appendixes) của hợp đồng
+            $this->handleAppendixesOnTermination($contract, $terminatedAt);
 
             // Log activity
             activity()
@@ -54,6 +59,54 @@ class ContractTerminationService
         } catch (\Exception $e) {
             DB::rollBack();
             throw $e;
+        }
+    }
+
+    /**
+     * Xử lý các phụ lục khi hợp đồng bị chấm dứt
+     */
+    protected function handleAppendixesOnTermination(Contract $contract, Carbon $terminatedAt): void
+    {
+        $appendixes = $contract->appendixes;
+
+        foreach ($appendixes as $appendix) {
+            // Phụ lục ACTIVE: Set end_date = terminated_at và chuyển sang CANCELLED
+            if ($appendix->status === 'ACTIVE') {
+                $appendix->update([
+                    'status' => 'CANCELLED',
+                    'end_date' => $terminatedAt,
+                    'note' => ($appendix->note ?? '') . "\n[Tự động hủy do hợp đồng chính bị chấm dứt]",
+                ]);
+
+                activity()
+                    ->performedOn($appendix)
+                    ->log('Phụ lục tự động bị hủy do hợp đồng chính chấm dứt');
+            }
+
+            // Phụ lục PENDING_APPROVAL: Tự động REJECT
+            if ($appendix->status === 'PENDING_APPROVAL') {
+                $appendix->update([
+                    'status' => 'REJECTED',
+                    'rejected_at' => now(),
+                    'approval_note' => 'Tự động từ chối do hợp đồng chính bị chấm dứt',
+                ]);
+
+                activity()
+                    ->performedOn($appendix)
+                    ->log('Phụ lục tự động bị từ chối do hợp đồng chính chấm dứt');
+            }
+
+            // Phụ lục DRAFT: Chuyển sang CANCELLED
+            if ($appendix->status === 'DRAFT') {
+                $appendix->update([
+                    'status' => 'CANCELLED',
+                    'note' => ($appendix->note ?? '') . "\n[Tự động hủy do hợp đồng chính bị chấm dứt]",
+                ]);
+
+                activity()
+                    ->performedOn($appendix)
+                    ->log('Phụ lục nháp tự động bị hủy do hợp đồng chính chấm dứt');
+            }
         }
     }
 

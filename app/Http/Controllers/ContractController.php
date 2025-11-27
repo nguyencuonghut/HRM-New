@@ -446,10 +446,28 @@ class ContractController extends Controller
                 'type' => 'success'
             ]);
         } catch (\InvalidArgumentException $e) {
+            \Log::error('Contract termination validation failed', [
+                'contract_id' => $contract->id,
+                'error' => $e->getMessage(),
+            ]);
+
             return redirect()->back()->withErrors([
                 'contract' => $e->getMessage(),
             ])->with([
                 'message' => $e->getMessage(),
+                'type' => 'error'
+            ]);
+        } catch (\Exception $e) {
+            \Log::error('Contract termination failed', [
+                'contract_id' => $contract->id,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+
+            return redirect()->back()->withErrors([
+                'contract' => 'Có lỗi xảy ra khi chấm dứt hợp đồng: ' . $e->getMessage(),
+            ])->with([
+                'message' => 'Không thể chấm dứt hợp đồng. Vui lòng kiểm tra lại.',
                 'type' => 'error'
             ]);
         }

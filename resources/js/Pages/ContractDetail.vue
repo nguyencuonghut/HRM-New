@@ -42,6 +42,30 @@
             <div><b>Bắt đầu:</b> {{ formatDate(contract.start_date) }}</div>
             <div><b>Kết thúc:</b> {{ formatDate(contract.end_date) || '—' }}</div>
           </div>
+
+          <!-- Thông tin chấm dứt hợp đồng -->
+          <div v-if="contract.status === 'TERMINATED' && contract.terminated_at" class="mt-6 p-4 bg-red-50 border border-red-200 rounded">
+            <h4 class="font-semibold text-red-700 mb-3 flex items-center gap-2">
+              <i class="pi pi-ban"></i>
+              Thông tin chấm dứt hợp đồng
+            </h4>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <span class="text-gray-600">Ngày chấm dứt:</span>
+                <span class="ml-2 font-medium">{{ formatDate(contract.terminated_at) }}</span>
+              </div>
+              <div>
+                <span class="text-gray-600">Lý do:</span>
+                <span class="ml-2 font-medium">{{ contract.termination_reason_label || '—' }}</span>
+              </div>
+              <div v-if="contract.termination_note" class="md:col-span-2">
+                <div class="text-gray-600 mb-2">Ghi chú chấm dứt:</div>
+                <div class="text-sm text-gray-700 whitespace-pre-line p-3 bg-white rounded border border-gray-200">
+                  {{ contract.termination_note }}
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       </TabPanel>
 
@@ -182,6 +206,7 @@ function getEventTitle(type) {
     REJECTED: 'Từ chối',
     RECALLED: 'Thu hồi',
     GENERATED_PDF: 'Sinh file PDF',
+    TERMINATED: 'Chấm dứt hợp đồng',
   }
   return titles[type] || 'Hành động khác'
 }
@@ -196,6 +221,7 @@ function getEventLabel(type) {
     REJECTED: 'Từ chối',
     RECALLED: 'Thu hồi',
     GENERATED_PDF: 'Sinh PDF',
+    TERMINATED: 'Đã chấm dứt',
   }
   return labels[type] || type
 }
@@ -210,6 +236,7 @@ function getEventSeverity(type) {
     REJECTED: 'danger',
     RECALLED: 'secondary',
     GENERATED_PDF: 'contrast',
+    TERMINATED: 'danger',
   }
   return severities[type] || 'info'
 }
@@ -224,6 +251,7 @@ function getIcon(type) {
     REJECTED: 'pi pi-times-circle',
     RECALLED: 'pi pi-undo',
     GENERATED_PDF: 'pi pi-file-pdf',
+    TERMINATED: 'pi pi-ban',
   }
   return icons[type] || 'pi pi-circle'
 }
@@ -238,6 +266,7 @@ function getIconClass(type) {
     REJECTED: 'bg-red-100 text-red-600',
     RECALLED: 'bg-gray-100 text-gray-600',
     GENERATED_PDF: 'bg-purple-100 text-purple-600',
+    TERMINATED: 'bg-red-100 text-red-600',
   }
   return classes[type] || 'bg-gray-100 text-gray-600'
 }
@@ -252,8 +281,25 @@ function getCardClass(type) {
     REJECTED: 'border-red-200 bg-red-50',
     RECALLED: 'border-gray-200 bg-gray-50',
     GENERATED_PDF: 'border-purple-200 bg-purple-50',
+    TERMINATED: 'border-red-200 bg-red-50',
   }
   return classes[type] || 'border-gray-200 bg-gray-50'
+}
+
+function getTerminationReasonLabel(reason) {
+  const labels = {
+    EXPIRATION: 'Hết hạn hợp đồng',
+    MUTUAL: 'Thỏa thuận hai bên',
+    RESIGNATION: 'Người lao động xin nghỉ',
+    DISMISSAL: 'Sa thải',
+    PROBATION_FAILED: 'Không qua thử việc',
+    BREACH: 'Vi phạm hợp đồng',
+    FORCE_MAJEURE: 'Bất khả kháng',
+    RETIREMENT: 'Nghỉ hưu',
+    DECEASED: 'Người lao động qua đời',
+    OTHER: 'Lý do khác',
+  }
+  return labels[reason] || reason || '—'
 }
 </script>
 

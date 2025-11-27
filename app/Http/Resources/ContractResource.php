@@ -53,6 +53,10 @@ class ContractResource extends JsonResource
             'approval_note'=> $this->approval_note,
             'terminated_at'=> optional($this->terminated_at)->toDateString(),
             'termination_reason'=> $this->termination_reason,
+            'termination_reason_label' => $this->termination_reason
+                ? \App\Enums\ContractTerminationReason::tryFrom($this->termination_reason)?->label()
+                : null,
+            'termination_note' => $this->status === 'TERMINATED' ? $this->note : null,
             'source'              => $this->source,
             'source_label'        => ContractSource::tryFrom($this->source)?->label(),
             'generated_pdf_path' => $this->generated_pdf_path ? asset("storage/{$this->generated_pdf_path}") : null,

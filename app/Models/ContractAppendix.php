@@ -4,10 +4,12 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
+use Spatie\Activitylog\Traits\LogsActivity;
+use Spatie\Activitylog\LogOptions;
 
 class ContractAppendix extends Model
 {
-    use HasUuids;
+    use HasUuids, LogsActivity;
 
     protected $fillable = [
         'contract_id','appendix_no','appendix_type','source','title','summary',
@@ -27,4 +29,13 @@ class ContractAppendix extends Model
     public function contract(){ return $this->belongsTo(Contract::class); }
     public function approver(){ return $this->belongsTo(User::class,'approver_id'); }
     public function attachments(){ return $this->hasMany(ContractAppendixAttachment::class,'appendix_id'); }
+
+    public function getActivitylogOptions(): LogOptions
+    {
+        return LogOptions::defaults()
+            ->logOnly(['appendix_no', 'appendix_type', 'title', 'status', 'effective_date', 'end_date',
+                      'base_salary', 'insurance_salary', 'position_allowance', 'department_id', 'position_id'])
+            ->logOnlyDirty()
+            ->dontSubmitEmptyLogs();
+    }
 }
