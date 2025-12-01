@@ -8,7 +8,7 @@ use App\Http\Resources\ContractResource;
 use App\Http\Resources\ContractAppendixResource;
 use App\Http\Resources\ContractTimelineResource;
 use App\Models\{Contract, ContractTemplate, Employee, Department, Position};
-use App\Enums\{ContractType, ContractStatus, ContractSource};
+use App\Enums\{ContractType, ContractStatus, ContractSource, AppendixType};
 use App\Services\ContractApprovalService;
 use App\Services\ContractTerminationService;
 use App\Enums\ContractTerminationReason;
@@ -176,14 +176,107 @@ class ContractController extends Controller
             ->orderBy('created_at', 'asc')
             ->get();
 
+        // Build contract timeline (merge contract events + appendixes)
+        $contractTimeline = $this->buildContractTimeline($contract);
+
         $activeTab = request('tab', 'general'); // default nếu không truyền
 
         return \Inertia\Inertia::render('ContractDetail', [
             'contract'   => new ContractResource($contract)->resolve(),
             'appendixes' => ContractAppendixResource::collection($appendixes)->resolve(),
             'timeline'   => ContractTimelineResource::collection($timeline)->resolve(),
+            'contractTimeline' => $contractTimeline,
             'activeTab'   => $activeTab,
         ]);
+    }
+
+    /**
+     * Build contract timeline with all events
+     */
+    private function buildContractTimeline(Contract $contract)
+    {
+        $events = collect();
+
+        // 1. Contract created event
+        $events->push([
+            'id' => 'contract_created',
+            'event_type' => 'contract_created',
+            'created_at' => $contract->created_at,
+            'actor' => $contract->creator ? [
+                'id' => $contract->creator->id,
+                'name' => $contract->creator->name,
+            ] : null,
+            'status' => $contract->status,
+            'details' => [
+                'contract_type_label' => ContractType::tryFrom($contract->contract_type)?->label(),
+                'start_date' => $contract->start_date,
+                'end_date' => $contract->end_date,
+            ],
+        ]);
+
+        // 2. Appendixes (including renewals)
+        foreach ($contract->appendixes as $appendix) {
+            $eventType = $appendix->appendix_type === AppendixType::EXTENSION ? 'contract_renewal' : 'appendix_created';
+
+            $details = [
+                'appendix_no' => $appendix->appendix_no,
+                'type_label' => $appendix->appendix_type->label(),
+                'effective_date' => $appendix->effective_date,
+                'description' => $appendix->content,
+            ];
+
+            // Add renewal-specific details
+            if ($appendix->appendix_type === AppendixType::EXTENSION) {
+                $activities = Activity::forSubject($contract)
+                    ->where('properties->appendix_id', $appendix->id)
+                    ->first();
+
+                $details['old_end_date'] = $activities?->properties['old_end_date'] ?? null;
+                $details['new_end_date'] = $activities?->properties['new_end_date'] ?? $appendix->effective_date;
+
+                if ($appendix->status === 'ACTIVE' && $appendix->approver) {
+                    $details['approved_at'] = $appendix->approved_at;
+                    $details['approver_name'] = $appendix->approver->name;
+                }
+
+                if ($appendix->status === 'REJECTED' && $appendix->approver) {
+                    $details['rejected_at'] = $appendix->rejected_at;
+                    $details['approver_name'] = $appendix->approver->name;
+                    $details['approval_note'] = $appendix->approval_note;
+                }
+            }
+
+            $events->push([
+                'id' => 'appendix_' . $appendix->id,
+                'event_type' => $eventType,
+                'created_at' => $appendix->created_at,
+                'actor' => $appendix->creator ? [
+                    'id' => $appendix->creator->id,
+                    'name' => $appendix->creator->name,
+                ] : null,
+                'status' => $appendix->status,
+                'details' => $details,
+            ]);
+        }
+
+        // 3. Contract terminated event
+        if ($contract->status === 'TERMINATED' && $contract->terminated_at) {
+            $events->push([
+                'id' => 'contract_terminated',
+                'event_type' => 'contract_terminated',
+                'created_at' => $contract->terminated_at,
+                'actor' => null, // TODO: Add terminator if available
+                'status' => 'TERMINATED',
+                'details' => [
+                    'terminated_at' => $contract->terminated_at,
+                    'termination_reason_label' => TerminationReason::tryFrom($contract->termination_reason)?->label(),
+                    'termination_note' => $contract->termination_note,
+                ],
+            ]);
+        }
+
+        // Sort by created_at descending (newest first)
+        return $events->sortByDesc('created_at')->values()->all();
     }
 
 
@@ -602,8 +695,6 @@ class ContractController extends Controller
      */
     public function approveAppendix(Request $request, Contract $contract, $appendixId, \App\Services\ContractRenewalService $renewalService)
     {
-        $this->authorize('approve', $contract);
-
         try {
             $appendix = \App\Models\ContractAppendix::findOrFail($appendixId);
 
@@ -611,24 +702,15 @@ class ContractController extends Controller
                 throw new \Exception('Phụ lục không thuộc về hợp đồng này');
             }
 
+            $this->authorize('approve', $appendix);
+
             $validated = $request->validate([
-                'action' => 'required|in:approve,reject',
                 'note' => 'nullable|string',
             ]);
 
-            if ($validated['action'] === 'approve') {
-                $renewalService->approveRenewal($appendix, $request->user(), $validated['note'] ?? null);
-                $message = 'Phụ lục đã được phê duyệt thành công';
-            } else {
-                $renewalService->rejectRenewal($appendix, $request->user(), $validated['note'] ?? null);
-                $message = 'Phụ lục đã bị từ chối';
-            }
+            $renewalService->approveRenewal($appendix, $request->user(), $validated['note'] ?? null);
 
-            return response()->json([
-                'success' => true,
-                'message' => $message,
-                'data' => new ContractAppendixResource($appendix->fresh()),
-            ]);
+            return redirect()->back()->with('success', 'Phụ lục đã được phê duyệt thành công');
         } catch (\Exception $e) {
             Log::error('Appendix approval failed', [
                 'contract_id' => $contract->id,
@@ -636,10 +718,39 @@ class ContractController extends Controller
                 'error' => $e->getMessage(),
             ]);
 
-            return response()->json([
-                'success' => false,
-                'message' => $e->getMessage(),
-            ], 422);
+            return redirect()->back()->withErrors(['error' => $e->getMessage()]);
+        }
+    }
+
+    /**
+     * Từ chối phụ lục
+     */
+    public function rejectAppendix(Request $request, Contract $contract, $appendixId, \App\Services\ContractRenewalService $renewalService)
+    {
+        try {
+            $appendix = \App\Models\ContractAppendix::findOrFail($appendixId);
+
+            if ($appendix->contract_id !== $contract->id) {
+                throw new \Exception('Phụ lục không thuộc về hợp đồng này');
+            }
+
+            $this->authorize('approve', $appendix);
+
+            $validated = $request->validate([
+                'note' => 'required|string',
+            ]);
+
+            $renewalService->rejectRenewal($appendix, $request->user(), $validated['note']);
+
+            return redirect()->back()->with('success', 'Phụ lục đã bị từ chối');
+        } catch (\Exception $e) {
+            Log::error('Appendix rejection failed', [
+                'contract_id' => $contract->id,
+                'appendix_id' => $appendixId,
+                'error' => $e->getMessage(),
+            ]);
+
+            return redirect()->back()->withErrors(['error' => $e->getMessage()]);
         }
     }
 }

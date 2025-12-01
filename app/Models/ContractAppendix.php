@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Spatie\Activitylog\Traits\LogsActivity;
 use Spatie\Activitylog\LogOptions;
+use App\Enums\AppendixType;
 
 class ContractAppendix extends Model
 {
@@ -19,6 +20,7 @@ class ContractAppendix extends Model
     ];
 
     protected $casts = [
+        'appendix_type'    => AppendixType::class,
         'effective_date' => 'date',
         'end_date'       => 'date',
         'approved_at'    => 'datetime',

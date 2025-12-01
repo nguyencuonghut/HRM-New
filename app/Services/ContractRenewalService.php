@@ -6,6 +6,7 @@ use App\Models\Contract;
 use App\Models\ContractAppendix;
 use App\Models\User;
 use App\Events\ContractRenewed;
+use App\Enums\AppendixType;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Carbon\Carbon;
@@ -57,7 +58,7 @@ class ContractRenewalService
                     'old_end_date' => $contract->end_date?->format('Y-m-d'),
                     'new_end_date' => $renewalData['new_end_date']->format('Y-m-d'),
                 ])
-                ->log('contract_renewal_requested');
+                ->log('CONTRACT_RENEWAL_REQUESTED');
 
             // Dispatch event để gửi thông báo
             event(new ContractRenewed($appendix, $creator));
@@ -154,7 +155,7 @@ class ContractRenewalService
         $appendixData = [
             'contract_id' => $contract->id,
             'appendix_no' => $appendixNo,
-            'appendix_type' => 'EXTENSION',
+            'appendix_type' => AppendixType::EXTENSION->value,
             'source' => 'WORKFLOW',
             'title' => $title,
             'summary' => $summary,
@@ -204,7 +205,7 @@ class ContractRenewalService
      */
     public function approveRenewal(ContractAppendix $appendix, User $approver, ?string $note = null): void
     {
-        if ($appendix->appendix_type !== 'EXTENSION') {
+        if ($appendix->appendix_type !== AppendixType::EXTENSION) {
             throw new \Exception('Phụ lục này không phải là phụ lục gia hạn');
         }
 
@@ -267,7 +268,7 @@ class ContractRenewalService
                     'appendix_no' => $appendix->appendix_no,
                     'new_end_date' => $appendix->end_date->format('Y-m-d'),
                 ])
-                ->log('contract_renewal_approved');
+                ->log('CONTRACT_RENEWAL_APPROVED');
         });
     }
 
@@ -282,7 +283,7 @@ class ContractRenewalService
      */
     public function rejectRenewal(ContractAppendix $appendix, User $approver, ?string $note = null): void
     {
-        if ($appendix->appendix_type !== 'EXTENSION') {
+        if ($appendix->appendix_type !== AppendixType::EXTENSION) {
             throw new \Exception('Phụ lục này không phải là phụ lục gia hạn');
         }
 
@@ -307,7 +308,7 @@ class ContractRenewalService
                     'appendix_id' => $appendix->id,
                     'appendix_no' => $appendix->appendix_no,
                 ])
-                ->log('contract_renewal_rejected');
+                ->log('CONTRACT_RENEWAL_REJECTED');
         });
     }
 

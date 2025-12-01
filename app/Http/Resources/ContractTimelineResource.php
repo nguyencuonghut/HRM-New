@@ -45,6 +45,9 @@ class ContractTimelineResource extends JsonResource
             'Từ chối phê duyệt' => 'REJECTED',
             'Thu hồi yêu cầu phê duyệt' => 'RECALLED',
             'generated' => 'GENERATED_PDF',
+            'CONTRACT_RENEWAL_REQUESTED' => 'CONTRACT_RENEWAL_REQUESTED',
+            'CONTRACT_RENEWAL_APPROVED' => 'CONTRACT_RENEWAL_APPROVED',
+            'CONTRACT_RENEWAL_REJECTED' => 'CONTRACT_RENEWAL_REJECTED',
             default => 'OTHER',
         };
     }

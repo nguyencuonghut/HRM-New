@@ -101,6 +101,9 @@ class RolesAndPermissionsSeeder extends Seeder
             'submit contracts', // Gửi phê duyệt
             'approve contracts', // Phê duyệt
             'recall contracts', // Thu hồi
+            'renew contracts', // Gia hạn hợp đồng
+            'approve appendixes', // Phê duyệt phụ lục
+            'reject appendixes', // Từ chối phụ lục
 
             // Contract Template
             'view contract templates',
@@ -150,6 +153,8 @@ class RolesAndPermissionsSeeder extends Seeder
             'edit departments',
             'view contracts',
             'approve contracts', // Director có quyền approve
+            'approve appendixes', // Director có quyền approve phụ lục
+            'reject appendixes',
             'view employees',
         ]);
 
@@ -162,6 +167,8 @@ class RolesAndPermissionsSeeder extends Seeder
             'view departments',
             'view contracts',
             'approve contracts', // Manager có quyền approve
+            'approve appendixes', // Manager có quyền approve phụ lục
+            'reject appendixes',
             'view employees',
         ]);
 

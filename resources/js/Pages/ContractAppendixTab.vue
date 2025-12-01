@@ -68,8 +68,22 @@
       <Column header="Thao tác" headerStyle="min-width:14rem;">
         <template #body="sp">
           <div class="flex gap-2">
-            <Button icon="pi pi-pencil" outlined severity="success" rounded @click="edit(sp.data)" />
-            <Button icon="pi pi-trash" outlined severity="danger" rounded @click="confirmDelete(sp.data)" />
+            <Button
+              icon="pi pi-pencil"
+              outlined
+              severity="success"
+              rounded
+              @click="edit(sp.data)"
+              v-tooltip="'Chỉnh sửa'"
+            />
+            <Button
+              icon="pi pi-trash"
+              outlined
+              severity="danger"
+              rounded
+              @click="confirmDelete(sp.data)"
+              v-tooltip="'Xóa'"
+            />
             <Button
               icon="pi pi-file"
               outlined
@@ -84,6 +98,7 @@
               severity="success"
               rounded
               @click="approve(sp.data)"
+              v-tooltip="'Phê duyệt'"
             />
             <Button
               v-if="sp.data.status === 'PENDING_APPROVAL'"
@@ -92,6 +107,7 @@
               severity="danger"
               rounded
               @click="reject(sp.data)"
+              v-tooltip="'Từ chối'"
             />
           </div>
         </template>
@@ -243,6 +259,51 @@
     </template>
   </Dialog>
 
+  <!-- Dialog phê duyệt -->
+  <Dialog v-model:visible="approveDialog" :style="{ width: '600px' }" header="Phê duyệt phụ lục" :modal="true">
+    <div class="mb-4">
+      <div class="flex items-center gap-3 mb-4 p-3 bg-green-50 rounded">
+        <i class="pi pi-check-circle text-green-600 text-xl"></i>
+        <div>
+          <div class="font-semibold text-gray-800">{{ current?.appendix_no }}</div>
+          <div class="text-sm text-gray-600">{{ current?.appendix_type_label }}</div>
+        </div>
+      </div>
+
+      <div>
+        <label class="block font-bold mb-2">Ý kiến phê duyệt</label>
+        <Textarea v-model="approvalNote" autoResize rows="3" class="w-full" placeholder="Nhập ý kiến (không bắt buộc)..." />
+      </div>
+    </div>
+    <template #footer>
+      <Button label="Hủy" icon="pi pi-times" text @click="approveDialog=false" />
+      <Button label="Phê duyệt" icon="pi pi-check" severity="success" @click="confirmApprove" :loading="approving" />
+    </template>
+  </Dialog>
+
+  <!-- Dialog từ chối -->
+  <Dialog v-model:visible="rejectDialog" :style="{ width: '600px' }" header="Từ chối phụ lục" :modal="true">
+    <div class="mb-4">
+      <div class="flex items-center gap-3 mb-4 p-3 bg-red-50 rounded">
+        <i class="pi pi-times-circle text-red-600 text-xl"></i>
+        <div>
+          <div class="font-semibold text-gray-800">{{ current?.appendix_no }}</div>
+          <div class="text-sm text-gray-600">{{ current?.appendix_type_label }}</div>
+        </div>
+      </div>
+
+      <div>
+        <label class="block font-bold mb-2 required-field">Lý do từ chối</label>
+        <Textarea v-model="rejectNote" autoResize rows="4" class="w-full" placeholder="Nhập lý do từ chối (bắt buộc)..." :invalid="rejectSubmitted && !rejectNote" />
+        <small class="text-red-500" v-if="rejectSubmitted && !rejectNote">Vui lòng nhập lý do từ chối.</small>
+      </div>
+    </div>
+    <template #footer>
+      <Button label="Hủy" icon="pi pi-times" text @click="rejectDialog=false" />
+      <Button label="Từ chối" icon="pi pi-times-circle" severity="danger" @click="confirmReject" :loading="rejecting" />
+    </template>
+  </Dialog>
+
   <!-- Dialog chọn template để sinh PDF -->
   <Dialog v-model:visible="generateDialog" :style="{ width: '600px' }" header="Xác nhận sinh PDF" :modal="true">
     <div class="mb-4">
@@ -304,6 +365,7 @@
 
 <script setup>
 import { ref, computed } from 'vue'
+import { router } from '@inertiajs/vue3'
 import DatePicker from 'primevue/datepicker'
 import Select from 'primevue/select'
 import Textarea from 'primevue/textarea'
@@ -487,17 +549,74 @@ function removeMany() {
   })
 }
 
+// Approval dialogs
+const approveDialog = ref(false)
+const rejectDialog = ref(false)
+const approving = ref(false)
+const rejecting = ref(false)
+const approvalNote = ref('')
+const rejectNote = ref('')
+const rejectSubmitted = ref(false)
+
 function approve(row) {
-  ContractAppendixService.approve(props.contractId, row.id, {}, {
-    onSuccess: () => {},
-    onError: () => {}
+  current.value = row
+  approvalNote.value = ''
+  approveDialog.value = true
+}
+
+function confirmApprove() {
+  approving.value = true
+  ContractAppendixService.approve(props.contractId, current.value.id, { note: approvalNote.value }, {
+    onSuccess: () => {
+      // Update local state instead of reloading
+      const index = props.appendixes.findIndex(a => a.id === current.value.id)
+      if (index !== -1) {
+        props.appendixes[index].status = 'ACTIVE'
+        props.appendixes[index].status_label = 'Đã duyệt'
+      }
+      approveDialog.value = false
+      current.value = null
+      approvalNote.value = ''
+    },
+    onError: () => {},
+    onFinish: () => {
+      approving.value = false
+    }
   })
 }
 
 function reject(row) {
-  ContractAppendixService.reject(props.contractId, row.id, {}, {
-    onSuccess: () => {},
-    onError: () => {}
+  current.value = row
+  rejectNote.value = ''
+  rejectSubmitted.value = false
+  rejectDialog.value = true
+}
+
+function confirmReject() {
+  rejectSubmitted.value = true
+
+  if (!rejectNote.value) {
+    return
+  }
+
+  rejecting.value = true
+  ContractAppendixService.reject(props.contractId, current.value.id, { note: rejectNote.value }, {
+    onSuccess: () => {
+      // Update local state instead of reloading
+      const index = props.appendixes.findIndex(a => a.id === current.value.id)
+      if (index !== -1) {
+        props.appendixes[index].status = 'REJECTED'
+        props.appendixes[index].status_label = 'Bị từ chối'
+      }
+      rejectDialog.value = false
+      current.value = null
+      rejectNote.value = ''
+      rejectSubmitted.value = false
+    },
+    onError: () => {},
+    onFinish: () => {
+      rejecting.value = false
+    }
   })
 }
 

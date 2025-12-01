@@ -29,7 +29,8 @@
       <TabList>
         <Tab :value="0">Thông tin chung</Tab>
         <Tab :value="1">Phụ lục</Tab>
-        <Tab :value="2">Lịch sử phê duyệt</Tab>
+        <Tab :value="2">Timeline</Tab>
+        <Tab :value="3">Lịch sử phê duyệt</Tab>
       </TabList>
 
       <TabPanel :value="0">
@@ -78,6 +79,13 @@
       </TabPanel>
 
       <TabPanel :value="2">
+        <ContractTimelineTab
+          :contract-id="contract.id"
+          :timeline-events="contractTimeline"
+        />
+      </TabPanel>
+
+      <TabPanel :value="3">
         <div class="pt-4">
           <div v-if="!timeline?.length" class="text-center py-8 text-gray-500">
             <i class="pi pi-info-circle text-3xl mb-3"></i>
@@ -146,6 +154,7 @@ import TabList from 'primevue/tablist'
 import Tab from 'primevue/tab'
 import TabPanel from 'primevue/tabpanel'
 import ContractAppendixTab from './ContractAppendixTab.vue'
+import ContractTimelineTab from './ContractTimelineTab.vue'
 import { formatDate } from '@/utils/dateHelper'
 
 const props = defineProps({
@@ -153,6 +162,7 @@ const props = defineProps({
   appendixes:        { type: Array,  default: () => [] },
   appendixTemplates: { type: Array,  default: () => [] },
   timeline:          { type: Array,  default: () => [] },
+  contractTimeline:  { type: Array,  default: () => [] },
   activeTab:         { type: String, default: 'general' } // nhận từ BE
 })
 
@@ -163,7 +173,8 @@ const appendixes = props.appendixes
 const activeTabIndex = computed(() => {
   const tab = props.activeTab || 'general'
   if (tab === 'appendixes') return 1
-  if (tab === 'approval-history') return 2
+  if (tab === 'timeline') return 2
+  if (tab === 'approval-history') return 3
   return 0
 })
 
@@ -207,7 +218,9 @@ function getEventTitle(type) {
     RECALLED: 'Thu hồi',
     GENERATED_PDF: 'Sinh file PDF',
     TERMINATED: 'Chấm dứt hợp đồng',
-    contract_renewal_requested: 'Yêu cầu gia hạn hợp đồng',
+    CONTRACT_RENEWAL_REQUESTED: 'Yêu cầu gia hạn hợp đồng',
+    CONTRACT_RENEWAL_APPROVED: 'Phê duyệt gia hạn hợp đồng',
+    CONTRACT_RENEWAL_REJECTED: 'Từ chối gia hạn hợp đồng',
   }
   return titles[type] || 'Hành động khác'
 }
@@ -223,7 +236,9 @@ function getEventLabel(type) {
     RECALLED: 'Thu hồi',
     GENERATED_PDF: 'Sinh PDF',
     TERMINATED: 'Đã chấm dứt',
-    contract_renewal_requested: 'Gia hạn',
+    CONTRACT_RENEWAL_REQUESTED: 'Gia hạn',
+    CONTRACT_RENEWAL_APPROVED: 'Đã duyệt',
+    CONTRACT_RENEWAL_REJECTED: 'Bị từ chối',
   }
   return labels[type] || type
 }
@@ -239,6 +254,9 @@ function getEventSeverity(type) {
     RECALLED: 'secondary',
     GENERATED_PDF: 'contrast',
     TERMINATED: 'danger',
+    CONTRACT_RENEWAL_REQUESTED: 'info',
+    CONTRACT_RENEWAL_APPROVED: 'success',
+    CONTRACT_RENEWAL_REJECTED: 'danger',
   }
   return severities[type] || 'info'
 }
@@ -254,6 +272,9 @@ function getIcon(type) {
     RECALLED: 'pi pi-undo',
     GENERATED_PDF: 'pi pi-file-pdf',
     TERMINATED: 'pi pi-ban',
+    CONTRACT_RENEWAL_REQUESTED: 'pi pi-refresh',
+    CONTRACT_RENEWAL_APPROVED: 'pi pi-check-circle',
+    CONTRACT_RENEWAL_REJECTED: 'pi pi-times-circle',
   }
   return icons[type] || 'pi pi-circle'
 }
@@ -269,6 +290,9 @@ function getIconClass(type) {
     RECALLED: 'bg-gray-100 text-gray-600',
     GENERATED_PDF: 'bg-purple-100 text-purple-600',
     TERMINATED: 'bg-red-100 text-red-600',
+    CONTRACT_RENEWAL_REQUESTED: 'bg-blue-100 text-blue-600',
+    CONTRACT_RENEWAL_APPROVED: 'bg-green-100 text-green-600',
+    CONTRACT_RENEWAL_REJECTED: 'bg-red-100 text-red-600',
   }
   return classes[type] || 'bg-gray-100 text-gray-600'
 }
@@ -284,6 +308,9 @@ function getCardClass(type) {
     RECALLED: 'border-gray-200 bg-gray-50',
     GENERATED_PDF: 'border-purple-200 bg-purple-50',
     TERMINATED: 'border-red-200 bg-red-50',
+    CONTRACT_RENEWAL_REQUESTED: 'border-blue-200 bg-blue-50',
+    CONTRACT_RENEWAL_APPROVED: 'border-green-200 bg-green-50',
+    CONTRACT_RENEWAL_REJECTED: 'border-red-200 bg-red-50',
   }
   return classes[type] || 'border-gray-200 bg-gray-50'
 }

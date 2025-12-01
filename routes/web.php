@@ -176,7 +176,8 @@ Route::group(['middleware' => 'auth'], function () {
 
     // Renewal routes
     Route::post('contracts/{contract}/renew', [ContractController::class,'renew'])->name('contracts.renew');
-    Route::post('contracts/{contract}/appendixes/{appendixId}/approve', [ContractController::class,'approveAppendix'])->name('contracts.appendixes.approve-renewal');
+    Route::post('contracts/{contract}/appendixes/{appendixId}/approve', [ContractController::class,'approveAppendix'])->name('contracts.appendixes.approve');
+    Route::post('contracts/{contract}/appendixes/{appendixId}/reject', [ContractController::class,'rejectAppendix'])->name('contracts.appendixes.reject');
 
     Route::post('contracts/{contract}/generate', [ContractGenerateController::class, 'generate'])->name('contracts.generate');
 
