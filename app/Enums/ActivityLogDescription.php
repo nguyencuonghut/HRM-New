@@ -27,6 +27,8 @@ enum ActivityLogDescription: string
     case APPENDIX_UPDATED = 'APPENDIX_UPDATED';
     case APPENDIX_DELETED = 'APPENDIX_DELETED';
     case APPENDIX_BULK_DELETED = 'APPENDIX_BULK_DELETED';
+    case APPENDIX_SUBMITTED = 'APPENDIX_SUBMITTED';
+    case APPENDIX_RECALLED = 'APPENDIX_RECALLED';
     case APPENDIX_APPROVED = 'APPENDIX_APPROVED';
     case APPENDIX_REJECTED = 'APPENDIX_REJECTED';
     case APPENDIX_CANCELLED = 'APPENDIX_CANCELLED';
@@ -63,6 +65,8 @@ enum ActivityLogDescription: string
             self::APPENDIX_UPDATED => 'Chỉnh sửa phụ lục',
             self::APPENDIX_DELETED => 'Xóa phụ lục',
             self::APPENDIX_BULK_DELETED => 'Xóa nhiều phụ lục',
+            self::APPENDIX_SUBMITTED => 'Gửi phê duyệt phụ lục',
+            self::APPENDIX_RECALLED => 'Thu hồi yêu cầu phê duyệt phụ lục',
             self::APPENDIX_APPROVED => 'Phê duyệt phụ lục',
             self::APPENDIX_REJECTED => 'Từ chối phụ lục',
             self::APPENDIX_CANCELLED => 'Hủy phụ lục',
@@ -101,6 +105,8 @@ enum ActivityLogDescription: string
             self::APPENDIX_UPDATED => 'UPDATED',
             self::APPENDIX_DELETED => 'DELETED',
             self::APPENDIX_BULK_DELETED => 'DELETED',
+            self::APPENDIX_SUBMITTED => 'SUBMITTED',
+            self::APPENDIX_RECALLED => 'RECALLED',
             self::APPENDIX_APPROVED => 'APPROVED_STEP',
             self::APPENDIX_REJECTED => 'REJECTED',
             self::APPENDIX_CANCELLED => 'DELETED',

@@ -2,6 +2,9 @@
 
 namespace App\Http\Controllers;
 
+use App\Events\AppendixSubmitted;
+use App\Events\AppendixApproved;
+use App\Events\AppendixRejected;
 use App\Http\Requests\StoreContractAppendixRequest;
 use App\Http\Requests\UpdateContractAppendixRequest;
 use App\Http\Resources\ContractAppendixResource;
@@ -60,6 +63,17 @@ class ContractAppendixController extends Controller
     public function update(UpdateContractAppendixRequest $request, Contract $contract, ContractAppendix $appendix)
     {
         $this->authorize('update', $appendix);
+
+        // Chỉ cho phép cập nhật appendix ở trạng thái DRAFT hoặc REJECTED
+        if (!in_array($appendix->status, ['DRAFT', 'REJECTED'])) {
+            session()->flash('message', 'Chỉ có thể chỉnh sửa phụ lục ở trạng thái Nháp hoặc Bị từ chối.');
+            session()->flash('type', 'error');
+
+            return Inertia::location(route('contracts.show', [
+                'contract' => $contract->id,
+                'tab' => 'appendixes'
+            ]));
+        }
 
         $before = $appendix->getOriginal();
         $appendix->update($request->validated());
@@ -145,6 +159,75 @@ class ContractAppendixController extends Controller
         ]));
     }
 
+    public function submitForApproval(Request $request, Contract $contract, ContractAppendix $appendix)
+    {
+        $this->authorize('submit', $appendix);
+
+        // Chỉ appendix ở trạng thái DRAFT hoặc REJECTED mới có thể gửi phê duyệt
+        if (!in_array($appendix->status, ['DRAFT', 'REJECTED'])) {
+            session()->flash('message', 'Chỉ phụ lục ở trạng thái Nháp hoặc Bị từ chối mới có thể gửi phê duyệt.');
+            session()->flash('type', 'error');
+
+            return Inertia::location(route('contracts.show', [
+                'contract' => $contract->id,
+                'tab' => 'appendixes'
+            ]));
+        }
+
+        $appendix->update(['status' => 'PENDING_APPROVAL']);
+
+        activity('contract-appendix')
+            ->performedOn($appendix)->causedBy($request->user())
+            ->withProperties([
+                'action'      => 'submitted_for_approval',
+                'contract_id' => $contract->id,
+            ])->log(ActivityLogDescription::APPENDIX_SUBMITTED->value);
+
+        // Dispatch event để gửi notification
+        event(new AppendixSubmitted($appendix));
+
+        session()->flash('message', 'Đã gửi phụ lục hợp đồng để phê duyệt.');
+        session()->flash('type', 'success');
+
+        return Inertia::location(route('contracts.show', [
+            'contract' => $contract->id,
+            'tab' => 'appendixes'
+        ]));
+    }
+
+    public function recall(Request $request, Contract $contract, ContractAppendix $appendix)
+    {
+        $this->authorize('recall', $appendix);
+
+        // Chỉ appendix ở trạng thái PENDING_APPROVAL mới có thể thu hồi
+        if ($appendix->status !== 'PENDING_APPROVAL') {
+            session()->flash('message', 'Chỉ phụ lục đang chờ phê duyệt mới có thể thu hồi.');
+            session()->flash('type', 'error');
+
+            return Inertia::location(route('contracts.show', [
+                'contract' => $contract->id,
+                'tab' => 'appendixes'
+            ]));
+        }
+
+        $appendix->update(['status' => 'DRAFT']);
+
+        activity('contract-appendix')
+            ->performedOn($appendix)->causedBy($request->user())
+            ->withProperties([
+                'action'      => 'recalled',
+                'contract_id' => $contract->id,
+            ])->log(ActivityLogDescription::APPENDIX_RECALLED->value);
+
+        session()->flash('message', 'Đã thu hồi yêu cầu phê duyệt phụ lục.');
+        session()->flash('type', 'success');
+
+        return Inertia::location(route('contracts.show', [
+            'contract' => $contract->id,
+            'tab' => 'appendixes'
+        ]));
+    }
+
     public function approve(Request $request, Contract $contract, ContractAppendix $appendix)
     {
         $this->authorize('approve', $appendix);
@@ -179,6 +262,9 @@ class ContractAppendixController extends Controller
                 'contract_id'   => $contract->id,
                 'approval_note' => $request->input('approval_note'),
             ])->log(ActivityLogDescription::APPENDIX_APPROVED->value);
+
+        // Dispatch event để gửi notification
+        event(new AppendixApproved($appendix, $request->user(), $request->input('approval_note')));
 
         session()->flash('message', 'Đã phê duyệt phụ lục.');
         session()->flash('type', 'success');
@@ -222,6 +308,9 @@ class ContractAppendixController extends Controller
                 'contract_id'   => $contract->id,
                 'approval_note' => $request->input('approval_note'),
             ])->log(ActivityLogDescription::APPENDIX_REJECTED->value);
+
+        // Dispatch event để gửi notification
+        event(new AppendixRejected($appendix, $request->user(), $request->input('approval_note')));
 
         session()->flash('message', 'Đã từ chối phụ lục.');
         session()->flash('type', 'success');

@@ -78,7 +78,8 @@
               severity="success"
               rounded
               @click="edit(sp.data)"
-              v-tooltip="'Chỉnh sửa'"
+              :disabled="!['DRAFT', 'REJECTED'].includes(sp.data.status)"
+              v-tooltip="['DRAFT', 'REJECTED'].includes(sp.data.status) ? 'Chỉnh sửa' : 'Chỉ có thể sửa phụ lục Nháp hoặc Bị từ chối'"
             />
             <Button
               icon="pi pi-trash"
@@ -86,7 +87,8 @@
               severity="danger"
               rounded
               @click="confirmDelete(sp.data)"
-              v-tooltip="'Xóa'"
+              :disabled="!['DRAFT', 'REJECTED'].includes(sp.data.status)"
+              v-tooltip="['DRAFT', 'REJECTED'].includes(sp.data.status) ? 'Xóa' : 'Chỉ có thể xóa phụ lục Nháp hoặc Bị từ chối'"
             />
             <Button
               icon="pi pi-file"
@@ -94,6 +96,33 @@
               rounded
               @click="generateAppendix(sp.data)"
               v-tooltip="'Sinh phụ lục (PDF)'"
+            />
+            <Button
+              v-if="sp.data.status === 'DRAFT'"
+              icon="pi pi-send"
+              outlined
+              severity="info"
+              rounded
+              @click="submitForApproval(sp.data)"
+              v-tooltip="'Gửi phê duyệt'"
+            />
+            <Button
+              v-if="sp.data.status === 'REJECTED'"
+              icon="pi pi-refresh"
+              outlined
+              severity="info"
+              rounded
+              @click="submitForApproval(sp.data)"
+              v-tooltip="'Gửi lại phê duyệt'"
+            />
+            <Button
+              v-if="sp.data.status === 'PENDING_APPROVAL'"
+              icon="pi pi-replay"
+              outlined
+              severity="warning"
+              rounded
+              @click="recall(sp.data)"
+              v-tooltip="'Thu hồi'"
             />
             <Button
               v-if="sp.data.status === 'PENDING_APPROVAL'"
@@ -260,6 +289,38 @@
     <template #footer>
       <Button label="Không" icon="pi pi-times" text @click="deleteManyDialog=false" />
       <Button label="Có" icon="pi pi-check" severity="danger" @click="removeMany" :loading="deleting" />
+    </template>
+  </Dialog>
+
+  <!-- Dialog gửi phê duyệt -->
+  <Dialog v-model:visible="submitDialog" :style="{ width: '450px' }" header="Xác nhận" :modal="true">
+    <div class="flex items-center gap-4">
+      <i class="pi pi-send !text-3xl text-blue-600" />
+      <span v-if="current">
+        Bạn có chắc muốn {{ current.status === 'REJECTED' ? 'gửi lại' : 'gửi' }} phụ lục <b>{{ current.appendix_no }}</b> để phê duyệt?
+      </span>
+    </div>
+    <template #footer>
+      <Button label="Hủy" icon="pi pi-times" text @click="submitDialog=false" />
+      <Button
+        :label="current?.status === 'REJECTED' ? 'Gửi lại' : 'Gửi phê duyệt'"
+        :icon="current?.status === 'REJECTED' ? 'pi pi-refresh' : 'pi pi-send'"
+        severity="info"
+        @click="confirmSubmit"
+        :loading="submitting"
+      />
+    </template>
+  </Dialog>
+
+  <!-- Dialog thu hồi -->
+  <Dialog v-model:visible="recallDialog" :style="{ width: '450px' }" header="Xác nhận" :modal="true">
+    <div class="flex items-center gap-4">
+      <i class="pi pi-replay !text-3xl text-orange-600" />
+      <span v-if="current">Bạn có chắc muốn thu hồi yêu cầu phê duyệt phụ lục <b>{{ current.appendix_no }}</b>?</span>
+    </div>
+    <template #footer>
+      <Button label="Hủy" icon="pi pi-times" text @click="recallDialog=false" />
+      <Button label="Thu hồi" icon="pi pi-replay" severity="warning" @click="confirmRecall" :loading="recalling" />
     </template>
   </Dialog>
 
@@ -434,7 +495,7 @@ const typeOptions = [
 const statusSeverity = (s) =>
   ({
     DRAFT: 'secondary',
-    PENDING_APPROVAL: 'warning',
+    PENDING_APPROVAL: 'warn',
     ACTIVE: 'success',
     REJECTED: 'danger',
     CANCELLED: 'contrast'
@@ -556,11 +617,65 @@ function removeMany() {
 // Approval dialogs
 const approveDialog = ref(false)
 const rejectDialog = ref(false)
+const submitDialog = ref(false)
+const recallDialog = ref(false)
 const approving = ref(false)
 const rejecting = ref(false)
+const submitting = ref(false)
+const recalling = ref(false)
 const approvalNote = ref('')
 const rejectNote = ref('')
 const rejectSubmitted = ref(false)
+
+function submitForApproval(row) {
+  current.value = row
+  submitDialog.value = true
+}
+
+function confirmSubmit() {
+  submitting.value = true
+  ContractAppendixService.submitForApproval(props.contractId, current.value.id, {
+    onSuccess: () => {
+      // Update local state instead of reloading
+      const index = props.appendixes.findIndex(a => a.id === current.value.id)
+      if (index !== -1) {
+        props.appendixes[index].status = 'PENDING_APPROVAL'
+        props.appendixes[index].status_label = 'Chờ duyệt'
+      }
+      submitDialog.value = false
+      current.value = null
+    },
+    onError: () => {},
+    onFinish: () => {
+      submitting.value = false
+    }
+  })
+}
+
+function recall(row) {
+  current.value = row
+  recallDialog.value = true
+}
+
+function confirmRecall() {
+  recalling.value = true
+  ContractAppendixService.recall(props.contractId, current.value.id, {
+    onSuccess: () => {
+      // Update local state instead of reloading
+      const index = props.appendixes.findIndex(a => a.id === current.value.id)
+      if (index !== -1) {
+        props.appendixes[index].status = 'DRAFT'
+        props.appendixes[index].status_label = 'Nháp'
+      }
+      recallDialog.value = false
+      current.value = null
+    },
+    onError: () => {},
+    onFinish: () => {
+      recalling.value = false
+    }
+  })
+}
 
 function approve(row) {
   current.value = row

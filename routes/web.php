@@ -176,8 +176,6 @@ Route::group(['middleware' => 'auth'], function () {
 
     // Renewal routes
     Route::post('contracts/{contract}/renew', [ContractController::class,'renew'])->name('contracts.renew');
-    Route::post('contracts/{contract}/appendixes/{appendixId}/approve', [ContractController::class,'approveAppendix'])->name('contracts.appendixes.approve');
-    Route::post('contracts/{contract}/appendixes/{appendixId}/reject', [ContractController::class,'rejectAppendix'])->name('contracts.appendixes.reject');
 
     Route::post('contracts/{contract}/generate', [ContractGenerateController::class, 'generate'])->name('contracts.generate');
 
@@ -231,6 +229,8 @@ Route::group(['middleware' => 'auth'], function () {
         Route::delete('appendixes/{appendix}', [ContractAppendixController::class,'destroy'])->name('contracts.appendixes.destroy');
         Route::post('appendixes/bulk-delete', [ContractAppendixController::class,'bulkDelete'])->name('contracts.appendixes.bulk-delete');
 
+        Route::post('appendixes/{appendix}/submit-for-approval', [ContractAppendixController::class,'submitForApproval'])->name('contracts.appendixes.submitForApproval');
+        Route::post('appendixes/{appendix}/recall', [ContractAppendixController::class,'recall'])->name('contracts.appendixes.recall');
         Route::post('appendixes/{appendix}/approve', [ContractAppendixController::class,'approve'])->name('contracts.appendixes.approve');
         Route::post('appendixes/{appendix}/reject', [ContractAppendixController::class,'reject'])->name('contracts.appendixes.reject');
 

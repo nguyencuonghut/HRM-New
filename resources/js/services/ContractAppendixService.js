@@ -100,6 +100,46 @@ export class ContractAppendixService {
         });
     }
 
+    static submitForApproval(contractId, id, options = {}) {
+        const { onStart, onFinish, onError, onSuccess } = options;
+
+        router.post(`/contracts/${contractId}/appendixes/${id}/submit-for-approval`, {}, {
+            onStart: () => { if (onStart) onStart(); },
+            onFinish: () => { if (onFinish) onFinish(); },
+            onError: (errors) => {
+                if (errors?.message) {
+                    ToastService.error(errors.message);
+                } else {
+                    ToastService.error('Có lỗi xảy ra khi gửi phụ lục để phê duyệt!');
+                }
+                if (onError) onError(errors);
+            },
+            onSuccess: (page) => {
+                if (onSuccess) onSuccess(page);
+            }
+        });
+    }
+
+    static recall(contractId, id, options = {}) {
+        const { onStart, onFinish, onError, onSuccess } = options;
+
+        router.post(`/contracts/${contractId}/appendixes/${id}/recall`, {}, {
+            onStart: () => { if (onStart) onStart(); },
+            onFinish: () => { if (onFinish) onFinish(); },
+            onError: (errors) => {
+                if (errors?.message) {
+                    ToastService.error(errors.message);
+                } else {
+                    ToastService.error('Có lỗi xảy ra khi thu hồi phụ lục!');
+                }
+                if (onError) onError(errors);
+            },
+            onSuccess: (page) => {
+                if (onSuccess) onSuccess(page);
+            }
+        });
+    }
+
     static approve(contractId, id, data = {}, options = {}) {
         const { onStart, onFinish, onError, onSuccess } = options;
 
