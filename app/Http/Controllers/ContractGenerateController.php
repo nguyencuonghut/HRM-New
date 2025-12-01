@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\{Contract, ContractTemplate};
+use App\Enums\ActivityLogDescription;
 use Illuminate\Http\Request;
 use App\Services\ContractGenerateService;
 use \Illuminate\Foundation\Auth\Access\AuthorizesRequests;
@@ -31,7 +32,7 @@ class ContractGenerateController extends Controller
                 'action' => 'generated_from_template',
                 'template_id' => $template?->id,
                 'file' => $res,
-            ])->log('generated');
+            ])->log(ActivityLogDescription::CONTRACT_GENERATED_PDF->value);
 
         return back()->with('success', 'Đã sinh file hợp đồng.')->with('generated_url', $res['url']);
     }

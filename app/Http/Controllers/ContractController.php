@@ -8,7 +8,7 @@ use App\Http\Resources\ContractResource;
 use App\Http\Resources\ContractAppendixResource;
 use App\Http\Resources\ContractTimelineResource;
 use App\Models\{Contract, ContractTemplate, Employee, Department, Position};
-use App\Enums\{ContractType, ContractStatus, ContractSource, AppendixType};
+use App\Enums\{ContractType, ContractStatus, ContractSource, AppendixType, ActivityLogDescription};
 use App\Services\ContractApprovalService;
 use App\Services\ContractTerminationService;
 use App\Enums\ContractTerminationReason;
@@ -84,7 +84,7 @@ class ContractController extends Controller
                 'base_salary' => number_format($row->base_salary ?? 0, 0, ',', '.') . ' VNĐ',
                 'template' => $template?->name,
             ])
-            ->log('created');
+            ->log(ActivityLogDescription::CONTRACT_CREATED->value);
 
         return redirect()->route('contracts.index')->with([
             'message' => 'Đã tạo hợp đồng.',
@@ -149,7 +149,7 @@ class ContractController extends Controller
             ->withProperties([
                 'old' => $old,
                 'attributes' => $new,
-            ])->log('updated');
+            ])->log(ActivityLogDescription::CONTRACT_UPDATED->value);
 
         return redirect()->route('contracts.index')->with([
             'message' => 'Đã cập nhật hợp đồng.',
@@ -170,11 +170,26 @@ class ContractController extends Controller
             ->orderByDesc('created_at')
             ->get();
 
-        // Load activity log timeline
-        $timeline = Activity::forSubject($contract)
+        // Load activity log timeline - approval workflow for contract AND appendixes
+        $contractActivities = Activity::forSubject($contract)
             ->with('causer:id,name,email')
-            ->orderBy('created_at', 'asc')
             ->get();
+
+        // Get all appendix activities
+        $appendixActivities = collect();
+        foreach ($contract->appendixes as $appendix) {
+            $appendixActivities = $appendixActivities->merge(
+                Activity::forSubject($appendix)
+                    ->with('causer:id,name,email')
+                    ->get()
+            );
+        }
+
+        // Merge and sort all approval activities
+        $timeline = $contractActivities
+            ->merge($appendixActivities)
+            ->sortBy('created_at')
+            ->values();
 
         // Build contract timeline (merge contract events + appendixes)
         $contractTimeline = $this->buildContractTimeline($contract);
@@ -311,7 +326,7 @@ class ContractController extends Controller
         $contract->delete();
 
         activity('contract')->performedOn($contract)->causedBy($request->user())
-            ->withProperties(['deleted' => $snapshot])->log('deleted');
+            ->withProperties(['deleted' => $snapshot])->log(ActivityLogDescription::CONTRACT_DELETED->value);
 
         return redirect()->route('contracts.index')->with([
             'message' => 'Đã xóa hợp đồng.',
@@ -354,7 +369,7 @@ class ContractController extends Controller
             ->withProperties([
                 'count' => count($ids),
                 'deleted' => $snapshots
-            ])->log('bulk-deleted');
+            ])->log(ActivityLogDescription::CONTRACT_BULK_DELETED->value);
 
         return redirect()->route('contracts.index')->with([
             'message' => 'Đã xóa nhiều hợp đồng.',

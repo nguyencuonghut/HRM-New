@@ -9,6 +9,7 @@ use App\Models\Contract;
 use App\Models\ContractAppendix;
 use App\Models\ContractAppendixTemplate;
 use App\Services\ContractAppendixGenerateService;
+use App\Enums\ActivityLogDescription;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
@@ -45,7 +46,7 @@ class ContractAppendixController extends Controller
                 'contract_id' => $contract->id,
                 'payload'     => $payload,
                 'created'     => (new ContractAppendixResource($row))->resolve(),
-            ])->log('created');
+            ])->log(ActivityLogDescription::APPENDIX_CREATED->value);
 
         session()->flash('message', 'Đã tạo phụ lục hợp đồng!');
         session()->flash('type', 'success');
@@ -70,7 +71,7 @@ class ContractAppendixController extends Controller
                 'before'      => $before,
                 'after'       => $appendix->getAttributes(),
                 'changed'     => array_keys($appendix->getChanges()),
-            ])->log('updated');
+            ])->log(ActivityLogDescription::APPENDIX_UPDATED->value);
 
         session()->flash('message', 'Đã cập nhật phụ lục hợp đồng!');
         session()->flash('type', 'success');
@@ -99,7 +100,7 @@ class ContractAppendixController extends Controller
             ->withProperties([
                 'contract_id' => $contract->id,
                 'deleted'     => $snapshot,
-            ])->log('deleted');
+            ])->log(ActivityLogDescription::APPENDIX_DELETED->value);
 
         session()->flash('message', 'Đã xoá phụ lục hợp đồng!');
         session()->flash('type', 'success');
@@ -133,7 +134,7 @@ class ContractAppendixController extends Controller
                 'contract_id' => $contract->id,
                 'ids'         => $ids,
                 'deleted'     => $snapshots,
-            ])->log('bulk-deleted');
+            ])->log(ActivityLogDescription::APPENDIX_BULK_DELETED->value);
 
         session()->flash('message', 'Đã xoá các phụ lục đã chọn!');
         session()->flash('type', 'success');
@@ -148,6 +149,21 @@ class ContractAppendixController extends Controller
     {
         $this->authorize('approve', $appendix);
 
+        // Nếu là phụ lục gia hạn, sử dụng ContractRenewalService
+        if ($appendix->appendix_type === \App\Enums\AppendixType::EXTENSION) {
+            $renewalService = app(\App\Services\ContractRenewalService::class);
+            $renewalService->approveRenewal($appendix, $request->user(), $request->input('approval_note'));
+
+            session()->flash('message', 'Đã phê duyệt phụ lục gia hạn.');
+            session()->flash('type', 'success');
+
+            return Inertia::location(route('contracts.show', [
+                'contract' => $contract->id,
+                'tab' => 'appendixes'
+            ]));
+        }
+
+        // Xử lý phê duyệt cho các loại phụ lục khác (không phải gia hạn)
         $appendix->update([
             'status' => 'ACTIVE',
             'approver_id' => $request->user()->id,
@@ -162,11 +178,7 @@ class ContractAppendixController extends Controller
                 'action'        => 'approved',
                 'contract_id'   => $contract->id,
                 'approval_note' => $request->input('approval_note'),
-            ])->log('approved');
-
-        // (Tuỳ chọn) áp xuống "current snapshot" tức thì:
-        // VD: nếu appendix có base_salary != null => cập nhật contract.base_salary (hoặc bảng snapshot riêng).
-        // Bản tối ưu là tạo service ApplyAppendixService để đồng bộ các trường có giá trị.
+            ])->log(ActivityLogDescription::APPENDIX_APPROVED->value);
 
         session()->flash('message', 'Đã phê duyệt phụ lục.');
         session()->flash('type', 'success');
@@ -181,6 +193,21 @@ class ContractAppendixController extends Controller
     {
         $this->authorize('approve', $appendix);
 
+        // Nếu là phụ lục gia hạn, sử dụng ContractRenewalService
+        if ($appendix->appendix_type === \App\Enums\AppendixType::EXTENSION) {
+            $renewalService = app(\App\Services\ContractRenewalService::class);
+            $renewalService->rejectRenewal($appendix, $request->user(), $request->input('approval_note'));
+
+            session()->flash('message', 'Đã từ chối phụ lục gia hạn.');
+            session()->flash('type', 'success');
+
+            return Inertia::location(route('contracts.show', [
+                'contract' => $contract->id,
+                'tab' => 'appendixes'
+            ]));
+        }
+
+        // Xử lý từ chối cho các loại phụ lục khác (không phải gia hạn)
         $appendix->update([
             'status' => 'REJECTED',
             'approver_id' => $request->user()->id,
@@ -194,7 +221,7 @@ class ContractAppendixController extends Controller
                 'action'        => 'rejected',
                 'contract_id'   => $contract->id,
                 'approval_note' => $request->input('approval_note'),
-            ])->log('rejected');
+            ])->log(ActivityLogDescription::APPENDIX_REJECTED->value);
 
         session()->flash('message', 'Đã từ chối phụ lục.');
         session()->flash('type', 'success');

@@ -89,7 +89,7 @@
         <div class="pt-4">
           <div v-if="!timeline?.length" class="text-center py-8 text-gray-500">
             <i class="pi pi-info-circle text-3xl mb-3"></i>
-            <p>Chưa có lịch sử</p>
+            <p>Chưa có lịch sử phê duyệt</p>
           </div>
 
           <div v-else class="approval-timeline">
@@ -106,9 +106,32 @@
               <!-- Content -->
               <div class="flex-1 pb-4">
                 <div class="approval-card p-4 rounded border" :class="getCardClass(event.type)">
+                  <!-- Header with subject badge -->
                   <div class="flex items-start justify-between mb-2">
-                    <div>
-                      <div class="font-semibold text-gray-800">{{ getEventTitle(event.type) }}</div>
+                    <div class="flex-1">
+                      <div class="flex items-center gap-2 mb-1">
+                        <span class="font-semibold text-gray-800">{{ getEventTitle(event.type, event.subject_type) }}</span>
+                        <Badge
+                          v-if="event.subject_type"
+                          :value="getSubjectTypeLabel(event.subject_type)"
+                          :severity="getSubjectTypeSeverity(event.subject_type)"
+                          class="text-xs"
+                        />
+                      </div>
+
+                      <!-- Subject info -->
+                      <div v-if="event.subject_info" class="text-xs text-gray-600 mb-2">
+                        <template v-if="event.subject_type === 'contract'">
+                          <i class="pi pi-file text-xs mr-1"></i>
+                          Hợp đồng: {{ event.subject_info.number }}
+                        </template>
+                        <template v-else-if="event.subject_type === 'appendix'">
+                          <i class="pi pi-file-edit text-xs mr-1"></i>
+                          Phụ lục: {{ event.subject_info.appendix_no }}
+                          <span v-if="event.subject_info.type_label" class="ml-1">({{ event.subject_info.type_label }})</span>
+                        </template>
+                      </div>
+
                       <div class="text-sm text-gray-600 mt-1">
                         <i class="pi pi-user text-xs mr-1"></i>
                         {{ event.user.name }}
@@ -118,10 +141,10 @@
                       </div>
                       <div v-if="event.level" class="text-xs text-gray-500 mt-1">
                         <i class="pi pi-shield text-xs mr-1"></i>
-                        Cấp: {{ event.level }}
+                        Cấp phê duyệt: {{ event.level }}
                       </div>
                     </div>
-                    <Tag :value="getEventLabel(event.type)" :severity="getEventSeverity(event.type)" />
+                    <Tag :value="getEventLabel(event.type, event.subject_type)" :severity="getEventSeverity(event.type)" />
                   </div>
 
                   <div v-if="event.comments" class="mt-3 p-3 bg-white rounded border border-gray-200">
@@ -149,6 +172,7 @@ import { ref, computed } from 'vue'
 import { Head, router } from '@inertiajs/vue3'
 import Button from 'primevue/button'
 import Tag from 'primevue/tag'
+import Badge from 'primevue/badge'
 import Tabs from 'primevue/tabs'
 import TabList from 'primevue/tablist'
 import Tab from 'primevue/tab'
@@ -207,17 +231,40 @@ function getContractStatusSeverity(status) {
 }
 
 // Timeline helper methods
-function getEventTitle(type) {
+function getEventTitle(type, subjectType = null, action = null) {
+  // For appendix operations based on subject_type
+  if (subjectType === 'appendix') {
+    const appendixTitles = {
+      CREATED: 'Tạo phụ lục',
+      UPDATED: 'Chỉnh sửa phụ lục',
+      DELETED: 'Xóa phụ lục',
+      BULK_DELETED: 'Xóa nhiều phụ lục',
+      APPROVED: 'Phê duyệt phụ lục',
+      APPROVED_STEP: 'Phê duyệt phụ lục',
+      REJECTED: 'Từ chối phụ lục',
+      CANCELLED: 'Hủy phụ lục',
+    }
+    if (appendixTitles[type]) return appendixTitles[type]
+  }
+
+  // For contract operations
   const titles = {
+    // Contract operations
     CREATED: 'Tạo hợp đồng',
     UPDATED: 'Chỉnh sửa hợp đồng',
+    DELETED: 'Xóa hợp đồng',
+    BULK_DELETED: 'Xóa nhiều hợp đồng',
     SUBMITTED: 'Gửi phê duyệt',
     APPROVED_STEP: 'Phê duyệt bước',
-    APPROVED_FINAL: 'Phê duyệt hoàn tất',
-    REJECTED: 'Từ chối',
-    RECALLED: 'Thu hồi',
+    APPROVED_FINAL: 'Phê duyệt hoàn tất - Hợp đồng hiệu lực',
+    APPROVED: 'Phê duyệt',
+    REJECTED: 'Từ chối phê duyệt',
+    RECALLED: 'Thu hồi yêu cầu phê duyệt',
     GENERATED_PDF: 'Sinh file PDF',
     TERMINATED: 'Chấm dứt hợp đồng',
+    CANCELLED: 'Hủy',
+
+    // Contract renewal
     CONTRACT_RENEWAL_REQUESTED: 'Yêu cầu gia hạn hợp đồng',
     CONTRACT_RENEWAL_APPROVED: 'Phê duyệt gia hạn hợp đồng',
     CONTRACT_RENEWAL_REJECTED: 'Từ chối gia hạn hợp đồng',
@@ -225,28 +272,53 @@ function getEventTitle(type) {
   return titles[type] || 'Hành động khác'
 }
 
-function getEventLabel(type) {
+function getEventLabel(type, subjectType = null) {
+  // For appendix operations
+  if (subjectType === 'appendix') {
+    const appendixLabels = {
+      CREATED: 'Tạo phụ lục',
+      UPDATED: 'Cập nhật',
+      DELETED: 'Đã xóa',
+      BULK_DELETED: 'Xóa nhiều',
+      APPROVED: 'Đã duyệt',
+      REJECTED: 'Từ chối',
+      CANCELLED: 'Đã hủy',
+    }
+    if (appendixLabels[type]) return appendixLabels[type]
+  }
+
+  // For contract operations
   const labels = {
     CREATED: 'Tạo mới',
-    UPDATED: 'Chỉnh sửa',
+    UPDATED: 'Cập nhật',
+    DELETED: 'Đã xóa',
+    BULK_DELETED: 'Xóa nhiều',
     SUBMITTED: 'Chờ duyệt',
     APPROVED_STEP: 'Đã duyệt',
     APPROVED_FINAL: 'Hoàn tất',
+    APPROVED: 'Đã duyệt',
     REJECTED: 'Từ chối',
     RECALLED: 'Thu hồi',
     GENERATED_PDF: 'Sinh PDF',
-    TERMINATED: 'Đã chấm dứt',
-    CONTRACT_RENEWAL_REQUESTED: 'Gia hạn',
-    CONTRACT_RENEWAL_APPROVED: 'Đã duyệt',
-    CONTRACT_RENEWAL_REJECTED: 'Bị từ chối',
+    TERMINATED: 'Chấm dứt',
+    CANCELLED: 'Đã hủy',
+
+    // Contract renewal
+    CONTRACT_RENEWAL_REQUESTED: 'Yêu cầu gia hạn',
+    CONTRACT_RENEWAL_APPROVED: 'Gia hạn được duyệt',
+    CONTRACT_RENEWAL_REJECTED: 'Gia hạn bị từ chối',
+
+    OTHER: 'Khác',
   }
-  return labels[type] || type
+  return labels[type] || 'Khác'
 }
 
 function getEventSeverity(type) {
   const severities = {
+    // Contract operations
     CREATED: 'info',
     UPDATED: 'info',
+    DELETED: 'secondary',
     SUBMITTED: 'warn',
     APPROVED_STEP: 'success',
     APPROVED_FINAL: 'success',
@@ -254,17 +326,23 @@ function getEventSeverity(type) {
     RECALLED: 'secondary',
     GENERATED_PDF: 'contrast',
     TERMINATED: 'danger',
+
+    // Contract renewal
     CONTRACT_RENEWAL_REQUESTED: 'info',
     CONTRACT_RENEWAL_APPROVED: 'success',
     CONTRACT_RENEWAL_REJECTED: 'danger',
+
+    OTHER: 'contrast',
   }
-  return severities[type] || 'info'
+  return severities[type] || 'contrast'
 }
 
 function getIcon(type) {
   const icons = {
+    // Contract operations
     CREATED: 'pi pi-file-plus',
     UPDATED: 'pi pi-pencil',
+    DELETED: 'pi pi-trash',
     SUBMITTED: 'pi pi-send',
     APPROVED_STEP: 'pi pi-check',
     APPROVED_FINAL: 'pi pi-check-circle',
@@ -272,17 +350,23 @@ function getIcon(type) {
     RECALLED: 'pi pi-undo',
     GENERATED_PDF: 'pi pi-file-pdf',
     TERMINATED: 'pi pi-ban',
+
+    // Contract renewal
     CONTRACT_RENEWAL_REQUESTED: 'pi pi-refresh',
     CONTRACT_RENEWAL_APPROVED: 'pi pi-check-circle',
     CONTRACT_RENEWAL_REJECTED: 'pi pi-times-circle',
+
+    OTHER: 'pi pi-info-circle',
   }
-  return icons[type] || 'pi pi-circle'
+  return icons[type] || 'pi pi-info-circle'
 }
 
 function getIconClass(type) {
   const classes = {
+    // Contract operations
     CREATED: 'bg-blue-100 text-blue-600',
     UPDATED: 'bg-blue-100 text-blue-600',
+    DELETED: 'bg-gray-100 text-gray-600',
     SUBMITTED: 'bg-yellow-100 text-yellow-600',
     APPROVED_STEP: 'bg-green-100 text-green-600',
     APPROVED_FINAL: 'bg-green-100 text-green-600',
@@ -290,6 +374,8 @@ function getIconClass(type) {
     RECALLED: 'bg-gray-100 text-gray-600',
     GENERATED_PDF: 'bg-purple-100 text-purple-600',
     TERMINATED: 'bg-red-100 text-red-600',
+
+    // Contract renewal
     CONTRACT_RENEWAL_REQUESTED: 'bg-blue-100 text-blue-600',
     CONTRACT_RENEWAL_APPROVED: 'bg-green-100 text-green-600',
     CONTRACT_RENEWAL_REJECTED: 'bg-red-100 text-red-600',
@@ -299,8 +385,10 @@ function getIconClass(type) {
 
 function getCardClass(type) {
   const classes = {
+    // Contract operations
     CREATED: 'border-blue-200 bg-blue-50',
     UPDATED: 'border-blue-200 bg-blue-50',
+    DELETED: 'border-gray-200 bg-gray-50',
     SUBMITTED: 'border-yellow-200 bg-yellow-50',
     APPROVED_STEP: 'border-green-200 bg-green-50',
     APPROVED_FINAL: 'border-green-200 bg-green-50',
@@ -308,6 +396,8 @@ function getCardClass(type) {
     RECALLED: 'border-gray-200 bg-gray-50',
     GENERATED_PDF: 'border-purple-200 bg-purple-50',
     TERMINATED: 'border-red-200 bg-red-50',
+
+    // Contract renewal
     CONTRACT_RENEWAL_REQUESTED: 'border-blue-200 bg-blue-50',
     CONTRACT_RENEWAL_APPROVED: 'border-green-200 bg-green-50',
     CONTRACT_RENEWAL_REJECTED: 'border-red-200 bg-red-50',
@@ -329,6 +419,24 @@ function getTerminationReasonLabel(reason) {
     OTHER: 'Lý do khác',
   }
   return labels[reason] || reason || '—'
+}
+
+function getSubjectTypeLabel(subjectType) {
+  const labels = {
+    contract: 'Hợp đồng',
+    appendix: 'Phụ lục',
+    other: 'Khác',
+  }
+  return labels[subjectType] || subjectType
+}
+
+function getSubjectTypeSeverity(subjectType) {
+  const severities = {
+    contract: 'info',
+    appendix: 'secondary',
+    other: 'contrast',
+  }
+  return severities[subjectType] || 'secondary'
 }
 </script>
 

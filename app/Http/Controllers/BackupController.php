@@ -6,6 +6,7 @@ use App\Models\BackupConfiguration;
 use App\Models\BackupLog;
 use App\Services\AutoBackupService;
 use App\Services\GoogleDriveService;
+use App\Enums\ActivityLogDescription;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -119,7 +120,7 @@ class BackupController extends Controller
                 'backup_options' => $config->backup_options,
                 'retention_days' => $config->retention_days
             ])
-            ->log('Tạo cấu hình backup mới: ' . $config->name);
+            ->log(ActivityLogDescription::BACKUP_CREATED->value);
 
         return redirect()->back()->with('flash', [
             'type' => 'success',
@@ -224,7 +225,7 @@ class BackupController extends Controller
                 'backup_options' => $configuration->backup_options,
                 'retention_days' => $configuration->retention_days
             ])
-            ->log('Cập nhật cấu hình backup: ' . $configuration->name);
+            ->log(ActivityLogDescription::BACKUP_CREATED->value);
 
         return redirect()->back()->with('flash', [
             'type' => 'success',
@@ -253,7 +254,7 @@ class BackupController extends Controller
             ->withProperties([
                 'config_name' => $configName
             ])
-            ->log("Đã xóa cấu hình backup: {$configName}");
+            ->log(ActivityLogDescription::BACKUP_DELETED->value);
 
         return redirect()->back()->with('flash', [
             'type' => 'success',
@@ -284,10 +285,7 @@ class BackupController extends Controller
                 'old_status' => $oldStatus ? 'active' : 'inactive',
                 'new_status' => $newStatus ? 'active' : 'inactive'
             ])
-            ->log($newStatus
-                ? "Kích hoạt cấu hình backup: {$configuration->name}"
-                : "Tạm dừng cấu hình backup: {$configuration->name}"
-            );
+            ->log(ActivityLogDescription::BACKUP_TOGGLED->value);
 
         return redirect()->back()->with('flash', [
             'type' => 'success',
@@ -314,7 +312,7 @@ class BackupController extends Controller
                     'log_id' => $log->id,
                     'status' => $log->status
                 ])
-                ->log("Thực thi backup thủ công cho cấu hình: {$configuration->name}");
+                ->log(ActivityLogDescription::BACKUP_EXECUTED->value);
 
             if ($log->status === 'success') {
                 return redirect()->back()->with('flash', [
@@ -387,7 +385,7 @@ class BackupController extends Controller
                     'backup_name' => $backupName,
                     'timestamp' => $timestamp
                 ])
-                ->log("Thực hiện backup hệ thống: {$backupName}");
+                ->log(ActivityLogDescription::BACKUP_EXECUTED->value);
 
             // 7. Trả về file zip để download
             return response()->download($zipPath, $backupName . '.zip')->deleteFileAfterSend(true);

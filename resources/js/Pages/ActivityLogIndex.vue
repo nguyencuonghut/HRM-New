@@ -52,7 +52,7 @@
                     <template #body="slotProps">
                         <div class="flex items-center gap-2">
                             <i :class="getActivityIcon(slotProps.data.description)" class="text-lg"></i>
-                            <span>{{ slotProps.data.description }}</span>
+                            <span>{{ getActivityLabel(slotProps.data.description) }}</span>
                         </div>
                     </template>
                 </Column>
@@ -189,15 +189,69 @@ const formatSubjectType = (type) => {
     return parts[parts.length - 1];
 };
 
+const getActivityLabel = (description) => {
+    if (!description) return description;
+
+    // Mapping enum values to Vietnamese labels
+    const labels = {
+        // Contract operations
+        'CONTRACT_CREATED': 'Tạo hợp đồng',
+        'CONTRACT_UPDATED': 'Chỉnh sửa hợp đồng',
+        'CONTRACT_DELETED': 'Xóa hợp đồng',
+        'CONTRACT_BULK_DELETED': 'Xóa nhiều hợp đồng',
+        'CONTRACT_SUBMITTED': 'Gửi phê duyệt',
+        'CONTRACT_APPROVED_STEP': 'Phê duyệt bước',
+        'CONTRACT_APPROVED_FINAL': 'Phê duyệt hoàn tất - Hợp đồng hiệu lực',
+        'CONTRACT_REJECTED': 'Từ chối phê duyệt',
+        'CONTRACT_RECALLED': 'Thu hồi yêu cầu phê duyệt',
+        'CONTRACT_GENERATED_PDF': 'Sinh file PDF',
+        'CONTRACT_TERMINATED': 'Chấm dứt hợp đồng',
+
+        // Contract renewal
+        'CONTRACT_RENEWAL_REQUESTED': 'Yêu cầu gia hạn hợp đồng',
+        'CONTRACT_RENEWAL_APPROVED': 'Phê duyệt gia hạn hợp đồng',
+        'CONTRACT_RENEWAL_REJECTED': 'Từ chối gia hạn hợp đồng',
+
+        // Appendix operations
+        'APPENDIX_CREATED': 'Tạo phụ lục',
+        'APPENDIX_UPDATED': 'Chỉnh sửa phụ lục',
+        'APPENDIX_DELETED': 'Xóa phụ lục',
+        'APPENDIX_BULK_DELETED': 'Xóa nhiều phụ lục',
+        'APPENDIX_APPROVED': 'Phê duyệt phụ lục',
+        'APPENDIX_REJECTED': 'Từ chối phụ lục',
+        'APPENDIX_CANCELLED': 'Hủy phụ lục',
+
+        // Backup operations
+        'BACKUP_CREATED': 'Tạo cấu hình backup mới',
+        'BACKUP_EXECUTED': 'Thực thi backup',
+        'BACKUP_DELETED': 'Xóa cấu hình backup',
+        'BACKUP_TOGGLED': 'Thay đổi trạng thái backup',
+
+        // Legacy/other operations
+        'created': 'Đã tạo',
+        'updated': 'Đã cập nhật',
+        'deleted': 'Đã xóa',
+        'restored': 'Đã khôi phục',
+    };
+
+    return labels[description] || description;
+};
+
 const getActivityIcon = (description) => {
     if (!description) return 'pi pi-circle-fill';
 
-    const desc = description.toLowerCase();
-    if (desc.includes('tạo') || desc.includes('created')) return 'pi pi-plus-circle text-green-500';
-    if (desc.includes('cập nhật') || desc.includes('updated')) return 'pi pi-pencil text-blue-500';
-    if (desc.includes('xóa') || desc.includes('deleted')) return 'pi pi-trash text-red-500';
-    if (desc.includes('khôi phục') || desc.includes('restored')) return 'pi pi-refresh text-green-500';
-    if (desc.includes('sao lưu') || desc.includes('backup')) return 'pi pi-download text-blue-500';
+    // Check enum values first
+    if (description.includes('CREATED') || description.includes('created')) return 'pi pi-plus-circle text-green-500';
+    if (description.includes('UPDATED') || description.includes('updated')) return 'pi pi-pencil text-blue-500';
+    if (description.includes('DELETED') || description.includes('deleted') || description.includes('CANCELLED')) return 'pi pi-trash text-red-500';
+    if (description.includes('APPROVED')) return 'pi pi-check-circle text-green-500';
+    if (description.includes('REJECTED')) return 'pi pi-times-circle text-red-500';
+    if (description.includes('SUBMITTED')) return 'pi pi-send text-blue-500';
+    if (description.includes('RECALLED')) return 'pi pi-undo text-orange-500';
+    if (description.includes('TERMINATED')) return 'pi pi-ban text-red-500';
+    if (description.includes('RENEWAL')) return 'pi pi-refresh text-blue-500';
+    if (description.includes('BACKUP')) return 'pi pi-download text-blue-500';
+    if (description.includes('restored')) return 'pi pi-refresh text-green-500';
 
     return 'pi pi-circle-fill text-gray-400';
 };

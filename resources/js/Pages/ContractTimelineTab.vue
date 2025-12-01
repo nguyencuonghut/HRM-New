@@ -165,7 +165,7 @@ import Tag from 'primevue/tag'
 import { formatDate, formatDateTime, calculateDaysDiff } from '@/utils/dateHelper'
 
 const props = defineProps({
-  contractId: { type: Number, required: true },
+  contractId: { type: String, required: true },
   timelineEvents: { type: Array, default: () => [] }
 })
 

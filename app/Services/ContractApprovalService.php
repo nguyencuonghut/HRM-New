@@ -8,6 +8,7 @@ use App\Models\User;
 use App\Enums\ApprovalLevel;
 use App\Enums\ApprovalStatus;
 use App\Enums\ContractStatus;
+use App\Enums\ActivityLogDescription;
 use App\Events\{ContractSubmitted, ContractApproved, ContractRejected};
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
@@ -40,7 +41,7 @@ class ContractApprovalService
                     'contract_number' => $contract->contract_number,
                     'action' => 'submitted_for_approval',
                 ])
-                ->log('Gửi phê duyệt');
+                ->log(ActivityLogDescription::CONTRACT_SUBMITTED->value);
             event(new ContractSubmitted($contract));
         });
     }
@@ -119,7 +120,7 @@ class ContractApprovalService
                         'action' => 'fully_approved',
                         'level' => $currentStep->level->label(),
                     ])
-                    ->log('Phê duyệt hoàn tất - Hợp đồng hiệu lực');
+                    ->log(ActivityLogDescription::CONTRACT_APPROVED_FINAL->value);
 
                 // Dispatch event để gửi notification
                 event(new ContractApproved($contract, $approver, $comments));
@@ -133,7 +134,7 @@ class ContractApprovalService
                         'level' => $currentStep->level->label(),
                         'next_level' => $nextStep->level->label(),
                     ])
-                    ->log('Phê duyệt bước ' . $currentStep->level->label());
+                    ->log(ActivityLogDescription::CONTRACT_APPROVED_STEP->value);
 
                 // Dispatch event cho approval bước hiện tại
                 event(new ContractApproved($contract, $approver, $comments));
@@ -197,7 +198,7 @@ class ContractApprovalService
                     'level' => $currentStep->level->label(),
                     'comments' => $comments,
                 ])
-                ->log('Từ chối phê duyệt');
+                ->log(ActivityLogDescription::CONTRACT_REJECTED->value);
 
             // Dispatch event để gửi notification
             event(new ContractRejected($contract, $approver, $comments));
@@ -238,7 +239,7 @@ class ContractApprovalService
                     'contract_number' => $contract->contract_number,
                     'action' => 'recalled',
                 ])
-                ->log('Thu hồi yêu cầu phê duyệt');
+                ->log(ActivityLogDescription::CONTRACT_RECALLED->value);
         });
     }
 

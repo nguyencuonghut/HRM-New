@@ -7,6 +7,7 @@ use App\Models\ContractAppendix;
 use App\Models\User;
 use App\Events\ContractRenewed;
 use App\Enums\AppendixType;
+use App\Enums\ActivityLogDescription;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Carbon\Carbon;
@@ -58,7 +59,7 @@ class ContractRenewalService
                     'old_end_date' => $contract->end_date?->format('Y-m-d'),
                     'new_end_date' => $renewalData['new_end_date']->format('Y-m-d'),
                 ])
-                ->log('CONTRACT_RENEWAL_REQUESTED');
+                ->log(ActivityLogDescription::CONTRACT_RENEWAL_REQUESTED->value);
 
             // Dispatch event để gửi thông báo
             event(new ContractRenewed($appendix, $creator));
@@ -268,7 +269,7 @@ class ContractRenewalService
                     'appendix_no' => $appendix->appendix_no,
                     'new_end_date' => $appendix->end_date->format('Y-m-d'),
                 ])
-                ->log('CONTRACT_RENEWAL_APPROVED');
+                ->log(ActivityLogDescription::CONTRACT_RENEWAL_APPROVED->value);
         });
     }
 
@@ -308,7 +309,7 @@ class ContractRenewalService
                     'appendix_id' => $appendix->id,
                     'appendix_no' => $appendix->appendix_no,
                 ])
-                ->log('CONTRACT_RENEWAL_REJECTED');
+                ->log(ActivityLogDescription::CONTRACT_RENEWAL_REJECTED->value);
         });
     }
 

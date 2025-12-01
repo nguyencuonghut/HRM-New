@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Models\Contract;
 use App\Models\User;
 use App\Enums\ContractTerminationReason;
+use App\Enums\ActivityLogDescription;
 use App\Events\ContractTerminated;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
@@ -43,7 +44,7 @@ class ContractTerminationService
                     'terminated_at' => $data['terminated_at'],
                     'note' => $data['termination_note'] ?? null,
                 ])
-                ->log('Chấm dứt hợp đồng');
+                ->log(ActivityLogDescription::CONTRACT_TERMINATED->value);
 
             // Dispatch event
             event(new ContractTerminated(
@@ -80,7 +81,7 @@ class ContractTerminationService
 
                 activity()
                     ->performedOn($appendix)
-                    ->log('Phụ lục tự động bị hủy do hợp đồng chính chấm dứt');
+                    ->log(ActivityLogDescription::APPENDIX_CANCELLED->value);
             }
 
             // Phụ lục PENDING_APPROVAL: Tự động REJECT
@@ -93,7 +94,7 @@ class ContractTerminationService
 
                 activity()
                     ->performedOn($appendix)
-                    ->log('Phụ lục tự động bị từ chối do hợp đồng chính chấm dứt');
+                    ->log(ActivityLogDescription::APPENDIX_REJECTED->value);
             }
 
             // Phụ lục DRAFT: Chuyển sang CANCELLED
@@ -105,7 +106,7 @@ class ContractTerminationService
 
                 activity()
                     ->performedOn($appendix)
-                    ->log('Phụ lục nháp tự động bị hủy do hợp đồng chính chấm dứt');
+                    ->log(ActivityLogDescription::APPENDIX_CANCELLED->value);
             }
         }
     }
