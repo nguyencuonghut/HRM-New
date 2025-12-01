@@ -41,7 +41,11 @@
 
       <Column selectionMode="multiple" headerStyle="width:3rem" />
       <Column field="appendix_no" header="Số PL" sortable headerStyle="min-width:10rem;" />
-      <Column field="appendix_type_label" header="Loại" headerStyle="min-width:10rem;" />
+      <Column field="appendix_type_label" header="Loại" sortable headerStyle="min-width:14rem;">
+        <template #body="sp">
+          {{ sp.data.appendix_type_label }}
+        </template>
+      </Column>
       <Column field="effective_date" header="Hiệu lực" headerStyle="min-width:10rem;">
         <template #body="sp">
           {{ formatDate(sp.data.effective_date) }}

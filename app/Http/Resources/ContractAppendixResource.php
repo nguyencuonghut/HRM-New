@@ -43,16 +43,7 @@ class ContractAppendixResource extends JsonResource
 
     private function getAppendixTypeLabel(): ?string
     {
-        return match ($this->appendix_type) {
-            'SALARY' => 'Điều chỉnh lương',
-            'ALLOWANCE' => 'Điều chỉnh phụ cấp',
-            'POSITION' => 'Bổ nhiệm chức vụ',
-            'DEPARTMENT' => 'Điều chuyển phòng ban',
-            'WORKING_TERMS' => 'Điều chỉnh điều kiện làm việc',
-            'EXTENSION' => 'Gia hạn hợp đồng',
-            'OTHER' => 'Khác',
-            default => null,
-        };
+        return $this->appendix_type?->label();
     }
 
     private function getStatusLabel(): ?string
