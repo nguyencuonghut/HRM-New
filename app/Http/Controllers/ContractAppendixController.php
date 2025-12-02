@@ -27,6 +27,7 @@ class ContractAppendixController extends Controller
         $this->authorize('viewAny', ContractAppendix::class);
 
         $rows = ContractAppendix::where('contract_id', $contract->id)
+            ->with('attachments')
             ->orderBy('effective_date','desc')->get();
 
         return response()->json(ContractAppendixResource::collection($rows));
@@ -42,6 +43,21 @@ class ContractAppendixController extends Controller
         // Có thể kiểm tra nâng cao theo loại nếu bạn muốn, tạm thời bỏ qua ở Phase 1.
 
         $row = ContractAppendix::create($payload);
+
+        // Upload attachments nếu có
+        if ($request->hasFile('attachments')) {
+            foreach ($request->file('attachments') as $file) {
+                $fileName = time() . '_' . $file->getClientOriginalName();
+                $filePath = $file->storeAs('appendixes/' . $row->id . '/attachments', $fileName, 'public');
+
+                $row->attachments()->create([
+                    'file_name' => $file->getClientOriginalName(),
+                    'file_path' => $filePath,
+                    'file_size' => $file->getSize(),
+                    'mime_type' => $file->getMimeType(),
+                ]);
+            }
+        }
 
         activity('contract-appendix')
             ->performedOn($row)->causedBy($request->user())
@@ -77,6 +93,34 @@ class ContractAppendixController extends Controller
 
         $before = $appendix->getOriginal();
         $appendix->update($request->validated());
+
+        // Upload attachments mới nếu có
+        if ($request->hasFile('attachments')) {
+            foreach ($request->file('attachments') as $file) {
+                $fileName = time() . '_' . $file->getClientOriginalName();
+                $filePath = $file->storeAs('appendixes/' . $appendix->id . '/attachments', $fileName, 'public');
+
+                $appendix->attachments()->create([
+                    'file_name' => $file->getClientOriginalName(),
+                    'file_path' => $filePath,
+                    'file_size' => $file->getSize(),
+                    'mime_type' => $file->getMimeType(),
+                ]);
+            }
+        }
+
+        // Xóa attachments đã chọn (nếu có)
+        if ($request->has('delete_attachments')) {
+            $deleteIds = $request->input('delete_attachments', []);
+            $attachmentsToDelete = $appendix->attachments()->whereIn('id', $deleteIds)->get();
+
+            foreach ($attachmentsToDelete as $attachment) {
+                if (Storage::disk('public')->exists($attachment->file_path)) {
+                    Storage::disk('public')->delete($attachment->file_path);
+                }
+                $attachment->delete();
+            }
+        }
 
         activity('contract-appendix')
             ->performedOn($appendix)->causedBy($request->user())
@@ -345,5 +389,26 @@ class ContractAppendixController extends Controller
             'contract' => $contract->id,
             'tab' => 'appendixes'
         ]));
+    }
+
+    /**
+     * Download appendix attachment
+     */
+    public function downloadAttachment(\App\Models\ContractAppendixAttachment $attachment)
+    {
+        $appendix = $attachment->appendix;
+        $this->authorize('view', $appendix);
+
+        if (!Storage::disk('public')->exists($attachment->file_path)) {
+            abort(404, 'File không tồn tại');
+        }
+
+        $path = Storage::disk('public')->path($attachment->file_path);
+
+        // Return file inline (browser will display if possible, otherwise download)
+        return response()->file($path, [
+            'Content-Type' => $attachment->mime_type,
+            'Content-Disposition' => 'inline; filename="' . $attachment->file_name . '"'
+        ]);
     }
 }

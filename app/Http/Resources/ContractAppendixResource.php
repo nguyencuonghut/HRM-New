@@ -38,6 +38,20 @@ class ContractAppendixResource extends JsonResource
             'generated_pdf_path'  => $this->generated_pdf_path,
             'generated_pdf_url'   => $this->generated_pdf_path ? Storage::url($this->generated_pdf_path) : null,
             'created_at' => optional($this->created_at)->toDateTimeString(),
+
+            // Attachments
+            'attachments' => $this->whenLoaded('attachments', function () {
+                return $this->attachments->map(function ($attachment) {
+                    return [
+                        'id' => $attachment->id,
+                        'file_name' => $attachment->file_name,
+                        'file_size' => $attachment->file_size,
+                        'mime_type' => $attachment->mime_type,
+                        'created_at' => $attachment->created_at->toDateTimeString(),
+                        'download_url' => route('contracts.appendixes.attachments.download', $attachment),
+                    ];
+                });
+            }),
         ];
     }
 

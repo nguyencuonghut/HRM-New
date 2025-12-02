@@ -89,6 +89,29 @@
             <span v-else>—</span>
           </template>
         </Column>
+        <Column header="Đính kèm" headerStyle="min-width:12rem;">
+          <template #body="sp">
+            <div v-if="sp.data.attachments && sp.data.attachments.length > 0">
+              <div class="flex flex-col gap-1">
+                <a
+                  v-for="att in sp.data.attachments.slice(0, 2)"
+                  :key="att.id"
+                  :href="att.download_url"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  class="text-xs text-primary hover:underline flex items-center gap-1"
+                >
+                  <i class="pi pi-paperclip text-xs"></i>
+                  <span class="truncate max-w-[150px]">{{ att.file_name }}</span>
+                </a>
+                <span v-if="sp.data.attachments.length > 2" class="text-xs text-gray-500">
+                  +{{ sp.data.attachments.length - 2 }} file khác
+                </span>
+              </div>
+            </div>
+            <span v-else class="text-gray-400">—</span>
+          </template>
+        </Column>
         <Column header="Thao tác" headerStyle="min-width:24rem;">
           <template #body="sp">
             <div class="flex gap-2">
@@ -247,6 +270,15 @@
 
         <div class="md:col-span-2">
           <!-- Template sẽ được chọn tự động khi sinh PDF -->
+        </div>
+
+        <div class="md:col-span-2">
+          <AttachmentUploader
+            ref="attachmentUploader"
+            :existingAttachments="form.attachments || []"
+            @update:newFiles="form.newAttachments = $event"
+            @update:deleteIds="form.deleteAttachments = $event"
+          />
         </div>
 
         <div class="md:col-span-2">
@@ -467,6 +499,7 @@ import Checkbox from 'primevue/checkbox'
 import { ContractService } from '@/services/ContractService'
 import { useFormValidation } from '@/composables/useFormValidation'
 import { formatDate, toYMD } from '@/utils/dateHelper'
+import AttachmentUploader from '@/Components/AttachmentUploader.vue'
 import TerminateContractModal from '@/Components/TerminateContractModal.vue'
 import ContractRenewalModal from '@/Components/ContractRenewalModal.vue'
 
@@ -541,8 +574,13 @@ const form = ref({
   status: 'DRAFT',
   source: 'LEGACY',
   source_id: '',
-  note: ''
+  note: '',
+  attachments: [],
+  newAttachments: [],
+  deleteAttachments: []
 })
+
+const attachmentUploader = ref(null)
 
 // Options - Backend sẽ cung cấp qua props
 const contractTypeOptions = computed(() => definePropsData.contractTypeOptions || [])
@@ -618,7 +656,10 @@ function edit(row) {
     status: row.status || 'DRAFT',
     source: row.source || 'LEGACY',
     source_id: row.source_id || '',
-    note: row.note || ''
+    note: row.note || '',
+    attachments: row.attachments || [],
+    newAttachments: [],
+    deleteAttachments: []
   }
   submitted.value = false
   dialog.value = true
@@ -626,6 +667,9 @@ function edit(row) {
 function hideDialog() {
   dialog.value = false
   submitted.value = false
+  if (attachmentUploader.value) {
+    attachmentUploader.value.reset()
+  }
 }
 function save() {
   submitted.value = true
@@ -639,22 +683,77 @@ function save() {
   }
 
   saving.value = true
-  const payload = {
-    ...form.value,
-    start_date: toYMD(form.value.start_date),
-    end_date: toYMD(form.value.end_date)
+
+  // Prepare FormData for file upload
+  const formData = new FormData()
+
+  // Add all form fields
+  Object.keys(form.value).forEach(key => {
+    if (key === 'newAttachments' || key === 'deleteAttachments' || key === 'attachments') {
+      return // Skip these, handle separately
+    }
+
+    if (key === 'other_allowances') {
+      // Append array items individually for FormData
+      if (Array.isArray(form.value[key])) {
+        form.value[key].forEach((item, index) => {
+          formData.append(`other_allowances[${index}][name]`, item.name || '')
+          formData.append(`other_allowances[${index}][amount]`, item.amount || 0)
+        })
+      }
+    } else if (key === 'start_date' || key === 'end_date') {
+      const dateValue = toYMD(form.value[key])
+      if (dateValue) formData.append(key, dateValue)
+    } else if (form.value[key] !== null && form.value[key] !== undefined && form.value[key] !== '') {
+      formData.append(key, form.value[key])
+    }
+  })
+
+  // Add new attachment files
+  if (form.value.newAttachments && form.value.newAttachments.length > 0) {
+    form.value.newAttachments.forEach(file => {
+      formData.append('attachments[]', file)
+    })
   }
+
+  // Add IDs of attachments to delete
+  if (form.value.deleteAttachments && form.value.deleteAttachments.length > 0) {
+    form.value.deleteAttachments.forEach(id => {
+      formData.append('delete_attachments[]', id)
+    })
+  }
+
   const opts = {
     onFinish: () => (saving.value = false),
     onSuccess: () => {
       dialog.value = false
       form.value = {}
+      if (attachmentUploader.value) {
+        attachmentUploader.value.reset()
+      }
+    },
+    onError: (errors) => {
+      console.error('Contract save error:', errors)
     }
   }
+
+  console.log('Saving contract with files:', {
+    hasNewFiles: form.value.newAttachments?.length > 0,
+    newFilesCount: form.value.newAttachments?.length,
+    deleteIdsCount: form.value.deleteAttachments?.length
+  })
+
   if (!form.value.id) {
-    ContractService.store(payload, opts)
+    router.post('/contracts', formData, {
+      forceFormData: true,
+      ...opts
+    })
   } else {
-    ContractService.update(form.value.id, payload, opts)
+    formData.append('_method', 'PUT')
+    router.post(`/contracts/${form.value.id}`, formData, {
+      forceFormData: true,
+      ...opts
+    })
   }
 }
 function confirmDelete(row) {

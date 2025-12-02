@@ -32,7 +32,8 @@ class ContractController extends Controller
                 'employee:id,full_name,employee_code',
                 'department:id,name,code',
                 'position:id,title',
-                'approvals.approver:id,name,email'
+                'approvals.approver:id,name,email',
+                'attachments'
             ])
             ->latest('created_at')
             ->get();
@@ -64,6 +65,22 @@ class ContractController extends Controller
         $this->ensureNoActiveOverlap($payload['employee_id'], $payload['start_date'] ?? null, $payload['end_date'] ?? null);
 
         $row = Contract::create($payload);
+
+        // Upload attachments nếu có
+        if ($request->hasFile('attachments')) {
+            foreach ($request->file('attachments') as $file) {
+                $fileName = time() . '_' . $file->getClientOriginalName();
+                $filePath = $file->storeAs('contracts/' . $row->id . '/attachments', $fileName, 'public');
+
+                $row->attachments()->create([
+                    'file_name' => $file->getClientOriginalName(),
+                    'file_path' => $filePath,
+                    'file_size' => $file->getSize(),
+                    'mime_type' => $file->getMimeType(),
+                ]);
+            }
+        }
+
         $row->load(['employee:id,full_name,employee_code', 'department:id,name', 'position:id,title', 'template:id,name']);
 
         $employee = $row->employee;
@@ -125,6 +142,34 @@ class ContractController extends Controller
 
         $contract->update($payload);
 
+        // Upload attachments mới nếu có
+        if ($request->hasFile('attachments')) {
+            foreach ($request->file('attachments') as $file) {
+                $fileName = time() . '_' . $file->getClientOriginalName();
+                $filePath = $file->storeAs('contracts/' . $contract->id . '/attachments', $fileName, 'public');
+
+                $contract->attachments()->create([
+                    'file_name' => $file->getClientOriginalName(),
+                    'file_path' => $filePath,
+                    'file_size' => $file->getSize(),
+                    'mime_type' => $file->getMimeType(),
+                ]);
+            }
+        }
+
+        // Xóa attachments đã chọn (nếu có)
+        if ($request->has('delete_attachments')) {
+            $deleteIds = $request->input('delete_attachments', []);
+            $attachmentsToDelete = $contract->attachments()->whereIn('id', $deleteIds)->get();
+
+            foreach ($attachmentsToDelete as $attachment) {
+                if (\Storage::disk('public')->exists($attachment->file_path)) {
+                    \Storage::disk('public')->delete($attachment->file_path);
+                }
+                $attachment->delete();
+            }
+        }
+
         // Load lại relationships sau update
         $contract->load(['employee:id,full_name,employee_code', 'department:id,name', 'position:id,title', 'template:id,name']);
         $newEmployee = $contract->employee;
@@ -162,10 +207,11 @@ class ContractController extends Controller
         $this->authorize('view', $contract);
 
         // Load các quan hệ cần cho header hồ sơ HĐ
-        $contract->load(['employee', 'department', 'position', 'approvals.approver:id,name,email']);
+        $contract->load(['employee', 'department', 'position', 'approvals.approver:id,name,email', 'attachments']);
 
         // Lấy danh sách phụ lục theo HĐ
         $appendixes = $contract->appendixes()
+            ->with('attachments')
             ->orderByDesc('effective_date')
             ->orderByDesc('created_at')
             ->get();
@@ -767,5 +813,26 @@ class ContractController extends Controller
 
             return redirect()->back()->withErrors(['error' => $e->getMessage()]);
         }
+    }
+
+    /**
+     * Download contract attachment
+     */
+    public function downloadAttachment(\App\Models\ContractAttachment $attachment)
+    {
+        $contract = $attachment->contract;
+        $this->authorize('view', $contract);
+
+        if (!Storage::disk('public')->exists($attachment->file_path)) {
+            abort(404, 'File không tồn tại');
+        }
+
+        $path = Storage::disk('public')->path($attachment->file_path);
+
+        // Return file inline (browser will display if possible, otherwise download)
+        return response()->file($path, [
+            'Content-Type' => $attachment->mime_type,
+            'Content-Disposition' => 'inline; filename="' . $attachment->file_name . '"'
+        ]);
     }
 }

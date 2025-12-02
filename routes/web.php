@@ -163,6 +163,8 @@ Route::group(['middleware' => 'auth'], function () {
     Route::get('contracts/{contract}', [ContractController::class, 'show'])->name('contracts.show');
     Route::put('contracts/{contract}', [ContractController::class,'update'])->name('contracts.update');
     Route::delete('contracts/{contract}', [ContractController::class,'destroy'])->name('contracts.destroy');
+    Route::get('contracts/attachments/{attachment}/download', [ContractController::class,'downloadAttachment'])->name('contracts.attachments.download');
+    Route::get('contracts/appendixes/attachments/{attachment}/download', [ContractAppendixController::class,'downloadAttachment'])->name('contracts.appendixes.attachments.download');
 
     // Approval workflow routes
     Route::post('contracts/{contract}/submit-for-approval', [ContractController::class,'submitForApproval'])->name('contracts.submitForApproval');

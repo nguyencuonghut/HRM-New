@@ -69,6 +69,29 @@
           <span v-else>—</span>
         </template>
       </Column>
+      <Column header="Đính kèm" headerStyle="min-width:12rem;">
+        <template #body="sp">
+          <div v-if="sp.data.attachments && sp.data.attachments.length > 0">
+            <div class="flex flex-col gap-1">
+              <a
+                v-for="att in sp.data.attachments.slice(0, 2)"
+                :key="att.id"
+                :href="att.download_url"
+                target="_blank"
+                rel="noopener noreferrer"
+                class="text-xs text-primary hover:underline flex items-center gap-1"
+              >
+                <i class="pi pi-paperclip text-xs"></i>
+                <span class="truncate max-w-[150px]">{{ att.file_name }}</span>
+              </a>
+              <span v-if="sp.data.attachments.length > 2" class="text-xs text-gray-500">
+                +{{ sp.data.attachments.length - 2 }} file khác
+              </span>
+            </div>
+          </div>
+          <span v-else class="text-gray-400">—</span>
+        </template>
+      </Column>
       <Column header="Thao tác" headerStyle="min-width:14rem;">
         <template #body="sp">
           <div class="flex gap-2">
@@ -256,6 +279,18 @@
         <Textarea v-model.trim="form.summary" autoResize rows="2" class="w-full" :invalid="hasError('summary')" />
         <small class="text-red-500" v-if="hasError('summary')">{{ errors.summary }}</small>
       </div>
+
+      <!-- Attachments -->
+      <div class="md:col-span-2">
+        <label class="block font-bold mb-2">Tệp đính kèm</label>
+        <AttachmentUploader
+          ref="attachmentUploader"
+          :existingAttachments="form.attachments"
+          @update:newFiles="form.newAttachments = $event"
+          @update:deleteIds="form.deleteAttachments = $event"
+        />
+      </div>
+
       <div class="md:col-span-2">
         <label class="block font-bold mb-2">Ghi chú</label>
         <Textarea v-model.trim="form.note" autoResize rows="3" class="w-full" :invalid="hasError('note')" />
@@ -437,6 +472,7 @@ import Textarea from 'primevue/textarea'
 import { ContractAppendixService } from '@/services/ContractAppendixService'
 import { useFormValidation } from '@/composables/useFormValidation'
 import { toYMD, formatDate } from '@/utils/dateHelper'
+import AttachmentUploader from '@/Components/AttachmentUploader.vue'
 
 const { errors, hasError } = useFormValidation()
 
@@ -466,6 +502,8 @@ const availableTemplates = ref([])
 const loadingTemplates = ref(false)
 const defaultTemplate = ref(null)
 
+const attachmentUploader = ref()
+
 const form = ref({
   id: null,
   appendix_no: '',
@@ -479,7 +517,10 @@ const form = ref({
   working_time: '',
   work_location: '',
   summary: '',
-  note: ''
+  note: '',
+  attachments: [],
+  newAttachments: [],
+  deleteAttachments: []
 })
 
 const typeOptions = [
@@ -514,7 +555,10 @@ function edit(row) {
     ...row,
     other_allowances: Array.isArray(row.other_allowances)
       ? JSON.parse(JSON.stringify(row.other_allowances))
-      : []
+      : [],
+    attachments: row.attachments || [],
+    newAttachments: [],
+    deleteAttachments: []
   }
   submitted.value = false
   dialog.value = true
@@ -534,13 +578,19 @@ function reset() {
     working_time: '',
     work_location: '',
     summary: '',
-    note: ''
+    note: '',
+    attachments: [],
+    newAttachments: [],
+    deleteAttachments: []
   }
 }
 
 function closeDialog() {
   dialog.value = false
   submitted.value = false
+  if (attachmentUploader.value) {
+    attachmentUploader.value.reset()
+  }
 }
 
 function save() {
@@ -551,22 +601,75 @@ function save() {
   }
 
   saving.value = true
-  const payload = {
-    ...form.value,
-    effective_date: toYMD(form.value.effective_date),
-    end_date: toYMD(form.value.end_date)
+
+  // Prepare FormData for file upload
+  const formData = new FormData()
+
+  // Add all form fields
+  Object.keys(form.value).forEach(key => {
+    if (key === 'newAttachments' || key === 'deleteAttachments' || key === 'attachments') {
+      return // Skip these, handle separately
+    }
+
+    if (key === 'other_allowances') {
+      // Append array items individually for FormData
+      if (Array.isArray(form.value[key])) {
+        form.value[key].forEach((item, index) => {
+          formData.append(`other_allowances[${index}][name]`, item.name || '')
+          formData.append(`other_allowances[${index}][amount]`, item.amount || 0)
+        })
+      }
+    } else if (key === 'effective_date' || key === 'end_date') {
+      const dateValue = toYMD(form.value[key])
+      if (dateValue) formData.append(key, dateValue)
+    } else if (form.value[key] !== null && form.value[key] !== undefined && form.value[key] !== '') {
+      formData.append(key, form.value[key])
+    }
+  })  // Add new attachment files
+  if (form.value.newAttachments && form.value.newAttachments.length > 0) {
+    form.value.newAttachments.forEach(file => {
+      formData.append('attachments[]', file)
+    })
   }
+
+  // Add IDs of attachments to delete
+  if (form.value.deleteAttachments && form.value.deleteAttachments.length > 0) {
+    form.value.deleteAttachments.forEach(id => {
+      formData.append('delete_attachments[]', id)
+    })
+  }
+
   const opts = {
     onFinish: () => (saving.value = false),
     onSuccess: () => {
       dialog.value = false
       submitted.value = false
+      if (attachmentUploader.value) {
+        attachmentUploader.value.reset()
+      }
+    },
+    onError: (errors) => {
+      console.error('Appendix save error:', errors)
     }
   }
+
+  console.log('Saving appendix with files:', {
+    hasNewFiles: form.value.newAttachments?.length > 0,
+    newFilesCount: form.value.newAttachments?.length,
+    deleteIdsCount: form.value.deleteAttachments?.length
+  })
+
   if (!form.value.id) {
-    ContractAppendixService.store(props.contractId, payload, opts)
+    router.post(`/contracts/${props.contractId}/appendixes`, formData, {
+      forceFormData: true,
+      ...opts
+    })
   } else {
-    ContractAppendixService.update(props.contractId, form.value.id, payload, opts)
+    formData.append('_method', 'PUT')
+    router.post(`/contracts/${props.contractId}/appendixes/${form.value.id}`, formData, {
+      forceFormData: true,
+      ...opts
+    })
   }
 }
 

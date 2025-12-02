@@ -79,6 +79,20 @@ class ContractResource extends JsonResource
                 $this->relationLoaded('approvals'),
                 fn() => $this->getApprovalProgress()
             ),
+
+            // Attachments
+            'attachments' => $this->whenLoaded('attachments', function () {
+                return $this->attachments->map(function ($attachment) {
+                    return [
+                        'id' => $attachment->id,
+                        'file_name' => $attachment->file_name,
+                        'file_size' => $attachment->file_size,
+                        'mime_type' => $attachment->mime_type,
+                        'created_at' => $attachment->created_at->toDateTimeString(),
+                        'download_url' => route('contracts.attachments.download', $attachment),
+                    ];
+                });
+            }),
         ];
     }
 }

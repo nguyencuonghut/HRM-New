@@ -44,6 +44,42 @@
             <div><b>Kết thúc:</b> {{ formatDate(contract.end_date) || '—' }}</div>
           </div>
 
+          <!-- Attachments Section -->
+          <div v-if="contract.attachments && contract.attachments.length > 0" class="mt-6">
+            <Accordion :value="[]">
+              <AccordionPanel value="0">
+                <AccordionHeader>
+                  <div class="flex items-center gap-2">
+                    <i class="pi pi-paperclip text-primary"></i>
+                    <span class="font-semibold">Tệp đính kèm</span>
+                    <Badge :value="contract.attachments.length" severity="info" />
+                  </div>
+                </AccordionHeader>
+                <AccordionContent>
+                  <div class="space-y-2">
+                    <a
+                      v-for="attachment in contract.attachments"
+                      :key="attachment.id"
+                      :href="attachment.download_url"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      class="flex items-center gap-3 p-3 bg-white border rounded hover:bg-blue-50 hover:border-blue-300 transition-all group"
+                    >
+                      <i :class="getFileIcon(attachment.mime_type)" class="text-2xl"></i>
+                      <div class="flex-1 min-w-0">
+                        <div class="font-medium text-sm truncate group-hover:text-primary">{{ attachment.file_name }}</div>
+                        <div class="text-xs text-gray-500">
+                          {{ formatFileSize(attachment.file_size) }} • {{ formatDate(attachment.created_at) }}
+                        </div>
+                      </div>
+                      <i class="pi pi-download text-gray-400 group-hover:text-primary"></i>
+                    </a>
+                  </div>
+                </AccordionContent>
+              </AccordionPanel>
+            </Accordion>
+          </div>
+
           <!-- Thông tin chấm dứt hợp đồng -->
           <div v-if="contract.status === 'TERMINATED' && contract.terminated_at" class="mt-6 p-4 bg-red-50 border border-red-200 rounded">
             <h4 class="font-semibold text-red-700 mb-3 flex items-center gap-2">
@@ -177,6 +213,10 @@ import Tabs from 'primevue/tabs'
 import TabList from 'primevue/tablist'
 import Tab from 'primevue/tab'
 import TabPanel from 'primevue/tabpanel'
+import Accordion from 'primevue/accordion'
+import AccordionPanel from 'primevue/accordionpanel'
+import AccordionHeader from 'primevue/accordionheader'
+import AccordionContent from 'primevue/accordioncontent'
 import ContractAppendixTab from './ContractAppendixTab.vue'
 import ContractTimelineTab from './ContractTimelineTab.vue'
 import { formatDate } from '@/utils/dateHelper'
@@ -419,6 +459,24 @@ function getTerminationReasonLabel(reason) {
     OTHER: 'Lý do khác',
   }
   return labels[reason] || reason || '—'
+}
+
+function getFileIcon(mimeType) {
+  if (!mimeType) return 'pi pi-file text-gray-500'
+  if (mimeType.includes('pdf')) return 'pi pi-file-pdf text-red-600'
+  if (mimeType.includes('word') || mimeType.includes('document')) return 'pi pi-file-word text-blue-600'
+  if (mimeType.includes('excel') || mimeType.includes('spreadsheet')) return 'pi pi-file-excel text-green-600'
+  if (mimeType.includes('image')) return 'pi pi-image text-purple-600'
+  if (mimeType.includes('zip') || mimeType.includes('rar')) return 'pi pi-folder text-yellow-600'
+  return 'pi pi-file text-gray-500'
+}
+
+function formatFileSize(bytes) {
+  if (!bytes || bytes === 0) return '0 B'
+  const k = 1024
+  const sizes = ['B', 'KB', 'MB', 'GB']
+  const i = Math.floor(Math.log(bytes) / Math.log(k))
+  return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i]
 }
 
 function getSubjectTypeLabel(subjectType) {
