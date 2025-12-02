@@ -284,7 +284,7 @@ class ContractController extends Controller
                 'status' => 'TERMINATED',
                 'details' => [
                     'terminated_at' => $contract->terminated_at,
-                    'termination_reason_label' => TerminationReason::tryFrom($contract->termination_reason)?->label(),
+                    'termination_reason_label' => ContractTerminationReason::tryFrom($contract->termination_reason)?->label(),
                     'termination_note' => $contract->termination_note,
                 ],
             ]);

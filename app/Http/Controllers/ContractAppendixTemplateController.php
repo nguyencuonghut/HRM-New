@@ -67,7 +67,7 @@ class ContractAppendixTemplateController extends Controller
         if ($template->body_path) {
             $docxPath = Storage::disk('public')->path($template->body_path);
             if (file_exists($docxPath)) {
-                TemplateUploadService::createPlaceholderMappingsForAppendix($template, $docxPath);
+                TemplateUploadService::createAppendixPlaceholderMappings($template, $docxPath);
             }
         }
 
@@ -104,7 +104,7 @@ class ContractAppendixTemplateController extends Controller
             if (file_exists($docxPath)) {
                 // Xóa mappings cũ và tạo mới
                 $template->placeholderMappings()->delete();
-                TemplateUploadService::createPlaceholderMappingsForAppendix($template, $docxPath);
+                TemplateUploadService::createAppendixPlaceholderMappings($template, $docxPath);
             }
         }
 

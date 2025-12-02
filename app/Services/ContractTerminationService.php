@@ -116,18 +116,23 @@ class ContractTerminationService
      */
     public function validateTermination(Contract $contract): void
     {
-        // Contract phải ở trạng thái ACTIVE
-        if ($contract->status !== 'ACTIVE') {
+        // Không cho phép terminate các trạng thái này
+        $invalidStatuses = ['DRAFT', 'PENDING_APPROVAL', 'REJECTED'];
+
+        if (in_array($contract->status, $invalidStatuses)) {
             throw new \InvalidArgumentException(
-                'Chỉ có thể chấm dứt hợp đồng đang ở trạng thái ACTIVE. Trạng thái hiện tại: ' . $contract->status
+                'Không thể chấm dứt hợp đồng ở trạng thái ' . $contract->status . '. Chỉ có thể chấm dứt hợp đồng đã ACTIVE.'
             );
         }
 
-        // Không thể chấm dứt hợp đồng đã bị chấm dứt
-        if ($contract->terminated_at !== null) {
-            throw new \InvalidArgumentException(
-                'Hợp đồng này đã bị chấm dứt vào ngày ' . $contract->terminated_at->format('d/m/Y')
-            );
+        // Nếu status là ACTIVE hoặc TERMINATED (do sửa DB), đều cho phép terminate
+        // Chỉ cảnh báo nếu đã có terminated_at (re-terminate case)
+        if ($contract->terminated_at !== null && $contract->status === 'TERMINATED') {
+            \Log::warning('Re-terminating contract that was already terminated', [
+                'contract_id' => $contract->id,
+                'previous_terminated_at' => $contract->terminated_at,
+                'status' => $contract->status,
+            ]);
         }
     }
 

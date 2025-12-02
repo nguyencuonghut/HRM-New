@@ -109,7 +109,7 @@ enum ActivityLogDescription: string
             self::APPENDIX_RECALLED => 'RECALLED',
             self::APPENDIX_APPROVED => 'APPROVED_STEP',
             self::APPENDIX_REJECTED => 'REJECTED',
-            self::APPENDIX_CANCELLED => 'DELETED',
+            self::APPENDIX_CANCELLED => 'CANCELLED',
             self::BACKUP_CREATED => 'BACKUP_CREATED',
             self::BACKUP_EXECUTED => 'BACKUP_EXECUTED',
             self::BACKUP_DELETED => 'BACKUP_DELETED',
