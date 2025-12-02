@@ -76,6 +76,43 @@ class NotificationController extends Controller
         return response()->json([
             'success' => true,
             'unread_count' => $user->unreadNotifications()->count(),
+            'total_count' => $user->notifications()->count(),
+        ]);
+    }
+
+    /**
+     * Xóa tất cả notifications đã đọc
+     */
+    public function destroyRead(Request $request)
+    {
+        $user = Auth::user();
+
+        $user->notifications()
+            ->whereNotNull('read_at')
+            ->delete();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Đã xóa tất cả thông báo đã đọc',
+            'unread_count' => $user->unreadNotifications()->count(),
+            'total_count' => $user->notifications()->count(),
+        ]);
+    }
+
+    /**
+     * Xóa tất cả notifications
+     */
+    public function destroyAll(Request $request)
+    {
+        $user = Auth::user();
+
+        $user->notifications()->delete();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Đã xóa tất cả thông báo',
+            'unread_count' => 0,
+            'total_count' => 0,
         ]);
     }
 }
