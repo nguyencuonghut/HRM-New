@@ -33,7 +33,7 @@ class UpdateContractAppendixRequest extends FormRequest
             'work_location'  => ['nullable','string','max:255'],
             'note'           => ['nullable','string','max:4000'],
             'approval_note'  => ['sometimes','nullable','string','max:1000'],
-            'status'         => ['sometimes', Rule::in(['DRAFT','PENDING_APPROVAL','ACTIVE','REJECTED','CANCELLED'])],
+            'status'         => ['sometimes', Rule::in(['DRAFT','PENDING_APPROVAL','APPROVED','REJECTED','ACTIVE','EXPIRED','CANCELLED'])],
         ];
     }
 }

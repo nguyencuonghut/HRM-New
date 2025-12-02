@@ -16,6 +16,7 @@ class StoreContractAppendixRequest extends FormRequest
         return [
             'appendix_no'   => ['required','string','max:100', Rule::unique('contract_appendixes','appendix_no')->where('contract_id',$contract->id)],
             'appendix_type' => ['required', Rule::in(['SALARY','ALLOWANCE','POSITION','DEPARTMENT','WORKING_TERMS','EXTENSION','OTHER'])],
+            'status'        => ['required', Rule::in(['DRAFT','PENDING_APPROVAL','APPROVED','REJECTED','ACTIVE','EXPIRED'])],
             'source'        => ['nullable', Rule::in(['LEGACY','WORKFLOW'])],
             'title'         => ['nullable','string','max:255'],
             'summary'       => ['nullable','string','max:2000'],

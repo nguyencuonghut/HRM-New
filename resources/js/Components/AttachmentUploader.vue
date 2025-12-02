@@ -1,7 +1,7 @@
 <template>
   <div class="attachment-uploader">
     <div class="flex items-center justify-between mb-3">
-      <label class="block font-bold">File đính kèm</label>
+      <label class="block font-bold">Tệp đính kèm</label>
       <Button
         v-if="!readonly"
         label="Chọn file"

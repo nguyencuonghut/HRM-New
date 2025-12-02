@@ -95,24 +95,29 @@
       <Column header="Thao tác" headerStyle="min-width:14rem;">
         <template #body="sp">
           <div class="flex gap-2">
+            <!-- Edit: Only for DRAFT/REJECTED -->
             <Button
+              v-if="['DRAFT', 'REJECTED'].includes(sp.data.status)"
               icon="pi pi-pencil"
               outlined
               severity="success"
               rounded
               @click="edit(sp.data)"
-              :disabled="!['DRAFT', 'REJECTED'].includes(sp.data.status)"
-              v-tooltip="['DRAFT', 'REJECTED'].includes(sp.data.status) ? 'Chỉnh sửa' : 'Chỉ có thể sửa phụ lục Nháp hoặc Bị từ chối'"
+              v-tooltip="'Chỉnh sửa'"
             />
+            
+            <!-- Delete: Only for DRAFT/REJECTED -->
             <Button
+              v-if="['DRAFT', 'REJECTED'].includes(sp.data.status)"
               icon="pi pi-trash"
               outlined
               severity="danger"
               rounded
               @click="confirmDelete(sp.data)"
-              :disabled="!['DRAFT', 'REJECTED'].includes(sp.data.status)"
-              v-tooltip="['DRAFT', 'REJECTED'].includes(sp.data.status) ? 'Xóa' : 'Chỉ có thể xóa phụ lục Nháp hoặc Bị từ chối'"
+              v-tooltip="'Xóa'"
             />
+            
+            <!-- Generate PDF: Always available -->
             <Button
               icon="pi pi-file"
               outlined
@@ -120,6 +125,8 @@
               @click="generateAppendix(sp.data)"
               v-tooltip="'Sinh phụ lục (PDF)'"
             />
+            
+            <!-- Submit for approval: DRAFT -->
             <Button
               v-if="sp.data.status === 'DRAFT'"
               icon="pi pi-send"
@@ -129,6 +136,8 @@
               @click="submitForApproval(sp.data)"
               v-tooltip="'Gửi phê duyệt'"
             />
+            
+            <!-- Resubmit: REJECTED -->
             <Button
               v-if="sp.data.status === 'REJECTED'"
               icon="pi pi-refresh"
@@ -138,6 +147,8 @@
               @click="submitForApproval(sp.data)"
               v-tooltip="'Gửi lại phê duyệt'"
             />
+            
+            <!-- Recall: PENDING_APPROVAL -->
             <Button
               v-if="sp.data.status === 'PENDING_APPROVAL'"
               icon="pi pi-replay"
@@ -147,6 +158,8 @@
               @click="recall(sp.data)"
               v-tooltip="'Thu hồi'"
             />
+            
+            <!-- Approve: PENDING_APPROVAL -->
             <Button
               v-if="sp.data.status === 'PENDING_APPROVAL'"
               icon="pi pi-check"
@@ -156,6 +169,8 @@
               @click="approve(sp.data)"
               v-tooltip="'Phê duyệt'"
             />
+            
+            <!-- Reject: PENDING_APPROVAL -->
             <Button
               v-if="sp.data.status === 'PENDING_APPROVAL'"
               icon="pi pi-times"
@@ -214,6 +229,21 @@
         <label class="block font-bold mb-2">Đến</label>
         <DatePicker v-model="form.end_date" dateFormat="yy-mm-dd" showIcon fluid :invalid="hasError('end_date')" />
         <small class="text-red-500" v-if="hasError('end_date')">{{ errors.end_date }}</small>
+      </div>
+
+      <div>
+        <label class="block font-bold mb-2 required-field">Trạng thái</label>
+        <Select
+          v-model="form.status"
+          :options="statusOptions"
+          optionLabel="label"
+          optionValue="value"
+          fluid
+          :invalid="(submitted && !form.status) || hasError('status')"
+        />
+        <small class="text-gray-500 text-xs mt-1">Dùng khi backfill dữ liệu lịch sử</small>
+        <small class="text-red-500" v-if="submitted && !form.status">Trạng thái là bắt buộc.</small>
+        <small class="text-red-500" v-if="hasError('status')">{{ errors.status }}</small>
       </div>
 
       <div>
@@ -282,7 +312,6 @@
 
       <!-- Attachments -->
       <div class="md:col-span-2">
-        <label class="block font-bold mb-2">Tệp đính kèm</label>
         <AttachmentUploader
           ref="attachmentUploader"
           :existingAttachments="form.attachments"
@@ -510,6 +539,7 @@ const form = ref({
   appendix_type: null,
   effective_date: null,
   end_date: null,
+  status: 'DRAFT',
   base_salary: null,
   insurance_salary: null,
   position_allowance: null,
@@ -531,6 +561,15 @@ const typeOptions = [
   { value: 'WORKING_TERMS', label: 'Thời gian/địa điểm làm việc' },
   { value: 'EXTENSION', label: 'Gia hạn HĐ' },
   { value: 'OTHER', label: 'Khác' }
+]
+
+const statusOptions = [
+  { value: 'DRAFT', label: 'Nháp' },
+  { value: 'PENDING_APPROVAL', label: 'Chờ phê duyệt' },
+  { value: 'APPROVED', label: 'Đã phê duyệt' },
+  { value: 'REJECTED', label: 'Bị từ chối' },
+  { value: 'ACTIVE', label: 'Đang hiệu lực' },
+  { value: 'EXPIRED', label: 'Hết hiệu lực' }
 ]
 
 const statusSeverity = (s) =>
@@ -571,6 +610,7 @@ function reset() {
     appendix_type: null,
     effective_date: null,
     end_date: null,
+    status: 'DRAFT',
     base_salary: null,
     insurance_salary: null,
     position_allowance: null,
@@ -596,7 +636,7 @@ function closeDialog() {
 function save() {
   submitted.value = true
 
-  if (!form.value.appendix_no || !form.value.appendix_type || !form.value.effective_date) {
+  if (!form.value.appendix_no || !form.value.appendix_type || !form.value.effective_date || !form.value.status) {
     return
   }
 
