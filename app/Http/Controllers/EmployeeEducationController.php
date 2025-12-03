@@ -9,12 +9,16 @@ use App\Http\Resources\EmployeeEducationResource;
 use App\Http\Resources\EmployeeExperienceResource;
 use App\Http\Resources\EmployeeRelativeResource;
 use App\Http\Resources\EmployeeSkillResource;
+use App\Http\Resources\EmployeeAssignmentResource;
 use App\Http\Resources\SkillResource;
 use App\Models\Skill;
 use App\Models\EducationLevel;
 use App\Models\Employee;
 use App\Models\EmployeeEducation;
 use App\Models\EmployeeSkill;
+use App\Models\EmployeeAssignment;
+use App\Models\Department;
+use App\Models\Position;
 use App\Models\School;
 use Illuminate\Http\Request;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
@@ -33,6 +37,8 @@ class EmployeeEducationController extends Controller
             'employee'          => $employee->only(['id','full_name','employee_code']),
             'education_levels'  => EducationLevel::orderBy('order_index')->get(['id','name']),
             'schools'           => School::orderBy('name')->get(['id','name']),
+            'departments'       => Department::orderBy('name')->get(['id','name','type']),
+            'positions'         => Position::orderBy('title')->get(['id','title','department_id']),
             // master skill list
             'skills'           => SkillResource::collection(
                 Skill::orderBy('name')->get()
@@ -52,6 +58,14 @@ class EmployeeEducationController extends Controller
             'employee_skills'  => EmployeeSkillResource::collection(
                 EmployeeSkill::with('skill:id,name')
                     ->where('employee_id', $employee->id)
+                    ->get()
+            )->resolve(),
+            // Phân công của nhân viên
+            'assignments'      => EmployeeAssignmentResource::collection(
+                $employee->assignments()
+                    ->with(['department:id,name,type', 'position:id,title'])
+                    ->orderByDesc('is_primary')
+                    ->orderByDesc('start_date')
                     ->get()
             )->resolve(),
         ]);

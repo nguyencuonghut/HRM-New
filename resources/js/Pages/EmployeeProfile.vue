@@ -14,6 +14,7 @@
         <Tab value="relatives">Người thân</Tab>
         <Tab value="experiences">Kinh nghiệm</Tab>
         <Tab value="skills">Kỹ năng</Tab>
+        <Tab value="assignments">Phân công</Tab>
       </TabList>
 
       <!-- TAB HỌC VẤN -->
@@ -393,36 +394,195 @@
         </Dialog>
       </TabPanel>
 
-    </Tabs>
-  </div>
-</template>
+      <!-- TAB PHÂN CÔNG -->
+      <TabPanel value="assignments">
+        <Toolbar class="mb-4">
+          <template #start>
+            <Button label="Thêm phân công" icon="pi pi-plus" class="mr-2" @click="openAssignmentNew" />
+            <Button label="Xóa" icon="pi pi-trash" severity="danger" variant="outlined"
+              @click="confirmAssignmentDeleteSelected" :disabled="!selectedAssignments || !selectedAssignments.length" />
+          </template>
+          <template #end>
+            <Button label="Xuất dữ liệu" icon="pi pi-upload" severity="secondary" @click="exportAssignmentCSV" />
+          </template>
+        </Toolbar>
 
+        <DataTable
+          ref="assignmentDt"
+          :value="assignmentRows"
+          v-model:selection="selectedAssignments"
+          dataKey="id"
+          :paginator="true" :rows="10"
+          :filters="assignmentFilters"
+          paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport RowsPerPageDropdown"
+          :rowsPerPageOptions="[5,10,25]"
+          currentPageReportTemplate="Hiển thị {first}-{last}/{totalRecords} phân công"
+          :rowClass="assignmentRowClass"
+        >
+          <template #header>
+            <div class="flex flex-wrap gap-2 items-center justify-between">
+              <h4 class="m-0">Danh sách Phân công</h4>
+              <IconField>
+                <InputIcon><i class="pi pi-search" /></InputIcon>
+                <InputText v-model="assignmentFilters['global'].value" placeholder="Tìm kiếm..." />
+              </IconField>
+            </div>
+          </template>
+
+          <Column selectionMode="multiple" style="width:3rem" :exportable="false" />
+          <Column field="department.name" header="Phòng/Ban" sortable style="min-width:14rem" />
+          <Column field="position.title" header="Chức danh" sortable style="min-width:12rem">
+            <template #body="sp">{{ sp.data.position?.title || '-' }}</template>
+          </Column>
+          <Column header="Vai trò" style="min-width:10rem">
+            <template #body="sp">
+              <Tag :value="getRoleLabel(sp.data.role_type)" />
+            </template>
+          </Column>
+          <Column header="Loại" style="min-width:8rem">
+            <template #body="sp">
+              <Badge :value="sp.data.is_primary ? 'CHÍNH' : 'Phụ'" :severity="sp.data.is_primary ? 'success' : 'secondary'" />
+            </template>
+          </Column>
+          <Column header="Hiệu lực" style="min-width:12rem">
+            <template #body="sp">
+              {{ formatDate(sp.data.start_date) }}<span v-if="sp.data.end_date"> → {{ formatDate(sp.data.end_date) }}</span>
+            </template>
+          </Column>
+          <Column header="Trạng thái" style="min-width:10rem">
+            <template #body="sp">
+              <Badge :value="sp.data.status==='ACTIVE' ? 'Hoạt động' : 'Không hoạt động'" :severity="sp.data.status==='ACTIVE' ? 'success' : 'danger'" />
+            </template>
+          </Column>
+          <Column header="Thao tác" :exportable="false" style="min-width:10rem">
+            <template #body="sp">
+              <div class="flex gap-2">
+                <Button icon="pi pi-pencil" variant="outlined" rounded @click="openAssignmentEdit(sp.data)" />
+                <Button icon="pi pi-trash" variant="outlined" rounded severity="danger" @click="confirmAssignmentDelete(sp.data)" />
+              </div>
+            </template>
+          </Column>
+        </DataTable>
+
+        <!-- Dialog Add/Edit Assignment -->
+        <Dialog v-model:visible="assignmentDialog" :style="{ width: '520px' }" :header="assignmentForm.id ? 'Cập nhật phân công' : 'Thêm phân công'" :modal="true">
+          <div class="flex flex-col gap-6">
+            <div>
+              <label class="block font-bold mb-3 required-field">Phòng/Ban</label>
+              <Select v-model="assignmentForm.department_id" :options="props.departments" optionLabel="name" filter optionValue="id" fluid
+                      :invalid="assignmentSubmitted && !assignmentForm.department_id" />
+              <small v-if="assignmentSubmitted && !assignmentForm.department_id" class="text-red-500">Bắt buộc</small>
+            </div>
+
+            <div>
+              <label class="block font-bold mb-3">Chức danh</label>
+              <Select v-model="assignmentForm.position_id" :options="filteredPositions" optionLabel="title" filter optionValue="id" fluid showClear
+                      :placeholder="assignmentForm.department_id ? 'Chọn chức danh' : 'Vui lòng chọn phòng/ban trước'"
+                      :disabled="!assignmentForm.department_id" />
+              <small v-if="!assignmentForm.department_id" class="text-gray-500 block mt-1">Chọn phòng/ban để hiển thị chức danh</small>
+              <small v-else-if="filteredPositions.length === 0" class="text-orange-500 block mt-1">Phòng/ban này chưa có chức danh nào</small>
+              <small v-else class="text-gray-500 block mt-1">{{ filteredPositions.length }} chức danh khả dụng</small>
+            </div>
+
+            <div class="grid grid-cols-2 gap-4">
+              <div>
+                <label class="block font-bold mb-3 required-field">Vai trò</label>
+                <Select v-model="assignmentForm.role_type" :options="roleTypeOptions" optionLabel="label" optionValue="value" fluid
+                        :invalid="assignmentSubmitted && !assignmentForm.role_type" />
+                <small v-if="assignmentSubmitted && !assignmentForm.role_type" class="text-red-500">Bắt buộc</small>
+              </div>
+
+              <div class="flex items-center gap-2 mt-7">
+                <Checkbox v-model="assignmentForm.is_primary" :binary="true" inputId="is_primary" @change="onPrimaryChange" />
+                <label for="is_primary" class="font-bold">Phân công CHÍNH</label>
+              </div>
+            </div>
+
+            <!-- Warning về primary assignment -->
+            <Message v-if="showPrimaryWarning" severity="warn" :closable="false">
+              Nhân viên đã có phân công CHÍNH đang HOẠT ĐỘNG. Nếu bạn tạo phân công CHÍNH mới, phân công cũ sẽ tự động chuyển sang KHÔNG HOẠT ĐỘNG hoặc bỏ cờ CHÍNH.
+            </Message>
+
+            <div class="grid grid-cols-2 gap-4">
+              <div>
+                <label class="block font-bold mb-3">Ngày bắt đầu</label>
+                <DatePicker v-model="assignmentForm.start_date" dateFormat="yy-mm-dd" showIcon fluid />
+              </div>
+              <div>
+                <label class="block font-bold mb-3">Ngày kết thúc</label>
+                <DatePicker v-model="assignmentForm.end_date" dateFormat="yy-mm-dd" showIcon fluid />
+              </div>
+            </div>
+
+            <div>
+              <label class="block font-bold mb-3 required-field">Trạng thái</label>
+              <Select v-model="assignmentForm.status" :options="statusOptions" optionLabel="label" optionValue="value" fluid
+                      :invalid="assignmentSubmitted && !assignmentForm.status" />
+              <small v-if="assignmentSubmitted && !assignmentForm.status" class="text-red-500">Bắt buộc</small>
+            </div>
+          </div>
+
+          <template #footer>
+            <Button label="Hủy" icon="pi pi-times" text @click="assignmentDialog=false" />
+            <Button label="Lưu" icon="pi pi-check" @click="saveAssignment" :loading="savingAssignment" />
+          </template>
+        </Dialog>
+
+        <!-- Dialog Delete Assignment -->
+        <Dialog v-model:visible="assignmentDeleteDialog" :style="{ width: '450px' }" header="Xác nhận" :modal="true">
+          <div class="flex items-center gap-4"><i class="pi pi-exclamation-triangle !text-3xl" /><span>Bạn có chắc muốn xóa phân công này?</span></div>
+          <template #footer>
+            <Button label="Không" icon="pi pi-times" text @click="assignmentDeleteDialog=false" />
+            <Button label="Có" icon="pi pi-check" severity="danger" @click="removeAssignment" :loading="deletingAssignment" />
+          </template>
+        </Dialog>
+
+        <!-- Dialog Delete Many Assignments -->
+        <Dialog v-model:visible="assignmentDeleteManyDialog" :style="{ width: '450px' }" header="Xác nhận" :modal="true">
+          <div class="flex items-center gap-4"><i class="pi pi-exclamation-triangle !text-3xl" /><span>Bạn có chắc muốn xóa các phân công đã chọn?</span></div>
+          <template #footer>
+            <Button label="Không" icon="pi pi-times" text @click="assignmentDeleteManyDialog=false" />
+            <Button label="Có" icon="pi pi-check" severity="danger" @click="removeManyAssignment" :loading="deletingAssignment" />
+          </template>
+        </Dialog>
+      </TabPanel>
+
+    </Tabs>
+    </div>
+</template>
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, watch, onMounted } from 'vue'
 import { Head } from '@inertiajs/vue3'
 import { EmployeeEducationService } from '@/services'
 import { EmployeeRelativeService } from '@/services'
 import { EmployeeExperienceService } from '@/services'
 import { EmployeeSkillService } from '@/services'
+import { EmployeeAssignmentService } from '@/services'
 import { toYMD, formatDate } from '@/utils/dateHelper'
 
 // PrimeVue imports
 import Select from 'primevue/select'
 import DatePicker from 'primevue/datepicker'
+import Checkbox from 'primevue/checkbox'
 import Tabs from 'primevue/tabs'
 import TabList from 'primevue/tablist'
 import Tab from 'primevue/tab'
 import TabPanel from 'primevue/tabpanel'
+import Tag from 'primevue/tag'
+import Message from 'primevue/message'
 
 const props = defineProps({
   employee: { type: Object, required: true },
   education_levels: { type: Array, required: true },
   schools: { type: Array, required: true },
+  departments: { type: Array, required: true },
+  positions: { type: Array, required: true },
   educations: { type: Array, required: true },
   relatives: { type: Array, default: () => [] },
   experiences: { type: Array, default: () => [] },
   skills: { type: Array, default: () => [] },           // master danh mục
   employee_skills: { type: Array, default: () => [] },  // kỹ năng của NV
+  assignments: { type: Array, default: () => [] },      // phân công của NV
 })
 
 // ====== Tab EDUCATION ======
@@ -651,5 +811,163 @@ function removeManySkill(){
   const ids = skillSelected.value.map(x=>x.id)
   deletingSkill.value=true
   EmployeeSkillService.bulkDelete(props.employee.id, ids, { onFinish:()=>{ deletingSkill.value=false; skillDeleteManyDialog.value=false; skillSelected.value=[] } })
+}
+
+/* ===== Assignments state & methods ===== */
+const assignmentDt = ref()
+const assignmentRows = computed(()=> props.assignments || [])
+const selectedAssignments = ref([])
+const assignmentFilters = ref({ global: { value: null, matchMode: 'contains' } })
+const assignmentDialog = ref(false)
+const assignmentDeleteDialog = ref(false)
+const assignmentDeleteManyDialog = ref(false)
+const currentAssignment = ref(null)
+const savingAssignment = ref(false)
+const deletingAssignment = ref(false)
+const assignmentSubmitted = ref(false)
+
+const roleTypeOptions = [
+  { label: 'Trưởng phòng', value: 'HEAD' },
+  { label: 'Phó phòng', value: 'DEPUTY' },
+  { label: 'Nhân viên', value: 'MEMBER' }
+]
+
+const statusOptions = [
+  { label: 'Hoạt động', value: 'ACTIVE' },
+  { label: 'Không hoạt động', value: 'INACTIVE' }
+]
+
+const assignmentForm = ref({
+  id: null,
+  department_id: null,
+  position_id: null,
+  is_primary: false,
+  role_type: 'MEMBER',
+  start_date: null,
+  end_date: null,
+  status: 'ACTIVE'
+})
+
+// Filter positions theo department đã chọn
+const filteredPositions = computed(() => {
+  if (!assignmentForm.value.department_id) {
+    return props.positions || []
+  }
+  return (props.positions || []).filter(p => p.department_id === assignmentForm.value.department_id)
+})
+
+// Watch department change để reset position nếu không thuộc department mới
+watch(() => assignmentForm.value.department_id, (newDeptId, oldDeptId) => {
+  if (newDeptId !== oldDeptId && assignmentForm.value.position_id) {
+    // Kiểm tra xem position hiện tại có thuộc department mới không
+    const positionStillValid = filteredPositions.value.some(p => p.id === assignmentForm.value.position_id)
+    if (!positionStillValid) {
+      assignmentForm.value.position_id = null
+    }
+  }
+})
+
+// Kiểm tra xem có primary assignment ACTIVE không
+const hasPrimaryActive = computed(() => {
+  return assignmentRows.value.some(a => a.is_primary && a.status === 'ACTIVE')
+})
+
+// Hiển thị warning khi check primary
+const showPrimaryWarning = computed(() => {
+  // Nếu đang edit và đã là primary -> không warning
+  if (assignmentForm.value.id) {
+    const current = assignmentRows.value.find(a => a.id === assignmentForm.value.id)
+    if (current?.is_primary) return false
+  }
+  // Nếu check primary + status ACTIVE + đã có primary active -> warning
+  return assignmentForm.value.is_primary &&
+         assignmentForm.value.status === 'ACTIVE' &&
+         hasPrimaryActive.value
+})
+
+function onPrimaryChange() {
+  // Trigger reactivity để update showPrimaryWarning
+}
+
+function getRoleLabel(roleType) {
+  const found = roleTypeOptions.find(x => x.value === roleType)
+  return found ? found.label : roleType
+}
+
+// Highlight primary assignment row
+function assignmentRowClass(data) {
+  return data.is_primary && data.status === 'ACTIVE' ? 'bg-green-50' : ''
+}
+
+function exportAssignmentCSV(){ assignmentDt.value?.exportCSV() }
+
+function openAssignmentNew(){
+  assignmentSubmitted.value = false
+  assignmentForm.value = {
+    id: null,
+    department_id: null,
+    position_id: null,
+    is_primary: false,
+    role_type: 'MEMBER',
+    start_date: null,
+    end_date: null,
+    status: 'ACTIVE'
+  }
+  assignmentDialog.value = true
+}
+
+function openAssignmentEdit(r){
+  assignmentSubmitted.value = false
+  assignmentForm.value = {
+    id: r.id,
+    department_id: r.department_id,
+    position_id: r.position_id,
+    is_primary: !!r.is_primary,
+    role_type: r.role_type,
+    start_date: r.start_date,
+    end_date: r.end_date,
+    status: r.status
+  }
+  assignmentDialog.value = true
+}
+
+function saveAssignment(){
+  assignmentSubmitted.value = true
+  if (!assignmentForm.value.department_id || !assignmentForm.value.role_type || !assignmentForm.value.status) return
+
+  savingAssignment.value = true
+  const payload = {
+    ...assignmentForm.value,
+    employee_id: props.employee.id,
+    start_date: toYMD(assignmentForm.value.start_date),
+    end_date: toYMD(assignmentForm.value.end_date)
+  }
+
+  const opts = {
+    onFinish: () => savingAssignment.value = false,
+    onSuccess: () => { assignmentDialog.value = false }
+  }
+  if (!assignmentForm.value.id) {
+    EmployeeAssignmentService.storeForEmployee(props.employee.id, payload, opts)
+  } else {
+    EmployeeAssignmentService.updateForEmployee(props.employee.id, assignmentForm.value.id, payload, opts)
+  }
+}
+
+function confirmAssignmentDelete(r){ currentAssignment.value = r; assignmentDeleteDialog.value = true }
+function removeAssignment(){
+  deletingAssignment.value = true
+  EmployeeAssignmentService.destroyForEmployee(props.employee.id, currentAssignment.value.id, {
+    onFinish: () => { deletingAssignment.value = false; assignmentDeleteDialog.value = false }
+  })
+}
+
+function confirmAssignmentDeleteSelected(){ assignmentDeleteManyDialog.value = true }
+function removeManyAssignment(){
+  const ids = selectedAssignments.value.map(x=>x.id)
+  deletingAssignment.value = true
+  EmployeeAssignmentService.bulkDeleteForEmployee(props.employee.id, ids, {
+    onFinish: () => { deletingAssignment.value = false; assignmentDeleteManyDialog.value = false; selectedAssignments.value = [] }
+  })
 }
 </script>

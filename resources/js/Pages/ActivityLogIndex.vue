@@ -227,6 +227,12 @@ const getActivityLabel = (description) => {
         'BACKUP_DELETED': 'Xóa cấu hình backup',
         'BACKUP_TOGGLED': 'Thay đổi trạng thái backup',
 
+        // Employee Assignment operations
+        'EMPLOYEE_ASSIGNMENT_CREATED': 'Tạo phân công nhân sự',
+        'EMPLOYEE_ASSIGNMENT_UPDATED': 'Cập nhật phân công nhân sự',
+        'EMPLOYEE_ASSIGNMENT_DELETED': 'Xóa phân công nhân sự',
+        'EMPLOYEE_ASSIGNMENT_BULK_DELETED': 'Xóa hàng loạt phân công nhân sự',
+
         // Legacy/other operations
         'created': 'Đã tạo',
         'updated': 'Đã cập nhật',

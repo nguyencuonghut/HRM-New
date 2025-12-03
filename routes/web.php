@@ -138,13 +138,20 @@ Route::group(['middleware' => 'auth'], function () {
     Route::delete('employees/{employee}/skills/{employeeSkill}', [EmployeeSkillController::class, 'destroy'])->name('employees.skills.destroy');
     Route::post('employees/{employee}/skills/bulk-delete', [EmployeeSkillController::class, 'bulkDelete'])->name('employees.skills.bulk-delete');
 
+    // Assignments (phân công nhân viên - nested trong profile)
+    Route::get('employees/{employee}/assignments', [EmployeeAssignmentController::class, 'indexByEmployee'])->name('employees.assignments.index');
+    Route::post('employees/{employee}/assignments', [EmployeeAssignmentController::class, 'storeForEmployee'])->name('employees.assignments.store');
+    Route::put('employees/{employee}/assignments/{assignment}', [EmployeeAssignmentController::class, 'updateForEmployee'])->name('employees.assignments.update');
+    Route::delete('employees/{employee}/assignments/{assignment}', [EmployeeAssignmentController::class, 'destroyForEmployee'])->name('employees.assignments.destroy');
+    Route::post('employees/{employee}/assignments/bulk-delete', [EmployeeAssignmentController::class, 'bulkDeleteForEmployee'])->name('employees.assignments.bulk-delete');
+
     // Danh mục kỹ năng (quản trị)
     Route::get('skills', [EmployeeSkillController::class, 'skillIndex'])->name('skills.index');
     Route::post('skills', [EmployeeSkillController::class, 'skillStore'])->name('skills.store');
     Route::put('skills/{skill}', [EmployeeSkillController::class, 'skillUpdate'])->name('skills.update');
     Route::delete('skills/{skill}', [EmployeeSkillController::class, 'skillDestroy'])->name('skills.destroy');
 
-    // Employee Assignment
+    // Employee Assignment (trang quản lý tổng thể)
     Route::resource('employee-assignments', EmployeeAssignmentController::class)->except(['show']);
 
     // Contract routes (static routes first to avoid route parameter conflicts)

@@ -9,7 +9,13 @@ class UpdateEmployeeAssignmentRequest extends FormRequest
     public function authorize(): bool
     {
         /** @var \App\Models\EmployeeAssignment $assignment */
-        $assignment = $this->route('employee_assignment');
+        // Route parameter can be 'employeeAssignment' (standalone) or 'assignment' (nested)
+        $assignment = $this->route('employeeAssignment') ?? $this->route('assignment');
+
+        if (!$assignment) {
+            return true; // Let controller handle authorization
+        }
+
         return $this->user()->can('update', $assignment);
     }
 

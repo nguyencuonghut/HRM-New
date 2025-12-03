@@ -45,6 +45,15 @@ class Employee extends Model
     // Quan hệ: assignments (phân công/kiêm nhiệm) của nhân viên
     public function assignments() { return $this->hasMany(EmployeeAssignment::class); }
 
+    // Lấy primary assignment đang ACTIVE
+    public function primaryAssignment()
+    {
+        return $this->assignments()
+            ->where('is_primary', true)
+            ->where('status', 'ACTIVE')
+            ->first();
+    }
+
     // Quan hệ: ward thường trú (theo CCCD)
     public function ward() { return $this->belongsTo(\App\Models\Ward::class); }
 

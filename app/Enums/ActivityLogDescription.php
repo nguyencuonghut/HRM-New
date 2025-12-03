@@ -39,6 +39,12 @@ enum ActivityLogDescription: string
     case BACKUP_DELETED = 'BACKUP_DELETED';
     case BACKUP_TOGGLED = 'BACKUP_TOGGLED';
 
+    // Employee Assignment operations
+    case EMPLOYEE_ASSIGNMENT_CREATED = 'EMPLOYEE_ASSIGNMENT_CREATED';
+    case EMPLOYEE_ASSIGNMENT_UPDATED = 'EMPLOYEE_ASSIGNMENT_UPDATED';
+    case EMPLOYEE_ASSIGNMENT_DELETED = 'EMPLOYEE_ASSIGNMENT_DELETED';
+    case EMPLOYEE_ASSIGNMENT_BULK_DELETED = 'EMPLOYEE_ASSIGNMENT_BULK_DELETED';
+
     public function label(): string
     {
         return match($this) {
@@ -76,6 +82,12 @@ enum ActivityLogDescription: string
             self::BACKUP_EXECUTED => 'Thực thi backup',
             self::BACKUP_DELETED => 'Xóa cấu hình backup',
             self::BACKUP_TOGGLED => 'Thay đổi trạng thái backup',
+
+            // Employee Assignment operations
+            self::EMPLOYEE_ASSIGNMENT_CREATED => 'Tạo phân công nhân sự',
+            self::EMPLOYEE_ASSIGNMENT_UPDATED => 'Cập nhật phân công nhân sự',
+            self::EMPLOYEE_ASSIGNMENT_DELETED => 'Xóa phân công nhân sự',
+            self::EMPLOYEE_ASSIGNMENT_BULK_DELETED => 'Xóa hàng loạt phân công nhân sự',
         };
     }
 
@@ -114,6 +126,12 @@ enum ActivityLogDescription: string
             self::BACKUP_EXECUTED => 'BACKUP_EXECUTED',
             self::BACKUP_DELETED => 'BACKUP_DELETED',
             self::BACKUP_TOGGLED => 'BACKUP_TOGGLED',
+
+            // Employee Assignment operations
+            self::EMPLOYEE_ASSIGNMENT_CREATED => 'CREATED',
+            self::EMPLOYEE_ASSIGNMENT_UPDATED => 'UPDATED',
+            self::EMPLOYEE_ASSIGNMENT_DELETED => 'DELETED',
+            self::EMPLOYEE_ASSIGNMENT_BULK_DELETED => 'DELETED',
         };
     }
 }

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\ActivityLogDescription;
 use App\Http\Requests\StoreEmployeeAssignmentRequest;
 use App\Http\Requests\UpdateEmployeeAssignmentRequest;
 use App\Http\Resources\EmployeeAssignmentResource;
@@ -88,7 +89,7 @@ class EmployeeAssignmentController extends Controller
                         'status' => $assignment->status,
                     ]
                 ])
-                ->log('Tạo phân công nhân sự');
+                ->log(ActivityLogDescription::EMPLOYEE_ASSIGNMENT_CREATED->value);
         } catch (QueryException $e) {
             // Bắt lỗi ràng buộc "một primary ACTIVE duy nhất"
             return back()->withErrors([
@@ -141,7 +142,7 @@ class EmployeeAssignmentController extends Controller
                     'old' => $oldData,
                     'attributes' => $newData
                 ])
-                ->log('Cập nhật phân công nhân sự');
+                ->log(ActivityLogDescription::EMPLOYEE_ASSIGNMENT_UPDATED->value);
         } catch (QueryException $e) {
             return back()->withErrors([
                 'is_primary' => 'Nhân viên này đã có phân công CHÍNH đang hoạt động.',
@@ -174,7 +175,7 @@ class EmployeeAssignmentController extends Controller
             ->performedOn($employeeAssignment)
             ->causedBy(request()->user())
             ->withProperties(['old' => $oldData])
-            ->log('Xóa phân công nhân sự');
+            ->log(ActivityLogDescription::EMPLOYEE_ASSIGNMENT_DELETED->value);
 
         return redirect()->route('employee-assignments.index')
             ->with('success', 'Đã xoá phân công.');
@@ -208,10 +209,207 @@ class EmployeeAssignmentController extends Controller
                     'count' => count($ids),
                     'deleted_records' => $deletedRecords
                 ])
-                ->log('Xóa hàng loạt phân công nhân sự');
+                ->log(ActivityLogDescription::EMPLOYEE_ASSIGNMENT_BULK_DELETED->value);
         }
 
         return redirect()->route('employee-assignments.index')
+            ->with('success', 'Đã xoá các phân công đã chọn.');
+    }
+
+    // ============= NESTED ROUTES FOR EMPLOYEE PROFILE =============
+
+    /**
+     * Get assignments for specific employee (used in profile tab)
+     */
+    public function indexByEmployee(Employee $employee)
+    {
+        $this->authorize('viewProfile', $employee);
+
+        $assignments = EmployeeAssignment::with(['department:id,name,type', 'position:id,title'])
+            ->where('employee_id', $employee->id)
+            ->orderByDesc('is_primary')
+            ->orderByDesc('start_date')
+            ->get();
+
+        return response()->json(EmployeeAssignmentResource::collection($assignments));
+    }
+
+    /**
+     * Store assignment for specific employee
+     */
+    public function storeForEmployee(StoreEmployeeAssignmentRequest $request, Employee $employee)
+    {
+        $this->authorize('editProfile', $employee);
+
+        $data = $request->validated();
+        $data['employee_id'] = $employee->id;
+
+        try {
+            $assignment = EmployeeAssignment::create($data);
+            $assignment->load(['department', 'position']);
+
+            activity()
+                ->performedOn($assignment)
+                ->causedBy($request->user())
+                ->withProperties([
+                    'attributes' => [
+                        'employee' => $employee->full_name,
+                        'department' => $assignment->department?->name,
+                        'position' => $assignment->position?->title,
+                        'is_primary' => $assignment->is_primary ? 'Chính' : 'Phụ',
+                        'role_type' => $assignment->role_type,
+                        'start_date' => $assignment->start_date?->toDateString(),
+                        'end_date' => $assignment->end_date?->toDateString(),
+                        'status' => $assignment->status,
+                    ]
+                ])
+                ->log(ActivityLogDescription::EMPLOYEE_ASSIGNMENT_CREATED->value);
+
+            return redirect()->route('employees.profile', $employee->id)
+                ->with('success', 'Đã thêm phân công nhân sự.');
+        } catch (QueryException $e) {
+            return back()->withErrors([
+                'is_primary' => 'Nhân viên này đã có phân công CHÍNH đang hoạt động.',
+            ])->withInput();
+        }
+    }
+
+    /**
+     * Update assignment for specific employee
+     */
+    public function updateForEmployee(UpdateEmployeeAssignmentRequest $request, Employee $employee, EmployeeAssignment $assignment)
+    {
+        $this->authorize('editProfile', $employee);
+
+        // Verify assignment belongs to employee
+        if ($assignment->employee_id !== $employee->id) {
+            abort(403, 'Phân công không thuộc về nhân viên này.');
+        }
+
+        $data = $request->validated();
+
+        try {
+            $assignment->load(['department', 'position']);
+            $oldData = [
+                'employee' => $employee->full_name,
+                'department' => $assignment->department?->name,
+                'position' => $assignment->position?->title,
+                'is_primary' => $assignment->is_primary ? 'Chính' : 'Phụ',
+                'role_type' => $assignment->role_type,
+                'start_date' => $assignment->start_date?->toDateString(),
+                'end_date' => $assignment->end_date?->toDateString(),
+                'status' => $assignment->status,
+            ];
+
+            $assignment->update($data);
+            $assignment->refresh()->load(['department', 'position']);
+
+            $newData = [
+                'employee' => $employee->full_name,
+                'department' => $assignment->department?->name,
+                'position' => $assignment->position?->title,
+                'is_primary' => $assignment->is_primary ? 'Chính' : 'Phụ',
+                'role_type' => $assignment->role_type,
+                'start_date' => $assignment->start_date?->toDateString(),
+                'end_date' => $assignment->end_date?->toDateString(),
+                'status' => $assignment->status,
+            ];
+
+            activity()
+                ->performedOn($assignment)
+                ->causedBy($request->user())
+                ->withProperties([
+                    'old' => $oldData,
+                    'attributes' => $newData
+                ])
+                ->log(ActivityLogDescription::EMPLOYEE_ASSIGNMENT_UPDATED->value);
+
+            return redirect()->route('employees.profile', $employee->id)
+                ->with('success', 'Đã cập nhật phân công nhân sự.');
+        } catch (QueryException $e) {
+            return back()->withErrors([
+                'is_primary' => 'Nhân viên này đã có phân công CHÍNH đang hoạt động.',
+            ])->withInput();
+        }
+    }
+
+    /**
+     * Delete assignment for specific employee
+     */
+    public function destroyForEmployee(Request $request, Employee $employee, EmployeeAssignment $assignment)
+    {
+        $this->authorize('editProfile', $employee);
+
+        // Verify assignment belongs to employee
+        if ($assignment->employee_id !== $employee->id) {
+            abort(403, 'Phân công không thuộc về nhân viên này.');
+        }
+
+        $assignment->load(['department', 'position']);
+        $oldData = [
+            'employee' => $employee->full_name,
+            'department' => $assignment->department?->name,
+            'position' => $assignment->position?->title,
+            'is_primary' => $assignment->is_primary ? 'Chính' : 'Phụ',
+            'role_type' => $assignment->role_type,
+            'start_date' => $assignment->start_date?->toDateString(),
+            'end_date' => $assignment->end_date?->toDateString(),
+            'status' => $assignment->status,
+        ];
+
+        $assignment->delete();
+
+        activity()
+            ->performedOn($assignment)
+            ->causedBy($request->user())
+            ->withProperties(['old' => $oldData])
+            ->log(ActivityLogDescription::EMPLOYEE_ASSIGNMENT_DELETED->value);
+
+        return redirect()->route('employees.profile', $employee->id)
+            ->with('success', 'Đã xoá phân công nhân sự.');
+    }
+
+    /**
+     * Bulk delete assignments for specific employee
+     */
+    public function bulkDeleteForEmployee(Request $request, Employee $employee)
+    {
+        $this->authorize('editProfile', $employee);
+
+        $ids = (array) $request->input('ids', []);
+
+        if (count($ids) > 0) {
+            $assignments = EmployeeAssignment::with(['department', 'position'])
+                ->where('employee_id', $employee->id)
+                ->whereIn('id', $ids)
+                ->get();
+
+            $deletedRecords = $assignments->map(function ($a) use ($employee) {
+                return [
+                    'employee' => $employee->full_name,
+                    'department' => $a->department?->name,
+                    'position' => $a->position?->title,
+                    'is_primary' => $a->is_primary ? 'Chính' : 'Phụ',
+                    'role_type' => $a->role_type,
+                    'start_date' => $a->start_date?->toDateString(),
+                    'end_date' => $a->end_date?->toDateString(),
+                    'status' => $a->status,
+                ];
+            })->toArray();
+
+            EmployeeAssignment::whereIn('id', $assignments->pluck('id'))->delete();
+
+            activity()
+                ->causedBy($request->user())
+                ->withProperties([
+                    'employee_id' => $employee->id,
+                    'count' => count($assignments),
+                    'deleted_records' => $deletedRecords
+                ])
+                ->log(ActivityLogDescription::EMPLOYEE_ASSIGNMENT_BULK_DELETED->value);
+        }
+
+        return redirect()->route('employees.profile', $employee->id)
             ->with('success', 'Đã xoá các phân công đã chọn.');
     }
 }
