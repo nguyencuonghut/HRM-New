@@ -12,7 +12,11 @@ class Skill extends Model
     public $incrementing = false;
     protected $keyType = 'string';
 
-    protected $fillable = ['code','name'];
+    protected $fillable = ['category_id', 'code', 'name'];
+
+    public function category(){
+        return $this->belongsTo(SkillCategory::class, 'category_id');
+    }
 
     public function employees(){
         return $this->belongsToMany(Employee::class, 'employee_skills')

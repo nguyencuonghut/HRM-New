@@ -26,6 +26,7 @@ class DatabaseSeeder extends Seeder
             RoleScopeSeeder::class,
             EducationLevelSeeder::class,
             SchoolSeeder::class,
+            SkillCategorySeeder::class,
             SkillSeeder::class,
             ContractDocxTemplateSeeder::class,
             ContractTemplatePlaceholderMappingSeeder::class,

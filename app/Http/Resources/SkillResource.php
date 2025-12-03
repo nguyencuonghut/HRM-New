@@ -10,8 +10,15 @@ class SkillResource extends JsonResource
     {
         return [
             'id'   => $this->id,
-            'name' => $this->name,
             'code' => $this->code,
+            'name' => $this->name,
+            'category_id' => $this->category_id,
+            'category' => $this->whenLoaded('category', function() {
+                return [
+                    'id' => $this->category->id,
+                    'name' => $this->category->name,
+                ];
+            }),
         ];
     }
 }

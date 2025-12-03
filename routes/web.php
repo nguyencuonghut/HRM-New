@@ -19,6 +19,7 @@ use App\Http\Controllers\EmployeeEducationController;
 use App\Http\Controllers\EmployeeRelativeController;
 use App\Http\Controllers\EmployeeExperienceController;
 use App\Http\Controllers\EmployeeSkillController;
+use App\Http\Controllers\SkillCategoryController;
 use App\Http\Controllers\ContractController;
 use App\Http\Controllers\ContractAppendixController;
 use App\Http\Controllers\ContractGenerateController;
@@ -144,6 +145,13 @@ Route::group(['middleware' => 'auth'], function () {
     Route::put('employees/{employee}/assignments/{assignment}', [EmployeeAssignmentController::class, 'updateForEmployee'])->name('employees.assignments.update');
     Route::delete('employees/{employee}/assignments/{assignment}', [EmployeeAssignmentController::class, 'destroyForEmployee'])->name('employees.assignments.destroy');
     Route::post('employees/{employee}/assignments/bulk-delete', [EmployeeAssignmentController::class, 'bulkDeleteForEmployee'])->name('employees.assignments.bulk-delete');
+
+    // Nhóm kỹ năng (Skill Categories)
+    Route::get('skill-categories', [SkillCategoryController::class, 'index'])->name('skill-categories.index');
+    Route::post('skill-categories', [SkillCategoryController::class, 'store'])->name('skill-categories.store');
+    Route::put('skill-categories/{skill_category}', [SkillCategoryController::class, 'update'])->name('skill-categories.update');
+    Route::delete('skill-categories/{skill_category}', [SkillCategoryController::class, 'destroy'])->name('skill-categories.destroy');
+    Route::post('skill-categories/bulk-delete', [SkillCategoryController::class, 'bulkDestroy'])->name('skill-categories.bulk-delete');
 
     // Danh mục kỹ năng (quản trị)
     Route::get('skills', [EmployeeSkillController::class, 'skillIndex'])->name('skills.index');

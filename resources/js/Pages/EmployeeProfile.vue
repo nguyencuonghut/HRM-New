@@ -328,44 +328,73 @@
             <Button label="Xóa" icon="pi pi-trash" severity="danger" variant="outlined"
                 @click="confirmSkillDeleteSelected" :disabled="!skillSelected || !skillSelected.length" />
             </template>
+            <template #end>
+              <div class="flex items-center gap-2">
+                <span class="text-sm text-gray-600">Nhóm:</span>
+                <Select v-model="selectedSkillCategory" :options="skillCategoryOptions" optionLabel="label" optionValue="value"
+                        placeholder="Tất cả nhóm" showClear class="w-56" />
+              </div>
+            </template>
         </Toolbar>
 
         <DataTable
-            ref="skillDt"
-            :value="skillRows"
-            v-model:selection="skillSelected"
-            dataKey="id"
-            :paginator="true" :rows="10"
-            :filters="skillFilters"
-            paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport RowsPerPageDropdown"
-            :rowsPerPageOptions="[5,10,25]"
-            currentPageReportTemplate="Hiển thị {first}-{last}/{totalRecords} kỹ năng"
+          :value="filteredSkillRows"
+          v-model:selection="skillSelected"
+          dataKey="id"
+          :paginator="false"
+          :rowGroupMode="'subheader'"
+          :groupRowsBy="'category_name'"
+          :sortField="'category_order'"
+          :sortOrder="1"
         >
-            <template #header>
-            <div class="flex flex-wrap gap-2 items-center justify-between">
-                <h4 class="m-0">Kỹ năng của nhân viên</h4>
-                <IconField><InputIcon><i class="pi pi-search"/></InputIcon><InputText v-model="skillFilters['global'].value" placeholder="Tìm kiếm..." /></IconField>
+          <template #groupheader="slotProps">
+            <div class="flex items-center gap-3 py-2">
+              <span class="font-semibold text-lg">{{ slotProps.data.category_name }}</span>
+              <Badge :value="getCategorySkillCount(slotProps.data.category_name)" severity="secondary" />
             </div>
-            </template>
+          </template>
 
-            <Column selectionMode="multiple" headerStyle="width:3rem"></Column>
-            <Column field="skill_name" header="Kỹ năng" headerStyle="min-width:14rem;"></Column>
-            <Column field="level" header="Mức (0-5)" headerStyle="min-width:8rem;"></Column>
-            <Column field="years" header="Số năm" headerStyle="min-width:8rem;"></Column>
-            <Column field="note" header="Ghi chú" headerStyle="min-width:12rem;"></Column>
-            <Column headerStyle="min-width:10rem;">
+          <Column selectionMode="multiple" headerStyle="width:3rem"></Column>
+          <Column field="skill_name" header="Kỹ năng" headerStyle="min-width:14rem;"></Column>
+          <Column field="level" header="Mức (0-5)" headerStyle="min-width:12rem;">
             <template #body="sp">
-                <Button icon="pi pi-pencil" class="mr-2" outlined severity="success" rounded @click="openSkillEdit(sp.data)" />
-                <Button icon="pi pi-trash" class="mt-2" outlined severity="danger" rounded @click="confirmSkillDelete(sp.data)" />
+              <div class="flex items-center gap-2">
+                <span>{{ sp.data.level }}</span>
+                <Rating :modelValue="sp.data.level" :cancel="false" readonly />
+              </div>
             </template>
-            </Column>
+          </Column>
+          <Column field="years" header="Số năm" headerStyle="min-width:8rem;"></Column>
+          <Column field="note" header="Ghi chú" headerStyle="min-width:12rem;"></Column>
+          <Column headerStyle="min-width:10rem;">
+            <template #body="sp">
+              <Button icon="pi pi-pencil" class="mr-2" outlined severity="success" rounded @click="openSkillEdit(sp.data)" />
+              <Button icon="pi pi-trash" class="mt-2" outlined severity="danger" rounded @click="confirmSkillDelete(sp.data)" />
+            </template>
+          </Column>
+
+          <template #empty>
+            <div class="text-center p-8">
+              <i class="pi pi-info-circle text-4xl text-gray-400 mb-3"></i>
+              <p class="text-gray-600">Chưa có kỹ năng nào</p>
+            </div>
+          </template>
         </DataTable>
 
         <Dialog v-model:visible="skillDialog" :style="{ width: '600px' }" header="Thông tin Kỹ năng" :modal="true">
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-                <label class="block font-bold mb-2">Kỹ năng</label>
-                <Select v-model="skillForm.skill_id" :options="props.skills" optionLabel="name" optionValue="id" showClear filter fluid />
+                <label class="block font-bold mb-2">Nhóm kỹ năng</label>
+                <Select v-model="skillFormCategoryFilter" :options="props.skill_categories" optionLabel="name" optionValue="id"
+                        placeholder="Chọn nhóm để lọc..." showClear filter fluid />
+            </div>
+            <div>
+                <label class="block font-bold mb-2">Kỹ năng <span class="text-red-500">*</span></label>
+                <Select v-model="skillForm.skill_id" :options="filteredSkillsForForm" optionLabel="name" optionValue="id"
+                        placeholder="Chọn kỹ năng..." showClear filter fluid
+                        :invalid="!!page.props.errors?.skill_id" />
+                <small v-if="page.props.errors?.skill_id" class="text-red-500">{{ page.props.errors.skill_id }}</small>
+                <small v-else class="text-gray-500">{{ filteredSkillsForForm.length }} kỹ năng khả dụng</small>
             </div>
             <div><label class="block font-bold mb-2">Mức (0-5)</label><InputText v-model.number="skillForm.level" type="number" min="0" max="5" class="w-full" /></div>
             <div><label class="block font-bold mb-2">Số năm</label><InputText v-model.number="skillForm.years" type="number" min="0" class="w-full" /></div>
@@ -552,13 +581,15 @@
 </template>
 <script setup>
 import { ref, computed, watch, onMounted } from 'vue'
-import { Head } from '@inertiajs/vue3'
+import { Head, usePage } from '@inertiajs/vue3'
 import { EmployeeEducationService } from '@/services'
 import { EmployeeRelativeService } from '@/services'
 import { EmployeeExperienceService } from '@/services'
 import { EmployeeSkillService } from '@/services'
 import { EmployeeAssignmentService } from '@/services'
 import { toYMD, formatDate } from '@/utils/dateHelper'
+
+const page = usePage()
 
 // PrimeVue imports
 import Select from 'primevue/select'
@@ -570,6 +601,8 @@ import Tab from 'primevue/tab'
 import TabPanel from 'primevue/tabpanel'
 import Tag from 'primevue/tag'
 import Message from 'primevue/message'
+import Badge from 'primevue/badge'
+import Rating from 'primevue/rating'
 
 const props = defineProps({
   employee: { type: Object, required: true },
@@ -577,6 +610,7 @@ const props = defineProps({
   schools: { type: Array, required: true },
   departments: { type: Array, required: true },
   positions: { type: Array, required: true },
+  skill_categories: { type: Array, default: () => [] },
   educations: { type: Array, required: true },
   relatives: { type: Array, default: () => [] },
   experiences: { type: Array, default: () => [] },
@@ -786,18 +820,95 @@ const skillDeleteManyDialog = ref(false)
 const currentSkill = ref(null)
 const savingSkill = ref(false)
 const deletingSkill = ref(false)
+const selectedSkillCategory = ref(null)
+const skillFormCategoryFilter = ref(null)
 
 const skillForm = ref({ id:null, skill_id:null, level:0, years:0, note:'' })
 
-function openSkillNew(){ skillForm.value={ id:null, skill_id:null, level:0, years:0, note:'' }; skillDialog.value=true }
+// Skill category filter options
+const skillCategoryOptions = computed(() => {
+  return props.skill_categories.map(cat => ({
+    label: cat.name,
+    value: cat.id
+  }))
+})
+
+// Filtered skills for form dropdown
+const filteredSkillsForForm = computed(() => {
+  if (!skillFormCategoryFilter.value) {
+    return props.skills
+  }
+  return props.skills.filter(s => s.category_id === skillFormCategoryFilter.value)
+})
+
+// Group skills by category
+// Enhanced skill rows với category info để grouping
+const enhancedSkillRows = computed(() => {
+  return skillRows.value.map(empSkill => {
+    const skill = props.skills.find(s => s.id === empSkill.skill_id)
+    const category = skill?.category
+    const categoryName = category?.name || 'Chưa phân loại'
+    const categoryOrder = category?.order_index || 999
+
+    return {
+      ...empSkill,
+      category_name: categoryName,
+      category_order: categoryOrder,
+      category_id: category?.id || null
+    }
+  })
+})
+
+// Filtered skills by selected category
+const filteredSkillRows = computed(() => {
+  let rows = enhancedSkillRows.value
+
+  if (selectedSkillCategory.value) {
+    rows = rows.filter(s => s.category_id === selectedSkillCategory.value)
+  }
+
+  // Sort by category_order first, then by skill name
+  return rows.sort((a, b) => {
+    if (a.category_order !== b.category_order) {
+      return a.category_order - b.category_order
+    }
+    return (a.skill_name || '').localeCompare(b.skill_name || '')
+  })
+})
+
+// Helper để đếm số skill trong mỗi category
+function getCategorySkillCount(categoryName) {
+  return filteredSkillRows.value.filter(s => s.category_name === categoryName).length
+}
+function openSkillNew(){
+  skillForm.value={ id:null, skill_id:null, level:0, years:0, note:'' }
+  skillFormCategoryFilter.value = null
+  // Clear previous errors
+  if (page.props.errors) {
+    delete page.props.errors.skill_id
+  }
+  skillDialog.value=true
+}
 function openSkillEdit(r){
   skillForm.value={ id:r.id, skill_id:r.skill_id, level:r.level ?? 0, years:r.years ?? 0, note:r.note ?? '' }
+  // Pre-select category based on skill
+  const skill = props.skills.find(s => s.id === r.skill_id)
+  skillFormCategoryFilter.value = skill?.category_id || null
+  // Clear previous errors
+  if (page.props.errors) {
+    delete page.props.errors.skill_id
+  }
   skillDialog.value=true
 }
 function saveSkill(){
   savingSkill.value=true
   const payload = { skill_id: skillForm.value.skill_id, level: skillForm.value.level ?? 0, years: skillForm.value.years ?? 0, note: skillForm.value.note }
-  const opts = { onFinish:()=> savingSkill.value=false, onSuccess:()=>{ skillDialog.value=false } }
+  const opts = {
+    onFinish:()=> savingSkill.value=false,
+    onSuccess:()=>{
+      skillDialog.value=false
+    }
+  }
   if (!skillForm.value.id) EmployeeSkillService.store(props.employee.id, payload, opts)
   else EmployeeSkillService.update(props.employee.id, skillForm.value.id, payload, opts)
 }

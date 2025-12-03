@@ -11,7 +11,9 @@ use App\Http\Resources\EmployeeRelativeResource;
 use App\Http\Resources\EmployeeSkillResource;
 use App\Http\Resources\EmployeeAssignmentResource;
 use App\Http\Resources\SkillResource;
+use App\Http\Resources\SkillCategoryResource;
 use App\Models\Skill;
+use App\Models\SkillCategory;
 use App\Models\EducationLevel;
 use App\Models\Employee;
 use App\Models\EmployeeEducation;
@@ -39,9 +41,13 @@ class EmployeeEducationController extends Controller
             'schools'           => School::orderBy('name')->get(['id','name']),
             'departments'       => Department::orderBy('name')->get(['id','name','type']),
             'positions'         => Position::orderBy('title')->get(['id','title','department_id']),
+            // skill categories
+            'skill_categories'  => SkillCategoryResource::collection(
+                SkillCategory::where('is_active', true)->orderBy('order_index')->get()
+            )->resolve(),
             // master skill list
             'skills'           => SkillResource::collection(
-                Skill::orderBy('name')->get()
+                Skill::with('category')->orderBy('name')->get()
             )->resolve(),
             // Nạp data tab Education (mặc định tab đầu)
             'educations'        => EmployeeEducationResource::collection(

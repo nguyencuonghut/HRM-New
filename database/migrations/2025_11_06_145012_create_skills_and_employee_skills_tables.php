@@ -6,11 +6,25 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration {
     public function up(): void {
+        // Tạo bảng skill_categories trước
+        Schema::create('skill_categories', function (Blueprint $table) {
+            $table->uuid('id')->primary();
+            $table->string('name');                                       // Tên nhóm (VD: Tin học văn phòng, Lập trình)
+            $table->text('description')->nullable();                      // Mô tả nhóm
+            $table->unsignedSmallInteger('order_index')->default(0);      // Thứ tự hiển thị
+            $table->boolean('is_active')->default(true);                  // Trạng thái
+            $table->timestamps();
+            $table->unique('name');
+        });
+
         Schema::create('skills', function (Blueprint $table) {
             $table->uuid('id')->primary();
+            $table->uuid('category_id')->nullable()->index();             // Nhóm kỹ năng
             $table->string('code', 100)->nullable()->index();             // Mã kỹ năng (nếu cần)
             $table->string('name');                                       // Tên kỹ năng (VD: Excel, SQL, Quản lý dự án)
             $table->timestamps();
+
+            $table->foreign('category_id')->references('id')->on('skill_categories')->nullOnDelete();
             $table->unique('name');                                       // Tránh trùng tên
         });
 
@@ -31,5 +45,6 @@ return new class extends Migration {
     public function down(): void {
         Schema::dropIfExists('employee_skills');
         Schema::dropIfExists('skills');
+        Schema::dropIfExists('skill_categories');
     }
 };
