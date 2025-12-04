@@ -3,11 +3,22 @@
 namespace App\Http\Resources;
 
 use Illuminate\Http\Resources\Json\JsonResource;
+use App\Services\ProfileCompletionService;
 
 class EmployeeResource extends JsonResource
 {
     public function toArray($request)
     {
+        // Calculate completion score if relationships are loaded
+        $completion = null;
+        if ($this->relationLoaded('assignments') &&
+            $this->relationLoaded('educations') &&
+            $this->relationLoaded('relatives') &&
+            $this->relationLoaded('experiences') &&
+            $this->relationLoaded('employeeSkills')) {
+            $completion = ProfileCompletionService::calculateScore($this->resource);
+        }
+
         return [
             'id'                       => $this->id,
             'user_id'                  => $this->user_id,
@@ -33,6 +44,13 @@ class EmployeeResource extends JsonResource
             'si_number'                => $this->si_number,
             'created_at'               => optional($this->created_at)->toDateTimeString(),
             'updated_at'               => optional($this->updated_at)->toDateTimeString(),
+
+            // Profile completion
+            'completion_score'         => $completion ? $completion['score'] : null,
+            'completion_details'       => $completion ? $completion['details'] : null,
+            'completion_missing'       => $completion ? $completion['missing'] : null,
+            'completion_level'         => $completion ? ProfileCompletionService::getCompletionLevel($completion['score']) : null,
+            'completion_severity'      => $completion ? ProfileCompletionService::getCompletionSeverity($completion['score']) : null,
         ];
     }
 }

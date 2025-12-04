@@ -45,6 +45,8 @@
                                 showClear
                                 @change="applyStatusFilter"
                             />
+                            <Checkbox v-model="showIncompleteOnly" :binary="true" inputId="incomplete" @change="applyCompletionFilter" />
+                            <label for="incomplete" class="ml-1 cursor-pointer">Hồ sơ chưa đầy đủ (&lt; 80%)</label>
                         </div>
                     </div>
                 </template>
@@ -58,6 +60,19 @@
                     <template #body="slotProps">
                         <Badge :value="statusLabel(slotProps.data.status)"
                                :severity="statusSeverity(slotProps.data.status)" />
+                    </template>
+                </Column>
+                <Column field="completion_score" header="% Hoàn thiện" sortable style="min-width: 14rem">
+                    <template #body="slotProps">
+                        <div class="flex items-center gap-2">
+                            <ProgressBar :value="slotProps.data.completion_score || 0"
+                                         :showValue="false"
+                                         style="height: 8px; width: 80px"
+                                         :pt="{
+                                           value: { style: getProgressBarColor(slotProps.data.completion_score) }
+                                         }" />
+                            <span class="text-sm font-medium">{{ slotProps.data.completion_score || 0 }}%</span>
+                        </div>
                     </template>
                 </Column>
                 <Column field="hire_date" header="Ngày vào" sortable style="min-width: 10rem">
@@ -211,6 +226,8 @@ import { FilterMatchMode } from '@primevue/core/api'
 import { Head, router } from '@inertiajs/vue3'
 import Select from 'primevue/select'
 import DatePicker from 'primevue/datepicker'
+import Checkbox from 'primevue/checkbox'
+import ProgressBar from 'primevue/progressbar'
 import AddressSelector from '@/Components/AddressSelector.vue'
 import { EmployeeService } from '@/services';
 import { useFormValidation } from '@/composables/useFormValidation'
@@ -238,6 +255,7 @@ const filters = ref({
   global: { value: null, matchMode: FilterMatchMode.CONTAINS },
 })
 const statusFilter = ref(null)
+const showIncompleteOnly = ref(false)
 
 const genderOptions = [
   { label:'Nam', value:'MALE' },
@@ -287,6 +305,23 @@ function statusLabel(v) {
 }
 function statusSeverity(v) {
   return v==='ACTIVE' ? 'success' : (v==='ON_LEAVE' ? 'info' : 'danger')
+}
+
+function getProgressBarColor(score) {
+  if (score >= 80) return 'background: #22c55e' // green
+  if (score >= 60) return 'background: #f59e0b' // orange
+  return 'background: #ef4444' // red
+}
+
+function applyCompletionFilter() {
+  if (showIncompleteOnly.value) {
+    list.value = props.employees.filter(e => (e.completion_score || 0) < 80)
+  } else {
+    list.value = props.employees.filter(e => {
+      if (!statusFilter.value) return true
+      return e.status === statusFilter.value
+    })
+  }
 }
 
 function openNew() {

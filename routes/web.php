@@ -117,6 +117,7 @@ Route::group(['middleware' => 'auth'], function () {
     Route::put('employees/{employee}/educations/{education}', [EmployeeEducationController::class, 'update'])->name('employees.educations.update');
     Route::delete('employees/{employee}/educations/{education}', [EmployeeEducationController::class, 'destroy'])->name('employees.educations.destroy');
     Route::post('employees/{employee}/educations/bulk-delete', [EmployeeEducationController::class, 'bulkDelete'])->name('employees.educations.bulk-delete');
+    Route::get('employees/{employee}/activities', [EmployeeEducationController::class, 'activities'])->name('employees.activities');
 
     // Relatives
     Route::get('employees/{employee}/relatives', [EmployeeRelativeController::class, 'index'])->name('employees.relatives.index');

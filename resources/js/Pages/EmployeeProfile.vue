@@ -3,18 +3,33 @@
     <title>Hồ sơ nhân viên - {{ props.employee.full_name }}</title>
   </Head>
 
-  <div class="card">
-    <div class="mb-4">
-      <h2 class="text-xl font-semibold">Hồ sơ: {{ props.employee.full_name }} ({{ props.employee.employee_code }})</h2>
+  <div class="grid grid-cols-1 lg:grid-cols-4 gap-4">
+    <!-- Sidebar: Profile Completion -->
+    <div class="lg:col-span-1">
+      <ProfileChecklist
+        :completion-score="props.employee.completion_score || 0"
+        :completion-details="props.employee.completion_details || []"
+        :completion-missing="props.employee.completion_missing || []"
+        :completion-level="props.employee.completion_level || 'Chưa xác định'"
+        :completion-severity="props.employee.completion_severity || 'secondary'"
+      />
     </div>
 
-    <Tabs value="education">
+    <!-- Main Content -->
+    <div class="lg:col-span-3">
+      <div class="card">
+        <div class="mb-4">
+          <h2 class="text-xl font-semibold">Hồ sơ: {{ props.employee.full_name }} ({{ props.employee.employee_code }})</h2>
+        </div>
+
+        <Tabs value="education">
       <TabList>
         <Tab value="education">Học vấn</Tab>
         <Tab value="relatives">Người thân</Tab>
         <Tab value="experiences">Kinh nghiệm</Tab>
         <Tab value="skills">Kỹ năng</Tab>
         <Tab value="assignments">Phân công</Tab>
+        <Tab value="timeline">Lịch sử</Tab>
       </TabList>
 
       <!-- TAB HỌC VẤN -->
@@ -576,8 +591,68 @@
         </Dialog>
       </TabPanel>
 
-    </Tabs>
+      <!-- TAB LỊCH SỬ -->
+      <TabPanel value="timeline">
+        <div class="mb-4 flex items-center gap-2">
+          <span class="font-medium">Lọc theo module:</span>
+          <Select v-model="selectedActivityModule" :options="activityModuleOptions" optionLabel="label" optionValue="value"
+                  placeholder="Tất cả" showClear class="w-64" @change="onModuleFilterChange" />
+        </div>
+
+        <div v-if="loadingActivities" class="text-center py-8">
+          <i class="pi pi-spin pi-spinner text-4xl text-gray-400"></i>
+          <p class="text-gray-600 mt-2">Đang tải...</p>
+        </div>
+
+        <div v-else-if="activities.length === 0" class="text-center py-8">
+          <i class="pi pi-info-circle text-4xl text-gray-400 mb-3"></i>
+          <p class="text-gray-600">Chưa có hoạt động nào</p>
+        </div>
+
+        <Timeline v-else :value="activities" align="left" class="customized-timeline">
+          <template #marker="slotProps">
+            <span class="flex w-8 h-8 items-center justify-center text-white rounded-full z-10"
+                  :class="getActivityColor(slotProps.item.log_name)">
+              <i :class="getActivityIcon(slotProps.item.description)" />
+            </span>
+          </template>
+          <template #content="slotProps">
+            <Card class="mt-3">
+              <template #title>
+                <div class="flex items-center justify-between">
+                  <span class="text-base">{{ getActivityLabel(slotProps.item) }}</span>
+                  <Badge :value="getModuleLabel(slotProps.item.log_name)" :severity="getModuleSeverity(slotProps.item.log_name)" />
+                </div>
+              </template>
+              <template #subtitle>
+                <div class="text-sm text-gray-600">
+                  <i class="pi pi-user mr-1" />{{ slotProps.item.causer?.name || 'Hệ thống' }}
+                  <i class="pi pi-clock ml-3 mr-1" />{{ formatDateTime(slotProps.item.created_at) }}
+                </div>
+              </template>
+              <template #content>
+                <div v-if="slotProps.item.properties" class="text-sm">
+                  <pre class="bg-gray-50 p-3 rounded text-xs overflow-auto">{{ JSON.stringify(slotProps.item.properties, null, 2) }}</pre>
+                </div>
+              </template>
+            </Card>
+          </template>
+        </Timeline>
+
+        <div v-if="activityPagination && activityPagination.last_page > 1" class="mt-4 flex justify-center">
+          <Paginator
+            :rows="activityPagination.per_page"
+            :totalRecords="activityPagination.total"
+            :first="(activityPagination.current_page - 1) * activityPagination.per_page"
+            @page="onActivityPageChange"
+          />
+        </div>
+      </TabPanel>
+
+        </Tabs>
+      </div>
     </div>
+  </div>
 </template>
 <script setup>
 import { ref, computed, watch, onMounted } from 'vue'
@@ -588,6 +663,7 @@ import { EmployeeExperienceService } from '@/services'
 import { EmployeeSkillService } from '@/services'
 import { EmployeeAssignmentService } from '@/services'
 import { toYMD, formatDate } from '@/utils/dateHelper'
+import ProfileChecklist from '@/Components/ProfileChecklist.vue'
 
 const page = usePage()
 
@@ -603,6 +679,9 @@ import Tag from 'primevue/tag'
 import Message from 'primevue/message'
 import Badge from 'primevue/badge'
 import Rating from 'primevue/rating'
+import Timeline from 'primevue/timeline'
+import Card from 'primevue/card'
+import Paginator from 'primevue/paginator'
 
 const props = defineProps({
   employee: { type: Object, required: true },
@@ -1081,4 +1160,115 @@ function removeManyAssignment(){
     onFinish: () => { deletingAssignment.value = false; assignmentDeleteManyDialog.value = false; selectedAssignments.value = [] }
   })
 }
+
+/* ===== Activity Timeline state & methods ===== */
+const activities = ref([])
+const loadingActivities = ref(false)
+const selectedActivityModule = ref(null)
+const activityPagination = ref(null)
+
+const activityModuleOptions = [
+  { label: 'Tất cả', value: null },
+  { label: 'Phân công', value: 'employee-assignment' },
+  { label: 'Học vấn', value: 'employee-education' },
+  { label: 'Người thân', value: 'employee-relative' },
+  { label: 'Kinh nghiệm', value: 'employee-experience' },
+  { label: 'Kỹ năng', value: 'employee-skill' },
+]
+
+async function loadActivities(page = 1) {
+  loadingActivities.value = true
+  try {
+    const params = new URLSearchParams({ page: page.toString() })
+    if (selectedActivityModule.value) {
+      params.append('module', selectedActivityModule.value)
+    }
+
+    const url = `/employees/${props.employee.id}/activities?${params}`
+
+    const response = await fetch(url)
+    const data = await response.json()
+
+    activities.value = data.data || []
+    activityPagination.value = {
+      current_page: data.current_page,
+      last_page: data.last_page,
+      per_page: data.per_page,
+      total: data.total
+    }
+  } catch (error) {
+    console.error('Failed to load activities:', error)
+  } finally {
+    loadingActivities.value = false
+  }
+}
+
+function onModuleFilterChange() {
+  // Reset to page 1 when filter changes
+  loadActivities(1)
+}
+
+function onActivityPageChange(event) {
+  loadActivities(event.page + 1)
+}
+
+function getActivityColor(logName) {
+  if (logName.includes('assignment')) return 'bg-blue-500'
+  if (logName.includes('education')) return 'bg-purple-500'
+  if (logName.includes('relative')) return 'bg-green-500'
+  if (logName.includes('experience')) return 'bg-orange-500'
+  if (logName.includes('skill')) return 'bg-pink-500'
+  return 'bg-gray-500'
+}
+
+function getActivityIcon(description) {
+  if (description.includes('created') || description.includes('Tạo')) return 'pi pi-plus'
+  if (description.includes('updated') || description.includes('Cập nhật')) return 'pi pi-pencil'
+  if (description.includes('deleted') || description.includes('Xóa')) return 'pi pi-trash'
+  return 'pi pi-info-circle'
+}
+
+function getActivityLabel(activity) {
+  // Ưu tiên lấy label tiếng Việt từ properties.label (từ BE enum)
+  if (activity.properties?.label) {
+    return activity.properties.label
+  }
+  // Fallback: hiển thị description nếu không có label
+  return activity.description || 'Hoạt động'
+}
+
+function getModuleLabel(logName) {
+  if (logName.includes('assignment')) return 'Phân công'
+  if (logName.includes('education')) return 'Học vấn'
+  if (logName.includes('relative')) return 'Người thân'
+  if (logName.includes('experience')) return 'Kinh nghiệm'
+  if (logName.includes('skill')) return 'Kỹ năng'
+  return logName
+}
+
+function getModuleSeverity(logName) {
+  if (logName.includes('assignment')) return 'info'
+  if (logName.includes('education')) return 'secondary'
+  if (logName.includes('relative')) return 'success'
+  if (logName.includes('experience')) return 'warn'
+  if (logName.includes('skill')) return 'danger'
+  return 'secondary'
+}
+
+function formatDateTime(datetime) {
+  if (!datetime) return '-'
+  const date = new Date(datetime)
+  return date.toLocaleString('vi-VN')
+}
+
+// Load activities on mount
+onMounted(() => {
+  loadActivities()
+})
+
+// Reload activities when page props update (after CRUD operations)
+watch(() => [props.educations, props.relatives, props.experiences, props.employee_skills, props.assignments], () => {
+  // Reload activities when any data changes (indicates a CRUD operation happened)
+  loadActivities(activityPagination.value?.current_page || 1)
+}, { deep: true })
 </script>

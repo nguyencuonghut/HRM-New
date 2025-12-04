@@ -35,8 +35,11 @@ class EmployeeEducationController extends Controller
     {
         $this->authorize('viewProfile', $employee);
 
+        // Load relationships for completion calculation
+        $employee->load(['assignments', 'educations', 'relatives', 'experiences', 'employeeSkills']);
+
         return Inertia::render('EmployeeProfile', [
-            'employee'          => $employee->only(['id','full_name','employee_code']),
+            'employee'          => (new \App\Http\Resources\EmployeeResource($employee))->resolve(),
             'education_levels'  => EducationLevel::orderBy('order_index')->get(['id','name']),
             'schools'           => School::orderBy('name')->get(['id','name']),
             'departments'       => Department::orderBy('name')->get(['id','name','type']),
@@ -231,5 +234,68 @@ class EmployeeEducationController extends Controller
         }
         return redirect()->route('employees.profile', $employee->id)
             ->with(['message' => 'Đã xoá các bản ghi đã chọn.', 'type' => 'success']);
+    }
+
+    /**
+     * Get activity timeline for employee
+     */
+    public function activities(Request $request, Employee $employee)
+    {
+        $this->authorize('viewProfile', $employee);
+
+        $query = \Spatie\Activitylog\Models\Activity::query();
+
+        // Filter by module if provided
+        if ($request->has('module') && $request->module) {
+            $module = $request->module;
+
+            // All modules now use log_name directly (including employee-assignment after fix)
+            // Also support old logs with log_name="default" for backward compatibility
+            if ($module === 'employee-assignment') {
+                $query->where(function($q) {
+                    // New logs: log_name = "employee-assignment"
+                    $q->where('log_name', 'employee-assignment')
+                      // Old logs: log_name = "default" + description pattern
+                      ->orWhere(function($qq) {
+                          $qq->where('log_name', 'default')
+                             ->where('description', 'LIKE', 'EMPLOYEE_ASSIGNMENT_%');
+                      });
+                });
+            } else {
+                // For other modules: filter by log_name directly
+                $query->where('log_name', $module);
+            }
+        } else {
+            // Get all employee-related logs (both old and new)
+            $query->where(function($q) {
+                $q->where('log_name', 'LIKE', 'employee-%')
+                  ->orWhere(function($qq) {
+                      $qq->where('log_name', 'default')
+                         ->where('description', 'LIKE', 'EMPLOYEE_%');
+                  });
+            });
+        }
+
+        // Filter by employee using multiple strategies based on activity log structure
+        $query->where(function($q) use ($employee) {
+            // Strategy 1: employee-skill uses properties->attributes->employee (full_name)
+            $q->where('properties->attributes->employee', $employee->full_name)
+              ->orWhere('properties->old->employee', $employee->full_name);
+
+            // Strategy 2: employee-relative & employee-experience use properties->employee_id (UUID)
+            $q->orWhere('properties->employee_id', $employee->id);
+
+            // Strategy 3: Direct activities on Employee model
+            $q->orWhere(function($qq) use ($employee) {
+                $qq->where('subject_type', Employee::class)
+                   ->where('subject_id', $employee->id);
+            });
+        });
+
+        $activities = $query->with('causer:id,name')
+            ->orderByDesc('created_at')
+            ->paginate(20);
+
+        return response()->json($activities);
     }
 }

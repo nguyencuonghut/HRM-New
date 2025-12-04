@@ -74,10 +74,13 @@ class EmployeeAssignmentController extends Controller
             $assignment = EmployeeAssignment::create($data);
             $assignment->load(['employee', 'department', 'position']);
 
+            $description = ActivityLogDescription::EMPLOYEE_ASSIGNMENT_CREATED;
             activity()
+                ->useLog('employee-assignment')
                 ->performedOn($assignment)
                 ->causedBy($request->user())
                 ->withProperties([
+                    'label' => $description->label(),
                     'attributes' => [
                         'employee' => $assignment->employee?->full_name,
                         'department' => $assignment->department?->name,
@@ -89,7 +92,7 @@ class EmployeeAssignmentController extends Controller
                         'status' => $assignment->status,
                     ]
                 ])
-                ->log(ActivityLogDescription::EMPLOYEE_ASSIGNMENT_CREATED->value);
+                ->log($description->value);
         } catch (QueryException $e) {
             // Bắt lỗi ràng buộc "một primary ACTIVE duy nhất"
             return back()->withErrors([
@@ -135,14 +138,17 @@ class EmployeeAssignmentController extends Controller
                 'status' => $employeeAssignment->status,
             ];
 
+            $description = ActivityLogDescription::EMPLOYEE_ASSIGNMENT_UPDATED;
             activity()
+                ->useLog('employee-assignment')
                 ->performedOn($employeeAssignment)
                 ->causedBy($request->user())
                 ->withProperties([
+                    'label' => $description->label(),
                     'old' => $oldData,
                     'attributes' => $newData
                 ])
-                ->log(ActivityLogDescription::EMPLOYEE_ASSIGNMENT_UPDATED->value);
+                ->log($description->value);
         } catch (QueryException $e) {
             return back()->withErrors([
                 'is_primary' => 'Nhân viên này đã có phân công CHÍNH đang hoạt động.',
@@ -171,11 +177,16 @@ class EmployeeAssignmentController extends Controller
 
         $employeeAssignment->delete();
 
+        $description = ActivityLogDescription::EMPLOYEE_ASSIGNMENT_DELETED;
         activity()
+            ->useLog('employee-assignment')
             ->performedOn($employeeAssignment)
             ->causedBy(request()->user())
-            ->withProperties(['old' => $oldData])
-            ->log(ActivityLogDescription::EMPLOYEE_ASSIGNMENT_DELETED->value);
+            ->withProperties([
+                'label' => $description->label(),
+                'old' => $oldData
+            ])
+            ->log($description->value);
 
         return redirect()->route('employee-assignments.index')
             ->with('success', 'Đã xoá phân công.');
@@ -203,13 +214,16 @@ class EmployeeAssignmentController extends Controller
 
             EmployeeAssignment::whereIn('id', $ids)->delete();
 
+            $description = ActivityLogDescription::EMPLOYEE_ASSIGNMENT_BULK_DELETED;
             activity()
+                ->useLog('employee-assignment')
                 ->causedBy($request->user())
                 ->withProperties([
+                    'label' => $description->label(),
                     'count' => count($ids),
                     'deleted_records' => $deletedRecords
                 ])
-                ->log(ActivityLogDescription::EMPLOYEE_ASSIGNMENT_BULK_DELETED->value);
+                ->log($description->value);
         }
 
         return redirect()->route('employee-assignments.index')
@@ -248,10 +262,13 @@ class EmployeeAssignmentController extends Controller
             $assignment = EmployeeAssignment::create($data);
             $assignment->load(['department', 'position']);
 
+            $description = ActivityLogDescription::EMPLOYEE_ASSIGNMENT_CREATED;
             activity()
+                ->useLog('employee-assignment')
                 ->performedOn($assignment)
                 ->causedBy($request->user())
                 ->withProperties([
+                    'label' => $description->label(),
                     'attributes' => [
                         'employee' => $employee->full_name,
                         'department' => $assignment->department?->name,
@@ -263,7 +280,7 @@ class EmployeeAssignmentController extends Controller
                         'status' => $assignment->status,
                     ]
                 ])
-                ->log(ActivityLogDescription::EMPLOYEE_ASSIGNMENT_CREATED->value);
+                ->log($description->value);
 
             return redirect()->route('employees.profile', $employee->id)
                 ->with('success', 'Đã thêm phân công nhân sự.');
@@ -315,14 +332,17 @@ class EmployeeAssignmentController extends Controller
                 'status' => $assignment->status,
             ];
 
+            $description = ActivityLogDescription::EMPLOYEE_ASSIGNMENT_UPDATED;
             activity()
+                ->useLog('employee-assignment')
                 ->performedOn($assignment)
                 ->causedBy($request->user())
                 ->withProperties([
+                    'label' => $description->label(),
                     'old' => $oldData,
                     'attributes' => $newData
                 ])
-                ->log(ActivityLogDescription::EMPLOYEE_ASSIGNMENT_UPDATED->value);
+                ->log($description->value);
 
             return redirect()->route('employees.profile', $employee->id)
                 ->with('success', 'Đã cập nhật phân công nhân sự.');
@@ -359,11 +379,16 @@ class EmployeeAssignmentController extends Controller
 
         $assignment->delete();
 
+        $description = ActivityLogDescription::EMPLOYEE_ASSIGNMENT_DELETED;
         activity()
+            ->useLog('employee-assignment')
             ->performedOn($assignment)
             ->causedBy($request->user())
-            ->withProperties(['old' => $oldData])
-            ->log(ActivityLogDescription::EMPLOYEE_ASSIGNMENT_DELETED->value);
+            ->withProperties([
+                'label' => $description->label(),
+                'old' => $oldData
+            ])
+            ->log($description->value);
 
         return redirect()->route('employees.profile', $employee->id)
             ->with('success', 'Đã xoá phân công nhân sự.');
@@ -399,14 +424,17 @@ class EmployeeAssignmentController extends Controller
 
             EmployeeAssignment::whereIn('id', $assignments->pluck('id'))->delete();
 
+            $description = ActivityLogDescription::EMPLOYEE_ASSIGNMENT_BULK_DELETED;
             activity()
+                ->useLog('employee-assignment')
                 ->causedBy($request->user())
                 ->withProperties([
+                    'label' => $description->label(),
                     'employee_id' => $employee->id,
                     'count' => count($assignments),
                     'deleted_records' => $deletedRecords
                 ])
-                ->log(ActivityLogDescription::EMPLOYEE_ASSIGNMENT_BULK_DELETED->value);
+                ->log($description->value);
         }
 
         return redirect()->route('employees.profile', $employee->id)

@@ -76,4 +76,7 @@ class Employee extends Model
             ->withPivot(['level','years','note'])
             ->withTimestamps();
     }
+
+    // Quan hệ: employee_skills (records)
+    public function employeeSkills(){ return $this->hasMany(EmployeeSkill::class); }
 }
