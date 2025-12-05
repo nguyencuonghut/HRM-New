@@ -9,9 +9,13 @@ return new class extends Migration {
         Schema::create('contracts', function (Blueprint $t) {
             $t->uuid('id')->primary();                   // PK
             $t->uuid('employee_id')->index();           // Nhân viên ký
-            $t->uuid('department_id')->nullable()->index(); // Đơn vị tại thời điểm ký (snapshot)
-            $t->uuid('position_id')->nullable()->index();   // Chức danh tại thời điểm ký (snapshot)
 
+            // Assignment snapshot tại thời điểm ký HĐ (từ PRIMARY assignment)
+            $t->uuid('department_id')->nullable()->index();        // ID để join/filter
+            $t->uuid('position_id')->nullable()->index();          // ID để join/filter
+            $t->string('snapshot_department_name')->nullable();    // Text snapshot - không đổi dù master data thay đổi
+            $t->string('snapshot_position_title')->nullable();     // Text snapshot - không đổi dù master data thay đổi
+            $t->string('snapshot_role_type')->nullable();          // HEAD/DEPUTY/MEMBER từ assignment
             $t->string('contract_number')->unique();    // Số HĐ
             $t->enum('contract_type', [                 // Loại HĐ
                 'PROBATION','FIXED_TERM','INDEFINITE','SEASONAL','SERVICE','INTERNSHIP','PARTTIME'

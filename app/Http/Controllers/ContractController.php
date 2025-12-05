@@ -60,6 +60,23 @@ class ContractController extends Controller
         $payload = $request->validated();
         $payload['created_by'] = $request->user()->id;
 
+        // Auto-fill snapshot from PRIMARY assignment if not provided
+        if (!isset($payload['snapshot_department_name']) && isset($payload['employee_id'])) {
+            $primaryAssignment = \App\Models\EmployeeAssignment::where('employee_id', $payload['employee_id'])
+                ->where('is_primary', true)
+                ->where('status', 'ACTIVE')
+                ->with(['department', 'position'])
+                ->first();
+
+            if ($primaryAssignment) {
+                $payload['department_id'] = $primaryAssignment->department_id;
+                $payload['position_id'] = $primaryAssignment->position_id;
+                $payload['snapshot_department_name'] = $primaryAssignment->department?->name;
+                $payload['snapshot_position_title'] = $primaryAssignment->position?->title;
+                $payload['snapshot_role_type'] = $primaryAssignment->role_type;
+            }
+        }
+
         // Rule: chặn overlap với hợp đồng ACTIVE
         // Kiểm tra cho mọi hợp đồng mới để tránh tạo hợp đồng sẽ overlap khi activate
         $this->ensureNoActiveOverlap($payload['employee_id'], $payload['start_date'] ?? null, $payload['end_date'] ?? null);

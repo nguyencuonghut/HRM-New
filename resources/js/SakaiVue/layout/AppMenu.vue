@@ -44,6 +44,25 @@ const model = computed(() => {
         });
     }
 
+    // Add Leave Management - accessible to all authenticated users
+    homeItems.push({
+        label: 'Nghỉ phép',
+        icon: 'pi pi-fw pi-calendar',
+        items: [
+            {
+                label: 'Đơn nghỉ phép',
+                icon: 'pi pi-fw pi-calendar-plus',
+                to: '/leave-requests'
+            },
+            {
+                label: 'Phê duyệt',
+                icon: 'pi pi-fw pi-check-circle',
+                to: '/leave-approvals',
+                badge: 'pending'  // Will be replaced with actual count
+            }
+        ]
+    });
+
     const items = [
         {
             label: t('nav.home'),

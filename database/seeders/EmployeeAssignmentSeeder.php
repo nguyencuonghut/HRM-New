@@ -22,6 +22,8 @@ class EmployeeAssignmentSeeder extends Seeder
         $hc = DB::table('departments')->where('name','Phòng Hành Chính')->first();
         $lx = DB::table('departments')->where('name','Tổ Lái Xe')->first();
         $ns = DB::table('departments')->where('name','Phòng Nhân Sự')->first();
+        $nskd = DB::table('departments')->where('name','Nhóm Nhân Sự Kinh Doanh')->first();
+        $nsnm = DB::table('departments')->where('name','Nhóm Nhân Sự Nhà Máy')->first();
         $cl = DB::table('departments')->where('name','Phòng Chất Lượng')->first();
         $clnl = DB::table('departments')->where('name','Nhóm KCS Nguyên Liệu')->first();
         $pt = DB::table('departments')->where('name','Bộ Phận Phân Tích')->first();
@@ -61,8 +63,9 @@ class EmployeeAssignmentSeeder extends Seeder
 
             // NS
             ['employee_id'=>$emp['312'] ?? null,'department_id'=>$ns->id,'position_id'=>$posTruongNS->id ?? null,'is_primary'=>false,'role_type'=>'HEAD'],
-            ['employee_id'=>$emp['481'] ?? null,'department_id'=>$ns->id,'position_id'=>$posTruongNhomNS->id ?? null,'is_primary'=>true,'role_type'=>'HEAD'],
-            ['employee_id'=>$emp['2411'] ?? null,'department_id'=>$ns->id,'position_id'=>$nvNS->id ?? null,'is_primary'=>true,'role_type'=>'MEMBER'],
+            ['employee_id'=>$emp['481'] ?? null,'department_id'=>$nskd->id,'position_id'=>$posTruongNhomNS->id ?? null,'is_primary'=>true,'role_type'=>'HEAD'],
+            ['employee_id'=>$emp['2411'] ?? null,'department_id'=>$nsnm->id,'position_id'=>$nvNS->id ?? null,'is_primary'=>true,'role_type'=>'MEMBER'],
+            ['employee_id'=>$emp['2661'] ?? null,'department_id'=>$nskd->id,'position_id'=>$nvNS->id ?? null,'is_primary'=>true,'role_type'=>'MEMBER'],
 
             // Chất Lượng
             ['employee_id'=>$emp['468'] ?? null,'department_id'=>$cl->id,'position_id'=>$posGdCL->id ?? null,'is_primary'=>true,'role_type'=>'HEAD'],

@@ -15,6 +15,8 @@ import { EmployeeEducationService } from './EmployeeEducationService';
 import { EmployeeRelativeService } from './EmployeeRelativeService';
 import { EmployeeExperienceService } from './EmployeeExperienceService';
 import { EmployeeSkillService } from './EmployeeSkillService';
+import { LeaveRequestService } from './LeaveRequestService';
+import { LeaveApprovalService } from './LeaveApprovalService';
 
 export {
     AuthService,
@@ -34,4 +36,6 @@ export {
     EmployeeRelativeService,
     EmployeeExperienceService,
     EmployeeSkillService,
+    LeaveRequestService,
+    LeaveApprovalService,
 };

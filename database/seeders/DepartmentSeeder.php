@@ -108,6 +108,8 @@ class DepartmentSeeder extends Seeder
 
         // Phòng Nhân Sự
         $hcns = $make('Phòng Nhân Sự', 'DEPARTMENT', null, 15);
+        $nskd = $make('Nhóm Nhân Sự Kinh Doanh', 'TEAM', $hcns, 1);
+        $nsnm = $make('Nhóm Nhân Sự Nhà Máy', 'TEAM', $hcns, 2);
     }
 
     /**

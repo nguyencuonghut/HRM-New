@@ -15,6 +15,8 @@ use App\Events\ContractRejected;
 use App\Listeners\SendContractApprovalRequestNotification;
 use App\Listeners\SendContractApprovedNotification;
 use App\Listeners\SendContractRejectedNotification;
+use App\Models\Employee;
+use App\Observers\EmployeeObserver;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -36,6 +38,9 @@ class AppServiceProvider extends ServiceProvider
 
         // Register policy for Spatie Activity model (cannot auto-discover external package models)
         Gate::policy(Activity::class, ActivityPolicy::class);
+
+        // Register observers
+        Employee::observe(EmployeeObserver::class);
 
         // Event listeners use #[ListensTo] attributes and are auto-discovered
         // No need to manually register with Event::listen()

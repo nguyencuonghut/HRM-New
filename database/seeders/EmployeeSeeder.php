@@ -47,6 +47,7 @@ class EmployeeSeeder extends Seeder
             // NS
             ['employee_code'=>'481','full_name'=>'Trần Thị Bích Phương','phone'=>'0901000005','company_email'=>'tranthibichphuong@honghafeed.com.vn','status'=>'ACTIVE'],
             ['employee_code'=>'2411','full_name'=>'Nguyễn Thị Ngọc Lan','phone'=>'0901000006','company_email'=>'ns@honghafeed.com.vn','status'=>'ACTIVE','user_id'=>$adminUser?->id],
+            ['employee_code'=>'2661','full_name'=>'Nguyễn Tuấn Hiệp','phone'=>'0902000007','company_email'=>'nguyentuanhiep@honghafeed.com.vn','status'=>'ACTIVE'],
             // Chất lượng
             ['employee_code'=>'468','full_name'=>'Phạm Thành Thứ','phone'=>'0901000007','company_email'=>'phamthanhthu@honghafeed.com.vn','status'=>'ACTIVE'],
             ['employee_code'=>'353','full_name'=>'Ngô Tiến Trung','phone'=>'0901000008','company_email'=>'ngotientrung@honghafeed.com.vn','status'=>'ACTIVE'],

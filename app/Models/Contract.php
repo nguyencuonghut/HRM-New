@@ -11,7 +11,9 @@ class Contract extends Model
     use HasUuids;
 
     protected $fillable = [
-        'employee_id','department_id','position_id','contract_number','contract_type','status',
+        'employee_id','department_id','position_id',
+        'snapshot_department_name','snapshot_position_title','snapshot_role_type',
+        'contract_number','contract_type','status',
         'sign_date','start_date','end_date','probation_end_date',
         'base_salary','insurance_salary','position_allowance','other_allowances',
         'social_insurance','health_insurance','unemployment_insurance',
@@ -44,6 +46,7 @@ class Contract extends Model
     public function template(){ return $this->belongsTo(ContractTemplate::class, 'template_id'); }
     public function appendixes(){ return $this->hasMany(ContractAppendix::class, 'contract_id'); }
     public function approvals(){ return $this->hasMany(ContractApproval::class)->orderBy('order'); }
+    public function payrollItems(){ return $this->hasMany(PayrollItem::class); }
 
 
     public function scopeActive($q){

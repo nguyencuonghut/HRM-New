@@ -79,4 +79,14 @@ class Employee extends Model
 
     // Quan hệ: employee_skills (records)
     public function employeeSkills(){ return $this->hasMany(EmployeeSkill::class); }
+
+    // Quan hệ: hợp đồng
+    public function contracts(){ return $this->hasMany(Contract::class); }
+
+    // Quan hệ: nghỉ phép
+    public function leaveRequests(){ return $this->hasMany(LeaveRequest::class); }
+    public function leaveBalances(){ return $this->hasMany(LeaveBalance::class); }
+
+    // Quan hệ: lương
+    public function payrollItems(){ return $this->hasMany(PayrollItem::class); }
 }

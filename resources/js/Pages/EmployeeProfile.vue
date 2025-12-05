@@ -1184,9 +1184,7 @@ async function loadActivities(page = 1) {
       params.append('module', selectedActivityModule.value)
     }
 
-    const url = `/employees/${props.employee.id}/activities?${params}`
-
-    const response = await fetch(url)
+    const response = await fetch(`/employees/${props.employee.id}/activities?${params}`)
     const data = await response.json()
 
     activities.value = data.data || []

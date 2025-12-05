@@ -293,4 +293,16 @@ Route::group(['middleware' => 'auth'], function () {
     Route::delete('/notifications', [\App\Http\Controllers\NotificationController::class, 'destroyAll'])->name('notifications.destroy-all');
     Route::delete('/notifications/read', [\App\Http\Controllers\NotificationController::class, 'destroyRead'])->name('notifications.destroy-read');
     Route::delete('/notifications/{id}', [\App\Http\Controllers\NotificationController::class, 'destroy'])->name('notifications.destroy');
+
+    // Leave Management Routes
+    Route::get('leave-requests/balance', [\App\Http\Controllers\LeaveRequestController::class, 'balance'])->name('leave-requests.balance');
+    Route::post('leave-requests/{leaveRequest}/submit', [\App\Http\Controllers\LeaveRequestController::class, 'submit'])->name('leave-requests.submit');
+    Route::post('leave-requests/{leaveRequest}/cancel', [\App\Http\Controllers\LeaveRequestController::class, 'cancel'])->name('leave-requests.cancel');
+    Route::resource('leave-requests', \App\Http\Controllers\LeaveRequestController::class);
+
+    // Leave Approval Routes
+    Route::get('leave-approvals', [\App\Http\Controllers\LeaveApprovalController::class, 'index'])->name('leave-approvals.index');
+    Route::get('leave-approvals/pending-count', [\App\Http\Controllers\LeaveApprovalController::class, 'pendingCount'])->name('leave-approvals.pending-count');
+    Route::post('leave-requests/{leaveRequest}/approve', [\App\Http\Controllers\LeaveApprovalController::class, 'approve'])->name('leave-requests.approve');
+    Route::post('leave-requests/{leaveRequest}/reject', [\App\Http\Controllers\LeaveApprovalController::class, 'reject'])->name('leave-requests.reject');
 });
