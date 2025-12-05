@@ -168,6 +168,14 @@ class LeaveApprovalService
     }
 
     /**
+     * Check if user can auto-approve leave requests (Admin or Super Admin roles)
+     */
+    protected function canAutoApproveAsAdmin(User $user): bool
+    {
+        return $user->hasAnyRole(['Admin', 'Super Admin']);
+    }
+
+    /**
      * Create approval chain for a new leave request
      *
      * @param LeaveRequest $leaveRequest
@@ -389,11 +397,18 @@ class LeaveApprovalService
     /**
      * Submit leave request for approval
      */
-    public function submitForApproval(LeaveRequest $leaveRequest): array
+    public function submitForApproval(LeaveRequest $leaveRequest, ?User $creator = null): array
     {
         // Validate request
         if ($leaveRequest->status !== LeaveRequest::STATUS_DRAFT) {
             return ['success' => false, 'message' => 'Leave request is not in DRAFT status'];
+        }
+
+        // Check if creator is Admin or HR - auto-approve immediately (real-world workflow)
+        $currentUser = $creator ?? auth()->user();
+        if ($currentUser && $this->canAutoApproveAsAdmin($currentUser)) {
+            $this->autoApprove($leaveRequest);
+            return ['success' => true, 'message' => 'Leave request approved (created by HR/Admin)'];
         }
 
         // Check if leave type requires approval

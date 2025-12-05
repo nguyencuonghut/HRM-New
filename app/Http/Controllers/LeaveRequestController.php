@@ -80,17 +80,31 @@ class LeaveRequestController extends Controller
     public function create()
     {
         $user = Auth::user();
-        $employee = Employee::where('user_id', $user->id)->first();
+        $isAdmin = $user->hasAnyRole(['Admin', 'Super Admin']);
 
-        if (!$employee) {
-            return redirect()->back()->with('error', 'Employee profile not found');
+        $data = [
+            'leaveTypes' => LeaveType::active()->ordered()->get(),
+            'mode' => 'create',
+            'isAdmin' => $isAdmin,
+        ];
+
+        // If Admin or Super Admin, provide ALL employees list for selection
+        if ($isAdmin) {
+            $data['employees'] = Employee::orderBy('full_name')
+                ->get(['id', 'full_name', 'employee_code']);
+        } else {
+            // Non-Admin: provide their own employee info
+            $employee = Employee::where('user_id', $user->id)->first();
+            if (!$employee) {
+                return redirect()->back()->with([
+                    'message' => 'Không tìm thấy thông tin nhân viên',
+                    'type' => 'error'
+                ]);
+            }
+            $data['employee'] = $employee;
         }
 
-        return Inertia::render('LeaveRequests/Form', [
-            'leaveTypes' => LeaveType::active()->ordered()->get(),
-            'employee' => $employee,
-            'mode' => 'create',
-        ]);
+        return Inertia::render('LeaveRequests/Form', $data);
     }
 
     /**
@@ -98,14 +112,35 @@ class LeaveRequestController extends Controller
      */
     public function store(Request $request)
     {
-        $validated = $request->validate([
-            'employee_id' => 'required|exists:employees,id',
+        $user = Auth::user();
+
+        // Determine validation rules based on role
+        $rules = [
             'leave_type_id' => 'required|exists:leave_types,id',
             'start_date' => 'required|date',
             'end_date' => 'required|date|after_or_equal:start_date',
             'reason' => 'nullable|string|max:1000',
             'submit' => 'boolean',
-        ]);
+        ];
+
+        // Admin or Super Admin can select employee, others use their own employee_id
+        if ($user->hasAnyRole(['Admin', 'Super Admin'])) {
+            $rules['employee_id'] = 'required|exists:employees,id';
+        }
+
+        $validated = $request->validate($rules);
+
+        // If not Admin or Super Admin, use authenticated user's employee_id
+        if (!$user->hasAnyRole(['Admin', 'Super Admin'])) {
+            $employee = Employee::where('user_id', $user->id)->first();
+            if (!$employee) {
+                return redirect()->back()->with([
+                    'message' => 'Không tìm thấy thông tin nhân viên',
+                    'type' => 'error'
+                ]);
+            }
+            $validated['employee_id'] = $employee->id;
+        }
 
         // Create temporary instance for overlap check
         $leaveRequest = new LeaveRequest([
@@ -156,7 +191,7 @@ class LeaveRequestController extends Controller
 
         // Submit for approval if requested
         if ($request->boolean('submit')) {
-            $result = $this->approvalService->submitForApproval($leaveRequest);
+            $result = $this->approvalService->submitForApproval($leaveRequest, Auth::user());
 
             if (!$result['success']) {
                 return redirect()->back()->with([
@@ -209,11 +244,21 @@ class LeaveRequestController extends Controller
             ]);
         }
 
-        return Inertia::render('LeaveRequests/Form', [
+        $user = Auth::user();
+        $data = [
             'leaveRequest' => new LeaveRequestResource($leaveRequest->load(['employee', 'leaveType'])),
             'leaveTypes' => LeaveType::active()->ordered()->get(),
             'mode' => 'edit',
-        ]);
+            'isAdmin' => $user->hasAnyRole(['Admin', 'Super Admin']),
+        ];
+
+        // If Admin or Super Admin, provide ALL employees list for selection
+        if ($user->hasAnyRole(['Admin', 'Super Admin'])) {
+            $data['employees'] = Employee::orderBy('full_name')
+                ->get(['id', 'full_name', 'employee_code']);
+        }
+
+        return Inertia::render('LeaveRequests/Form', $data);
     }
 
     /**
@@ -276,7 +321,7 @@ class LeaveRequestController extends Controller
 
         // Submit if requested
         if ($request->boolean('submit')) {
-            $result = $this->approvalService->submitForApproval($leaveRequest);
+            $result = $this->approvalService->submitForApproval($leaveRequest, Auth::user());
 
             if (!$result['success']) {
                 return redirect()->back()->with([
@@ -309,7 +354,7 @@ class LeaveRequestController extends Controller
             ]);
         }
 
-        $result = $this->approvalService->submitForApproval($leaveRequest);
+        $result = $this->approvalService->submitForApproval($leaveRequest, Auth::user());
 
         if (!$result['success']) {
             return redirect()->back()->with([

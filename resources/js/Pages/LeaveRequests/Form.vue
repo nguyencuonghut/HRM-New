@@ -13,14 +13,43 @@
 
             <form @submit.prevent="handleSubmit">
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <!-- Employee Info (read-only for create) -->
-                    <div v-if="mode === 'create'">
-                        <label class="block font-bold mb-2">Nhân viên</label>
+                    <!-- Employee Selection - Admin can select, others see their own -->
+                    <div>
+                        <label class="block font-bold mb-2" :class="{ 'required-field': isAdmin }">Nhân viên</label>
+
+                        <!-- Admin: Select dropdown -->
+                        <Select
+                            v-if="isAdmin"
+                            v-model="form.employee_id"
+                            :options="employees"
+                            optionLabel="full_name"
+                            optionValue="id"
+                            placeholder="Chọn nhân viên"
+                            :invalid="submitted && !form.employee_id"
+                            fluid
+                            showClear
+                            filter
+                            @change="onEmployeeChange"
+                        >
+                            <template #option="slotProps">
+                                <div class="flex items-center gap-2">
+                                    <span class="font-semibold">{{ slotProps.option.full_name }}</span>
+                                    <span class="text-gray-500 text-sm">({{ slotProps.option.employee_code }})</span>
+                                </div>
+                            </template>
+                        </Select>
+
+                        <!-- Non-Admin: Read-only display -->
                         <InputText
-                            :value="`${employee.full_name} (${employee.employee_code})`"
+                            v-else
+                            :value="employee ? `${employee.full_name} (${employee.employee_code})` : ''"
                             disabled
                             fluid
                         />
+
+                        <small v-if="isAdmin && submitted && !form.employee_id" class="p-error block mt-1">
+                            Vui lòng chọn nhân viên
+                        </small>
                     </div>
 
                     <!-- Leave Type -->
@@ -179,6 +208,8 @@ const props = defineProps({
     leaveTypes: Array,
     employee: Object,
     mode: String,
+    isAdmin: Boolean,
+    employees: Array, // Only provided for Admin users
 });
 
 const toast = useToast();
@@ -191,7 +222,7 @@ const initFormData = () => {
     const leaveData = props.leaveRequest?.data || props.leaveRequest;
 
     const data = {
-        employee_id: props.employee?.id || leaveData?.employee_id,
+        employee_id: leaveData?.employee_id || props.employee?.id || null,
         leave_type_id: leaveData?.leave_type_id || null,
         start_date: null,
         end_date: null,
@@ -229,6 +260,12 @@ const remainingDays = ref(null);
 const selectedLeaveType = computed(() => {
     return props.leaveTypes.find(t => t.id === form.value.leave_type_id);
 });
+
+const onEmployeeChange = () => {
+    // Reset leave type and balance when employee changes
+    form.value.leave_type_id = null;
+    remainingDays.value = null;
+};
 
 const onLeaveTypeChange = () => {
     loadRemainingDays();
