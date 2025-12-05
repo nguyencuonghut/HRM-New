@@ -60,13 +60,19 @@ class LeaveApprovalService
         if ($primaryAssignment->department && $primaryAssignment->department->parent_id) {
             $rootDepartmentId = $this->findRootDepartment($primaryAssignment->department);
             if ($rootDepartmentId) {
-                $director = $this->findDirector($rootDepartmentId);
+                $director = $this->findDirector($rootDepartmentId, $employee->id);
                 if ($director && $director->employee && $director->employee->user) {
-                    $chain[] = [
-                        'step' => $step++,
-                        'approver_id' => $director->employee->user->id,
-                        'approver_role' => LeaveApproval::ROLE_DIRECTOR,
-                    ];
+                    // Only add if not already in chain (avoid duplicate approver)
+                    $directorUserId = $director->employee->user->id;
+                    $alreadyInChain = collect($chain)->pluck('approver_id')->contains($directorUserId);
+
+                    if (!$alreadyInChain) {
+                        $chain[] = [
+                            'step' => $step++,
+                            'approver_id' => $directorUserId,
+                            'approver_role' => LeaveApproval::ROLE_DIRECTOR,
+                        ];
+                    }
                 }
             }
         }
@@ -74,11 +80,16 @@ class LeaveApprovalService
         // Step 3: HR Head (final approval)
         $hrHead = $this->findHRHead();
         if ($hrHead) {
-            $chain[] = [
-                'step' => $step++,
-                'approver_id' => $hrHead->id,
-                'approver_role' => LeaveApproval::ROLE_HR,
-            ];
+            // Only add if not already in chain and not the employee themselves
+            $alreadyInChain = collect($chain)->pluck('approver_id')->contains($hrHead->id);
+
+            if (!$alreadyInChain && $hrHead->id !== $employee->user_id) {
+                $chain[] = [
+                    'step' => $step++,
+                    'approver_id' => $hrHead->id,
+                    'approver_role' => LeaveApproval::ROLE_HR,
+                ];
+            }
         }
 
         return $chain;
@@ -134,11 +145,12 @@ class LeaveApprovalService
     /**
      * Find DIRECTOR: HEAD of specified department (typically root department)
      */
-    protected function findDirector(string $departmentId): ?EmployeeAssignment
+    protected function findDirector(string $departmentId, int $excludeEmployeeId): ?EmployeeAssignment
     {
         return EmployeeAssignment::where('department_id', $departmentId)
             ->where('role_type', 'HEAD')
             ->where('status', 'ACTIVE')
+            ->where('employee_id', '!=', $excludeEmployeeId) // Don't approve yourself
             ->whereHas('employee.user')
             ->with(['employee.user'])
             ->first();
@@ -417,6 +429,17 @@ class LeaveApprovalService
 
         DB::beginTransaction();
         try {
+            // Get approval chain first to check if there are any approvers
+            $employee = $leaveRequest->employee;
+            $chain = $this->getApprovalChain($employee);
+
+            // If no approvers (e.g., HR Head approving their own leave), auto-approve
+            if (empty($chain)) {
+                $this->autoApprove($leaveRequest);
+                DB::commit();
+                return ['success' => true, 'message' => 'Leave request auto-approved (no approvers required)'];
+            }
+
             // Update status to PENDING
             $leaveRequest->update([
                 'status' => LeaveRequest::STATUS_PENDING,
