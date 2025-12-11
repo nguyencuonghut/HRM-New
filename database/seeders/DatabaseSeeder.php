@@ -36,6 +36,7 @@ class DatabaseSeeder extends Seeder
             LeaveTypeSeeder::class, // Leave types with colors and configurations
             ContractSeeder::class, // Test contracts for leave balance system
             ContractAppendixSeeder::class, // Test appendices for contract modifications
+            InsuranceTestDataSeeder::class, // Test data for insurance workflow
         ]);
     }
 }

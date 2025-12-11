@@ -25,8 +25,9 @@ class LeaveRequest extends Model
         'status',
         'submitted_at',
         'approved_at',
-        'rejected_at',
         'cancelled_at',
+        'note',
+        'created_by',
     ];
 
     protected $casts = [
@@ -35,7 +36,6 @@ class LeaveRequest extends Model
         'days' => 'decimal:2',
         'submitted_at' => 'datetime',
         'approved_at' => 'datetime',
-        'rejected_at' => 'datetime',
         'cancelled_at' => 'datetime',
     ];
 

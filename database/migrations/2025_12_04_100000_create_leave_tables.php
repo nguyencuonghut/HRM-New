@@ -42,8 +42,7 @@ return new class extends Migration {
             ])->default('DRAFT')->index();
 
             $t->timestamp('submitted_at')->nullable();           // Thời gian nộp đơn
-            $t->timestamp('approved_at')->nullable();            // Thời gian phê duyệt cuối
-            $t->timestamp('rejected_at')->nullable();            // Thời gian từ chối
+            $t->timestamp('approved_at')->nullable();            // Thời gian duyệt cuối cùng (fully approved)
             $t->timestamp('cancelled_at')->nullable();           // Thời gian hủy
 
             $t->text('note')->nullable();                        // Ghi chú thêm

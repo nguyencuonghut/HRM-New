@@ -89,4 +89,9 @@ class Employee extends Model
 
     // Quan hệ: lương
     public function payrollItems(){ return $this->hasMany(PayrollItem::class); }
+
+    // Quan hệ: bảo hiểm
+    public function insuranceParticipations(){ return $this->hasMany(InsuranceParticipation::class); }
+    public function insuranceChangeRecords(){ return $this->hasMany(InsuranceChangeRecord::class); }
+    public function employeeAbsences(){ return $this->hasMany(EmployeeAbsence::class); }
 }

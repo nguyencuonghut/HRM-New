@@ -277,7 +277,6 @@ class LeaveApprovalService
                 // Reject the entire request
                 $leaveRequest->update([
                     'status' => LeaveRequest::STATUS_REJECTED,
-                    'rejected_at' => now(),
                 ]);
 
                 $message = 'Leave request rejected';

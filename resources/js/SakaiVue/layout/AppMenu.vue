@@ -63,6 +63,15 @@ const model = computed(() => {
         ]
     });
 
+    // Add Insurance Reports - for HR staff
+    if (can('view insurance reports') || can('manage insurance')) {
+        homeItems.push({
+            label: 'Báo cáo BHXH',
+            icon: 'pi pi-fw pi-shield',
+            to: '/insurance-reports'
+        });
+    }
+
     const items = [
         {
             label: t('nav.home'),

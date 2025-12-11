@@ -21,14 +21,14 @@ class EmployeeSeeder extends Seeder
 
         $list = [
             // KSNB
-            ['employee_code'=>'312','full_name'=>'Tạ Văn Toại','phone'=>'0901000001','company_email'=>'gd@honghafeed.com.vn','status'=>'ACTIVE','user_id'=>$directorUser?->id],
-            ['employee_code'=>'2142','full_name'=>'Bùi Thị Nụ','phone'=>'0901000002','company_email'=>'buitinu@honghafeed.com.vn','status'=>'ACTIVE'],
-            ['employee_code'=>'2272','full_name'=>'Trần Xuân Trường','phone'=>'0901000003','company_email'=>'tranxuantruong@honghafeed.com.vn','status'=>'ACTIVE'],
-            ['employee_code'=>'912','full_name'=>'Nguyễn Văn Cường','phone'=>'0901000003','company_email'=>'nguyenvancuong@honghafeed.com.vn','status'=>'ACTIVE'],
-            ['employee_code'=>'1992','full_name'=>'Phạm Hồng Hải','phone'=>'0901000003','company_email'=>'phamhonghai@honghafeed.com.vn','status'=>'ACTIVE'],
+            ['employee_code'=>'312','full_name'=>'Tạ Văn Toại','phone'=>'0901000001','company_email'=>'gd@honghafeed.com.vn','status'=>'ACTIVE','user_id'=>$directorUser?->id,'si_number'=>'0101234567890'],
+            ['employee_code'=>'2142','full_name'=>'Bùi Thị Nụ','phone'=>'0901000002','company_email'=>'buitinu@honghafeed.com.vn','status'=>'ACTIVE','si_number'=>'0101234567891'],
+            ['employee_code'=>'2272','full_name'=>'Trần Xuân Trường','phone'=>'0901000003','company_email'=>'tranxuantruong@honghafeed.com.vn','status'=>'ACTIVE','si_number'=>'0101234567892'],
+            ['employee_code'=>'912','full_name'=>'Nguyễn Văn Cường','phone'=>'0901000003','company_email'=>'nguyenvancuong@honghafeed.com.vn','status'=>'ACTIVE','si_number'=>'0101234567893'],
+            ['employee_code'=>'1992','full_name'=>'Phạm Hồng Hải','phone'=>'0901000003','company_email'=>'phamhonghai@honghafeed.com.vn','status'=>'ACTIVE','si_number'=>'0101234567894'],
             // HC
-            ['employee_code'=>'254','full_name'=>'Hoàng Thị Ngọc Ánh','phone'=>'0901000004','company_email'=>'it@honghafeed.com.vn','status'=>'ACTIVE'],
-            ['employee_code'=>'185','full_name'=>'Bùi Thị Nết','phone'=>'0901000006','company_email'=>'buithinet@honghafeed.com.vn','status'=>'ACTIVE'],
+            ['employee_code'=>'254','full_name'=>'Hoàng Thị Ngọc Ánh','phone'=>'0901000004','company_email'=>'it@honghafeed.com.vn','status'=>'ACTIVE','si_number'=>'0101234567895'],
+            ['employee_code'=>'185','full_name'=>'Bùi Thị Nết','phone'=>'0901000006','company_email'=>'buithinet@honghafeed.com.vn','status'=>'ACTIVE','si_number'=>'0101234567896'],
             [
                 'employee_code'=>'2571',
                 'full_name'=>'Bùi Thế Tuyến',
@@ -43,22 +43,23 @@ class EmployeeSeeder extends Seeder
                 'cccd_issued_by' => 'Bộ Công An',
                 'address_street' => 'Xóm 3, thôn Đông Lỗ',
                 'temp_address_street' => '456 Đường Trần Duy Hưng',
-                'status'=>'ACTIVE'],
+                'status'=>'ACTIVE',
+                'si_number'=>'0101234567897'],
             // NS
-            ['employee_code'=>'481','full_name'=>'Trần Thị Bích Phương','phone'=>'0901000005','company_email'=>'tranthibichphuong@honghafeed.com.vn','status'=>'ACTIVE'],
-            ['employee_code'=>'2411','full_name'=>'Nguyễn Thị Ngọc Lan','phone'=>'0901000006','company_email'=>'ns@honghafeed.com.vn','status'=>'ACTIVE','user_id'=>$adminUser?->id],
-            ['employee_code'=>'2661','full_name'=>'Nguyễn Tuấn Hiệp','phone'=>'0902000007','company_email'=>'nguyentuanhiep@honghafeed.com.vn','status'=>'ACTIVE'],
+            ['employee_code'=>'481','full_name'=>'Trần Thị Bích Phương','phone'=>'0901000005','company_email'=>'tranthibichphuong@honghafeed.com.vn','status'=>'ACTIVE','si_number'=>'0101234567898'],
+            ['employee_code'=>'2411','full_name'=>'Nguyễn Thị Ngọc Lan','phone'=>'0901000006','company_email'=>'ns@honghafeed.com.vn','status'=>'ACTIVE','user_id'=>$adminUser?->id,'si_number'=>'0101234567899'],
+            ['employee_code'=>'2661','full_name'=>'Nguyễn Tuấn Hiệp','phone'=>'0902000007','company_email'=>'nguyentuanhiep@honghafeed.com.vn','status'=>'ACTIVE','si_number'=>'0101234567900'],
             // Chất lượng
-            ['employee_code'=>'468','full_name'=>'Phạm Thành Thứ','phone'=>'0901000007','company_email'=>'phamthanhthu@honghafeed.com.vn','status'=>'ACTIVE'],
-            ['employee_code'=>'353','full_name'=>'Ngô Tiến Trung','phone'=>'0901000008','company_email'=>'ngotientrung@honghafeed.com.vn','status'=>'ACTIVE'],
-            ['employee_code'=>'226','full_name'=>'Cao Xuân Thuyên','phone'=>'0901000009','company_email'=>'caoxuanthuyen@honghafeed.com.vn','status'=>'ACTIVE'],
-            ['employee_code'=>'233','full_name'=>'Phạm Thị Thúy','phone'=>'0901000010','company_email'=>'phamthithuy@honghafeed.com.vn','status'=>'ACTIVE'],
-            ['employee_code'=>'249','full_name'=>'Phan Thị Hằng','phone'=>'0901000011','company_email'=>'phanthihang@honghafeed.com.vn','status'=>'ACTIVE'],
-            ['employee_code'=>'248','full_name'=>'Trần Thị Thu Hương','phone'=>'0901000012','company_email'=>'tranthithuhuong@honghafeed.com.vn','status'=>'ACTIVE'],
-            ['employee_code'=>'252','full_name'=>'Nguyễn Thị Thiết','phone'=>'0901000013','company_email'=>'nguyenthithiet@honghafeed.com.vn','status'=>'ACTIVE'],
-            ['employee_code'=>'231','full_name'=>'Nguyễn Thị Thảo','phone'=>'0901000014','company_email'=>'nguyenthithao@honghafeed.com.vn','status'=>'ACTIVE'],
-            ['employee_code'=>'874','full_name'=>'Vũ Thị Nga','phone'=>'0901000015','company_email'=>'vuthinga@honghafeed.com.vn','status'=>'ACTIVE'],
-            ['employee_code'=>'554','full_name'=>'Cao Thị Phượng','phone'=>'0901000015','company_email'=>'caothiphuong@honghafeed.com.vn','status'=>'ACTIVE'],
+            ['employee_code'=>'468','full_name'=>'Phạm Thành Thứ','phone'=>'0901000007','company_email'=>'phamthanhthu@honghafeed.com.vn','status'=>'ACTIVE','si_number'=>'0101234567901'],
+            ['employee_code'=>'353','full_name'=>'Ngô Tiến Trung','phone'=>'0901000008','company_email'=>'ngotientrung@honghafeed.com.vn','status'=>'ACTIVE','si_number'=>'0101234567902'],
+            ['employee_code'=>'226','full_name'=>'Cao Xuân Thuyên','phone'=>'0901000009','company_email'=>'caoxuanthuyen@honghafeed.com.vn','status'=>'ACTIVE','si_number'=>'0101234567903'],
+            ['employee_code'=>'233','full_name'=>'Phạm Thị Thúy','phone'=>'0901000010','company_email'=>'phamthithuy@honghafeed.com.vn','status'=>'ACTIVE','si_number'=>'0101234567904'],
+            ['employee_code'=>'249','full_name'=>'Phan Thị Hằng','phone'=>'0901000011','company_email'=>'phanthihang@honghafeed.com.vn','status'=>'ACTIVE','si_number'=>'0101234567905'],
+            ['employee_code'=>'248','full_name'=>'Trần Thị Thu Hương','phone'=>'0901000012','company_email'=>'tranthithuhuong@honghafeed.com.vn','status'=>'ACTIVE','si_number'=>'0101234567906'],
+            ['employee_code'=>'252','full_name'=>'Nguyễn Thị Thiết','phone'=>'0901000013','company_email'=>'nguyenthithiet@honghafeed.com.vn','status'=>'ACTIVE','si_number'=>'0101234567907'],
+            ['employee_code'=>'231','full_name'=>'Nguyễn Thị Thảo','phone'=>'0901000014','company_email'=>'nguyenthithao@honghafeed.com.vn','status'=>'ACTIVE','si_number'=>'0101234567908'],
+            ['employee_code'=>'874','full_name'=>'Vũ Thị Nga','phone'=>'0901000015','company_email'=>'vuthinga@honghafeed.com.vn','status'=>'ACTIVE','si_number'=>'0101234567909'],
+            ['employee_code'=>'554','full_name'=>'Cao Thị Phượng','phone'=>'0901000015','company_email'=>'caothiphuong@honghafeed.com.vn','status'=>'ACTIVE','si_number'=>'0101234567910'],
         ];
 
         foreach ($list as $r) {

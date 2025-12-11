@@ -116,6 +116,16 @@ class RolesAndPermissionsSeeder extends Seeder
             'create appendix templates',
             'edit appendix templates',
             'delete appendix templates',
+
+            // Insurance Reports
+            'view insurance reports',
+            'create insurance reports',
+            'approve insurance records',
+            'reject insurance records',
+            'adjust insurance records',
+            'finalize insurance reports',
+            'export insurance reports',
+            'delete insurance reports',
         ];
 
         foreach ($permissions as $permission) {
@@ -141,6 +151,21 @@ class RolesAndPermissionsSeeder extends Seeder
         ];
         $adminPermissions = Permission::whereNotIn('name', $excludedPermissions)->pluck('name');
         $admin->givePermissionTo($adminPermissions);
+
+        // HR Staff - can manage insurance reports
+        $hrStaff = Role::create(['name' => 'HR Staff']);
+        $hrStaff->givePermissionTo([
+            'view employees',
+            'view contracts',
+            'view insurance reports',
+            'create insurance reports',
+            'approve insurance records',
+            'reject insurance records',
+            'adjust insurance records',
+            'finalize insurance reports',
+            'export insurance reports',
+            'delete insurance reports',
+        ]);
 
         // Director - can approve contracts at director level, manage users
         $director = Role::create(['name' => 'Director']);

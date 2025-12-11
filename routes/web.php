@@ -305,4 +305,20 @@ Route::group(['middleware' => 'auth'], function () {
     Route::get('leave-approvals/pending-count', [\App\Http\Controllers\LeaveApprovalController::class, 'pendingCount'])->name('leave-approvals.pending-count');
     Route::post('leave-requests/{leaveRequest}/approve', [\App\Http\Controllers\LeaveApprovalController::class, 'approve'])->name('leave-requests.approve');
     Route::post('leave-requests/{leaveRequest}/reject', [\App\Http\Controllers\LeaveApprovalController::class, 'reject'])->name('leave-requests.reject');
+
+    // Insurance Report Routes
+    Route::get('insurance-reports', [\App\Http\Controllers\InsuranceReportController::class, 'index'])->name('insurance-reports.index');
+    Route::get('insurance-reports/create', [\App\Http\Controllers\InsuranceReportController::class, 'create'])->name('insurance-reports.create');
+    Route::post('insurance-reports', [\App\Http\Controllers\InsuranceReportController::class, 'store'])->name('insurance-reports.store');
+    Route::get('insurance-reports/{insuranceReport}', [\App\Http\Controllers\InsuranceReportController::class, 'show'])->name('insurance-reports.show');
+    Route::delete('insurance-reports/{insuranceReport}', [\App\Http\Controllers\InsuranceReportController::class, 'destroy'])->name('insurance-reports.destroy');
+
+    // Insurance Report Actions
+    Route::post('insurance-reports/{insuranceReport}/finalize', [\App\Http\Controllers\InsuranceReportController::class, 'finalize'])->name('insurance-reports.finalize');
+    Route::get('insurance-reports/{insuranceReport}/export', [\App\Http\Controllers\InsuranceReportController::class, 'export'])->name('insurance-reports.export');
+
+    // Insurance Change Record Actions
+    Route::post('insurance-records/{record}/approve', [\App\Http\Controllers\InsuranceReportController::class, 'approve'])->name('insurance-records.approve');
+    Route::post('insurance-records/{record}/reject', [\App\Http\Controllers\InsuranceReportController::class, 'reject'])->name('insurance-records.reject');
+    Route::post('insurance-records/{record}/adjust', [\App\Http\Controllers\InsuranceReportController::class, 'adjust'])->name('insurance-records.adjust');
 });

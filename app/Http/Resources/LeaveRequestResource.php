@@ -39,7 +39,6 @@ class LeaveRequestResource extends JsonResource
             'status_color' => $this->getStatusColor(),
             'submitted_at' => $this->submitted_at?->format('Y-m-d H:i:s'),
             'approved_at' => $this->approved_at?->format('Y-m-d H:i:s'),
-            'rejected_at' => $this->rejected_at?->format('Y-m-d H:i:s'),
             'cancelled_at' => $this->cancelled_at?->format('Y-m-d H:i:s'),
             'note' => $this->note,
             'created_at' => $this->created_at?->format('Y-m-d H:i:s'),
