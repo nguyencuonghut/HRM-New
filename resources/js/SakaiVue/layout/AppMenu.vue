@@ -45,22 +45,33 @@ const model = computed(() => {
     }
 
     // Add Leave Management - accessible to all authenticated users
+    const leaveMenuItems = [
+        {
+            label: 'Đơn nghỉ phép',
+            icon: 'pi pi-fw pi-calendar-plus',
+            to: '/leave-requests'
+        },
+        {
+            label: 'Phê duyệt',
+            icon: 'pi pi-fw pi-check-circle',
+            to: '/leave-approvals',
+            badge: 'pending'  // Will be replaced with actual count
+        }
+    ];
+
+    // Add Leave Balance menu for HR/Admin
+    if (can('view leave balances') || can('view employees')) {
+        leaveMenuItems.push({
+            label: 'Số dư phép',
+            icon: 'pi pi-fw pi-chart-bar',
+            to: '/leave-balances'
+        });
+    }
+
     homeItems.push({
         label: 'Nghỉ phép',
         icon: 'pi pi-fw pi-calendar',
-        items: [
-            {
-                label: 'Đơn nghỉ phép',
-                icon: 'pi pi-fw pi-calendar-plus',
-                to: '/leave-requests'
-            },
-            {
-                label: 'Phê duyệt',
-                icon: 'pi pi-fw pi-check-circle',
-                to: '/leave-approvals',
-                badge: 'pending'  // Will be replaced with actual count
-            }
-        ]
+        items: leaveMenuItems
     });
 
     // Add Insurance Reports - for HR staff

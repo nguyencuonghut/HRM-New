@@ -306,6 +306,11 @@ Route::group(['middleware' => 'auth'], function () {
     Route::post('leave-requests/{leaveRequest}/approve', [\App\Http\Controllers\LeaveApprovalController::class, 'approve'])->name('leave-requests.approve');
     Route::post('leave-requests/{leaveRequest}/reject', [\App\Http\Controllers\LeaveApprovalController::class, 'reject'])->name('leave-requests.reject');
 
+    // Leave Balance Routes
+    Route::get('leave-balances', [\App\Http\Controllers\LeaveBalanceController::class, 'index'])->name('leave-balances.index');
+    Route::get('employees/{employee}/leave-balances', [\App\Http\Controllers\LeaveBalanceController::class, 'show'])->name('employees.leave-balances');
+    Route::post('leave-balances/initialize', [\App\Http\Controllers\LeaveBalanceController::class, 'initialize'])->name('leave-balances.initialize');
+
     // Insurance Report Routes
     Route::get('insurance-reports', [\App\Http\Controllers\InsuranceReportController::class, 'index'])->name('insurance-reports.index');
     Route::get('insurance-reports/create', [\App\Http\Controllers\InsuranceReportController::class, 'create'])->name('insurance-reports.create');

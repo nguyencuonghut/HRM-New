@@ -29,6 +29,7 @@
         <Tab value="experiences">Kinh nghiệm</Tab>
         <Tab value="skills">Kỹ năng</Tab>
         <Tab value="assignments">Phân công</Tab>
+        <Tab value="leave-balances">Số dư phép</Tab>
         <Tab value="timeline">Lịch sử</Tab>
       </TabList>
 
@@ -591,6 +592,11 @@
         </Dialog>
       </TabPanel>
 
+      <!-- TAB SỐ DƯ PHÉP -->
+      <TabPanel value="leave-balances">
+        <LeaveBalanceTab :employee="employee" />
+      </TabPanel>
+
       <!-- TAB LỊCH SỬ -->
       <TabPanel value="timeline">
         <div class="mb-4 flex items-center gap-2">
@@ -664,6 +670,7 @@ import { EmployeeSkillService } from '@/services'
 import { EmployeeAssignmentService } from '@/services'
 import { toYMD, formatDate } from '@/utils/dateHelper'
 import ProfileChecklist from '@/Components/ProfileChecklist.vue'
+import LeaveBalanceTab from '@/Pages/Employees/Components/LeaveBalanceTab.vue'
 
 const page = usePage()
 

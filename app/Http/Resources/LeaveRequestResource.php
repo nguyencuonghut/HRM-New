@@ -69,6 +69,18 @@ class LeaveRequestResource extends JsonResource
                 $this->relationLoaded('employee') && $this->relationLoaded('leaveType'),
                 fn() => $this->getRemainingDays()
             ),
+            'exceeds_balance' => $this->when(
+                $this->relationLoaded('employee') && $this->relationLoaded('leaveType'),
+                function() {
+                    $remaining = $this->getRemainingDays();
+                    $exceeds = $this->days - $remaining;
+                    return $exceeds > 0 ? [
+                        'exceeds' => true,
+                        'exceeds_by' => (float) $exceeds,
+                        'warning' => "Vượt {$exceeds} ngày phép. Sẽ bị trừ vào công/lương."
+                    ] : ['exceeds' => false];
+                }
+            ),
             'can_edit' => in_array($this->status, ['DRAFT']),
             'can_cancel' => in_array($this->status, ['DRAFT', 'PENDING']),
             'can_delete' => in_array($this->status, ['DRAFT', 'CANCELLED']),

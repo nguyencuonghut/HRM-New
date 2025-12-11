@@ -421,13 +421,24 @@ class LeaveApprovalService
             return ['success' => true, 'message' => 'Leave request auto-approved'];
         }
 
-        // Check leave balance
+        // Check leave balance (warning only, not blocking)
         $remainingDays = $leaveRequest->getRemainingDays();
-        if ($remainingDays < $leaveRequest->days) {
-            return [
-                'success' => false,
-                'message' => "Insufficient leave balance. Available: {$remainingDays} days, Requested: {$leaveRequest->days} days"
-            ];
+        $exceedsDays = $leaveRequest->days - $remainingDays;
+        if ($exceedsDays > 0) {
+            // Log for tracking but don't block submission
+            Log::warning("Leave request exceeds balance", [
+                'leave_request_id' => $leaveRequest->id,
+                'employee_id' => $leaveRequest->employee_id,
+                'requested_days' => $leaveRequest->days,
+                'remaining_days' => $remainingDays,
+                'exceeds_by' => $exceedsDays,
+            ]);
+
+            // Add note to request for approvers to see
+            $leaveRequest->update([
+                'note' => ($leaveRequest->note ? $leaveRequest->note . "\n\n" : '')
+                    . "[HỆ THỐNG] Đơn này vượt {$exceedsDays} ngày phép. Những ngày vượt sẽ bị trừ vào công/lương."
+            ]);
         }
 
         // Check for overlapping leave requests before submitting

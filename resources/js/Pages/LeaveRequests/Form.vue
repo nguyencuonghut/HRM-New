@@ -143,7 +143,10 @@
                             </div>
                             <div v-if="remainingDays !== null && calculatedDays > remainingDays" class="mt-2 text-red-600">
                                 <i class="pi pi-exclamation-triangle"></i>
-                                Số ngày nghỉ vượt quá số ngày phép còn lại!
+                                <span class="font-semibold">Vượt {{ calculatedDays - remainingDays }} ngày phép!</span>
+                                <span class="text-sm block mt-1">
+                                    Những ngày vượt quá sẽ bị trừ vào công và ảnh hưởng tới lương.
+                                </span>
                             </div>
                         </div>
                     </div>
@@ -327,9 +330,11 @@ const submitForApproval = () => {
 
     if (!validateForm()) return;
 
+    // Allow submission even if exceeds balance
+    // The excess days will be marked as unpaid leave
     if (remainingDays.value !== null && calculatedDays.value > remainingDays.value) {
-        ToastService.error('Số ngày nghỉ vượt quá số ngày phép còn lại!');
-        return;
+        const excessDays = calculatedDays.value - remainingDays.value;
+        ToastService.warn(`Vượt ${excessDays} ngày phép. Những ngày này sẽ bị trừ vào công/lương.`);
     }
 
     submitting.value = true;
