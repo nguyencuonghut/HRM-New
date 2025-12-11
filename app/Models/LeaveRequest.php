@@ -76,6 +76,11 @@ class LeaveRequest extends Model
         return $this->hasMany(LeaveApproval::class);
     }
 
+    public function employeeAbsence()
+    {
+        return $this->hasOne(\App\Models\EmployeeAbsence::class, 'leave_request_id');
+    }
+
     /**
      * Business Logic Methods
      */

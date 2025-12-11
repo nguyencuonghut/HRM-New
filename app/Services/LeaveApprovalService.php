@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Events\LeaveRequestApproved;
 use App\Models\Employee;
 use App\Models\EmployeeAssignment;
 use App\Models\LeaveApproval;
@@ -262,7 +263,7 @@ class LeaveApprovalService
 
                 // Check if this is the final approval
                 if ($leaveRequest->isFullyApproved()) {
-                    $this->finalizeApproval($leaveRequest);
+                    $this->finalizeApproval($leaveRequest, $approver);
                 }
 
                 $message = 'Leave request approved successfully';
@@ -331,12 +332,15 @@ class LeaveApprovalService
     /**
      * Finalize approval - mark request as APPROVED and deduct leave balance
      */
-    protected function finalizeApproval(LeaveRequest $leaveRequest): void
+    protected function finalizeApproval(LeaveRequest $leaveRequest, ?User $approver = null): void
     {
         $leaveRequest->update([
             'status' => LeaveRequest::STATUS_APPROVED,
             'approved_at' => now(),
         ]);
+
+        // Dispatch event for insurance tracking
+        event(new LeaveRequestApproved($leaveRequest, $approver));
 
         // Deduct from leave balance
         $year = Carbon::parse($leaveRequest->start_date)->year;
@@ -369,14 +373,14 @@ class LeaveApprovalService
     {
         DB::beginTransaction();
         try {
-            $leaveRequest->update([
-                'status' => LeaveRequest::STATUS_APPROVED,
-                'submitted_at' => now(),
-                'approved_at' => now(),
-            ]);
+            // Set submitted_at if not already set
+            if (!$leaveRequest->submitted_at) {
+                $leaveRequest->update(['submitted_at' => now()]);
+            }
 
-            // Deduct from balance
-            $this->finalizeApproval($leaveRequest);
+            // Finalize approval (will update status, dispatch event, and deduct balance)
+            // Approver is current user (Admin/HR) or system
+            $this->finalizeApproval($leaveRequest, auth()->user());
 
             // Log activity
             activity()

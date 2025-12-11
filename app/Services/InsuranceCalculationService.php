@@ -42,29 +42,47 @@ class InsuranceCalculationService
     {
         $records = collect();
 
-        // 1. NEW_HIRE: Employees hired in this month
-        $newHires = Employee::where('status', 'ACTIVE')
-            ->whereBetween('hire_date', [$startDate, $endDate])
-            ->whereDoesntHave('insuranceParticipations', function ($query) {
-                $query->where('status', InsuranceParticipation::STATUS_ACTIVE);
-            })
+        // 1. NEW_HIRE: New ACTIVE contracts starting in this month
+        // This includes: actual new hires AND re-hired employees (after termination)
+        $newContracts = Contract::where('status', 'ACTIVE')
+            ->whereBetween('start_date', [$startDate, $endDate])
+            ->with('employee')
             ->get();
 
-        foreach ($newHires as $employee) {
-            $salary = $this->getInsuranceSalary($employee, $startDate);
+        foreach ($newContracts as $contract) {
+            $employee = $contract->employee;
+
+            // Skip if employee not active
+            if (!$employee || $employee->status !== 'ACTIVE') {
+                continue;
+            }
+
+            // Check if this contract has already been reported
+            // (to avoid duplicate if already in a finalized report)
+            $alreadyReported = InsuranceChangeRecord::where('contract_id', $contract->id)
+                ->where('change_type', InsuranceChangeRecord::TYPE_INCREASE)
+                ->whereHas('report', function ($query) {
+                    $query->where('status', 'FINALIZED');
+                })
+                ->exists();
+
+            if ($alreadyReported) {
+                continue;
+            }
+
+            $salary = $this->getInsuranceSalary($employee, Carbon::parse($contract->start_date));
             if ($salary > 0) {
                 $records->push([
                     'employee' => $employee,
                     'change_type' => InsuranceChangeRecord::TYPE_INCREASE,
                     'auto_reason' => InsuranceChangeRecord::REASON_NEW_HIRE,
                     'insurance_salary' => $salary,
-                    'effective_date' => $employee->hire_date,
-                    'system_notes' => "Nhân viên mới vào làm ngày " . $employee->hire_date->format('d/m/Y'),
+                    'effective_date' => $contract->start_date,
+                    'system_notes' => "Hợp đồng mới từ ngày " . Carbon::parse($contract->start_date)->format('d/m/Y'),
+                    'contract_id' => $contract->id,
                 ]);
             }
-        }
-
-        // 2. RETURN_TO_WORK: Ended long absences in this month
+        }        // 2. RETURN_TO_WORK: Ended long absences in this month
         $returnedEmployees = EmployeeAbsence::where('status', EmployeeAbsence::STATUS_ENDED)
             ->where('affects_insurance', true)
             ->whereBetween('end_date', [$startDate, $endDate])
@@ -148,12 +166,12 @@ class InsuranceCalculationService
             ]);
         }
 
-        // 2b. SICK/UNPAID >30 days
+        // 2b. SICK/UNPAID >=30 days
         $longLeaves = LeaveRequest::where('status', LeaveRequest::STATUS_APPROVED)
             ->whereHas('leaveType', function ($query) {
                 $query->whereIn('code', ['SICK', 'UNPAID']);
             })
-            ->where('days', '>', 30)
+            ->where('days', '>=', 30)
             ->whereBetween('start_date', [$startDate, $endDate])
             ->with('employee', 'leaveType')
             ->get();
