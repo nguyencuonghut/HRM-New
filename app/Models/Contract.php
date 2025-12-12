@@ -11,7 +11,7 @@ class Contract extends Model
     use HasUuids;
 
     protected $fillable = [
-        'employee_id','department_id','position_id',
+        'employee_id','employment_id','department_id','position_id',
         'snapshot_department_name','snapshot_position_title','snapshot_role_type',
         'contract_number','contract_type','status',
         'sign_date','start_date','end_date','probation_end_date',
@@ -38,6 +38,7 @@ class Contract extends Model
     ];
 
     public function employee(){ return $this->belongsTo(Employee::class); }
+    public function employment(){ return $this->belongsTo(EmployeeEmployment::class, 'employment_id'); }
     public function department(){ return $this->belongsTo(Department::class); }
     public function position(){ return $this->belongsTo(Position::class); }
     public function approver(){ return $this->belongsTo(User::class,'approver_id'); }

@@ -80,6 +80,30 @@ class Employee extends Model
     // Quan hệ: employee_skills (records)
     public function employeeSkills(){ return $this->hasMany(EmployeeSkill::class); }
 
+    // Quan hệ: employment periods (chu kỳ làm việc)
+    public function employments(){ return $this->hasMany(EmployeeEmployment::class); }
+    
+    // Lấy employment hiện tại
+    public function currentEmployment()
+    {
+        return $this->employments()->where('is_current', true)->first();
+    }
+    
+    // Tính tổng thâm niên (tất cả các employment periods)
+    public function getTotalSeniorityYears(): int
+    {
+        return $this->employments()
+            ->get()
+            ->sum(fn($employment) => $employment->getDurationInYears());
+    }
+    
+    // Tính thâm niên tại employment hiện tại
+    public function getCurrentSeniorityYears(): int
+    {
+        $current = $this->currentEmployment();
+        return $current ? $current->getDurationInYears() : 0;
+    }
+
     // Quan hệ: hợp đồng
     public function contracts(){ return $this->hasMany(Contract::class); }
 

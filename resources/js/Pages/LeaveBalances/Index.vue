@@ -52,11 +52,26 @@ const initializeBalances = () => {
 };
 
 const viewEmployeeDetails = (employeeId) => {
-    // Find all balances for this employee
-    const details = props.balances.data.filter(b => b.employee_id === employeeId);
-    employeeDetails.value = details;
-    selectedEmployee.value = details[0]?.employee;
-    showDetailDialog.value = true;
+    // Find employee info from summary
+    const summaryItem = props.summary.data.find(s => s.employee_id === employeeId);
+    selectedEmployee.value = summaryItem?.employee;
+
+    // Use Inertia to fetch details, preserving current state
+    router.get('/leave-balances',
+        {
+            year: filters.value.year,
+            employee_id: employeeId
+        },
+        {
+            preserveState: true,
+            preserveScroll: true,
+            only: ['balances'],
+            onSuccess: (page) => {
+                employeeDetails.value = page.props.balances.data || [];
+                showDetailDialog.value = true;
+            }
+        }
+    );
 };
 
 const getUsageColor = (percentage) => {

@@ -16,12 +16,21 @@ use Symfony\Component\Console\Attribute\AsCommand;
 class InitializeLeaveBalances extends Command
 {
     /**
+     * The name and signature of the console command.
+     *
+     * @var string
+     */
+    protected $signature = 'leave:initialize-balances
+                            {year? : The year to initialize balances for (default: current year)}
+                            {employee? : Specific employee ID to initialize}';
+
+    /**
      * Execute the console command.
      */
-    public function handle(?int $year = null, ?string $employee = null)
+    public function handle()
     {
-        $year = $year ?? now()->year;
-        $employeeId = $employee;
+        $year = $this->argument('year') ?? now()->year;
+        $employeeId = $this->argument('employee');
 
         $this->info("Initializing leave balances for year {$year}...");
 
@@ -100,35 +109,50 @@ class InitializeLeaveBalances extends Command
 
     /**
      * Calculate total days based on contract type and seniority
+     * Pro-rata calculation: 1 day per month worked in the year
      */
     private function calculateTotalDays(Employee $employee, LeaveType $leaveType, int $year): float
     {
-        // Get active contract
-        $contract = $employee->contracts()
-            ->where('status', 'ACTIVE')
-            ->orderBy('start_date', 'desc')
+        // Get current employment period
+        $employment = $employee->employments()
+            ->where('is_current', true)
             ->first();
 
-        if (!$contract) {
-            return 0;
+        if (!$employment) {
+            return 0; // No active employment
         }
 
-        // Base days from leave type
-        $baseDays = $leaveType->days_per_year;
-
-        // Probation contract = no annual leave
-        if ($contract->contract_type === 'PROBATION') {
-            return 0;
+        // For non-ANNUAL leave types, use default days
+        if ($leaveType->code !== 'ANNUAL') {
+            return $leaveType->days_per_year ?? 0;
         }
 
-        // Official contract: 1 day per month = 12 days per year
-        if ($contract->contract_type === 'OFFICIAL' && $leaveType->code === 'ANNUAL') {
-            $baseDays = 12; // 1 day/month
-        }
+        // Calculate working months in this specific year
+        $yearStart = \Carbon\Carbon::create($year, 1, 1);
+        $yearEnd = \Carbon\Carbon::create($year, 12, 31);
 
-        // Calculate seniority bonus: +1 day per 5 years
-        if ($leaveType->code === 'ANNUAL') {
-            $seniorityYears = $this->calculateSeniorityYears($employee, $year);
+        // Determine actual work period within the year
+        $workStart = $employment->start_date->year == $year
+            ? $employment->start_date
+            : $yearStart;
+
+        $workEnd = $employment->end_date && $employment->end_date->year == $year
+            ? $employment->end_date
+            : $yearEnd;
+
+        // Calculate full working months (include partial month as full month)
+        $workingMonths = $workStart->diffInMonths($workEnd) + 1;
+
+        // Ensure not exceed 12 months
+        $workingMonths = min($workingMonths, 12);
+
+        // ANNUAL leave: 1 day per month worked
+        $baseDays = $workingMonths;
+
+        // Add seniority bonus ONLY if worked full year (12 months)
+        // Seniority bonus: +1 day per 5 years of service
+        if ($workingMonths >= 12) {
+            $seniorityYears = $this->calculateSeniorityYears($employee, $year - 1); // Use previous years for seniority
             $seniorityBonus = floor($seniorityYears / 5);
             $baseDays += $seniorityBonus;
         }
@@ -138,10 +162,36 @@ class InitializeLeaveBalances extends Command
 
     /**
      * Calculate seniority years
+     *
+     * QUAN TRỌNG: Tính tổng thâm niên qua tất cả các employment periods
+     * Nếu nhân viên nghỉ việc rồi quay lại, chỉ tính các khoảng thời gian thực tế làm việc
      */
     private function calculateSeniorityYears(Employee $employee, int $year): int
     {
-        // Get first contract start date
+        // Method 1: Nếu có employment records → tính chính xác
+        $employments = $employee->employments()
+            ->where('start_date', '<=', "{$year}-12-31")
+            ->get();
+
+        if ($employments->isNotEmpty()) {
+            $totalYears = 0;
+
+            foreach ($employments as $employment) {
+                $start = $employment->start_date;
+                $end = $employment->end_date ?? \Carbon\Carbon::parse("{$year}-12-31");
+
+                // Chỉ tính đến hết năm hiện tại
+                if ($end->year > $year) {
+                    $end = \Carbon\Carbon::parse("{$year}-12-31");
+                }
+
+                $totalYears += $start->diffInYears($end);
+            }
+
+            return $totalYears;
+        }
+
+        // Method 2 (fallback): Nếu chưa có employment records → dùng first contract (legacy)
         $firstContract = $employee->contracts()
             ->orderBy('start_date', 'asc')
             ->first();

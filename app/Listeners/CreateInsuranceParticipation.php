@@ -35,9 +35,16 @@ class CreateInsuranceParticipation implements ShouldHandleEventsAfterCommit
         }
 
         try {
+            // Get employment start date (more accurate than contract start date)
+            $employment = $contract->employee->employments()
+                ->where('is_current', true)
+                ->first();
+
+            $startDate = $employment ? $employment->start_date : $contract->start_date;
+
             InsuranceParticipation::create([
                 'employee_id' => $contract->employee_id,
-                'participation_start_date' => $contract->start_date,
+                'participation_start_date' => $startDate, // ✅ Dùng employment start_date
                 'participation_end_date' => null, // Active
                 'has_social_insurance' => $contract->has_social_insurance ?? true,
                 'has_health_insurance' => $contract->has_health_insurance ?? true,

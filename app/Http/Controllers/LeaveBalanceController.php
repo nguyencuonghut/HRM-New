@@ -19,9 +19,15 @@ class LeaveBalanceController extends Controller
         $leaveTypeId = $request->input('leave_type_id');
         $departmentId = $request->input('department_id');
         $search = $request->input('search');
+        $employeeId = $request->input('employee_id');
 
         // Build base query for detailed view
         $balancesQuery = LeaveBalance::query()->where('year', $year);
+
+        // Filter by employee (for detail dialog)
+        if ($employeeId) {
+            $balancesQuery->where('employee_id', $employeeId);
+        }
 
         // Filter by leave type
         if ($leaveTypeId) {

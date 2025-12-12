@@ -37,6 +37,7 @@ class DatabaseSeeder extends Seeder
             ContractSeeder::class, // Test contracts for leave balance system
             ContractAppendixSeeder::class, // Test appendices for contract modifications
             //InsuranceTestDataSeeder::class, // Test data for insurance workflow
+            MigrateExistingEmployeesToEmploymentSeeder::class, // Migrate existing insurance data
         ]);
     }
 }
