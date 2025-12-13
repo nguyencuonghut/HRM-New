@@ -34,9 +34,17 @@ class ContractResource extends JsonResource
             'contract_type_label' => ContractType::tryFrom($this->contract_type)?->label(),
             'status' => $this->status,
             'status_label'        => ContractStatus::tryFrom($this->status)?->label(),
+
+            // Flat fields for easy filtering
+            'employee_name' => $this->employee ? $this->employee->full_name : null,
+            'employee_code' => $this->employee ? $this->employee->employee_code : null,
+            'department_name' => $this->department ? $this->department->name : null,
+            'position_name' => $this->position ? $this->position->title : null,
             'sign_date' => optional($this->sign_date)->toDateString(),
             'start_date'=> optional($this->start_date)->toDateString(),
             'end_date'  => optional($this->end_date)->toDateString(),
+            'start_date_formatted' => $this->start_date ? $this->start_date->format('d/m/Y') : null,
+            'end_date_formatted' => $this->end_date ? $this->end_date->format('d/m/Y') : null,
             'probation_end_date' => optional($this->probation_end_date)->toDateString(),
             'base_salary'=> (int)$this->base_salary,
             'insurance_salary'=> (int)$this->insurance_salary,

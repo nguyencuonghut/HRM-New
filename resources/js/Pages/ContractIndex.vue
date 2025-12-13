@@ -23,6 +23,7 @@
         :paginator="true"
         :rows="10"
         :filters="filters"
+        :globalFilterFields="['contract_number', 'employee_name', 'employee_code', 'department_name', 'position_name', 'contract_type_label', 'status_label', 'start_date_formatted', 'end_date_formatted']"
         paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport RowsPerPageDropdown"
         :rowsPerPageOptions="[5, 10, 25]"
         currentPageReportTemplate="Hiển thị {first}–{last}/{totalRecords} hợp đồng"

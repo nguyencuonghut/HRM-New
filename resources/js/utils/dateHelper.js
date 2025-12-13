@@ -17,15 +17,19 @@ export function toYMD(val) {
 }
 
 /**
- * Format date for display (Vietnamese format)
+ * Format date for display (Vietnamese format with leading zeros)
  *
  * @param {Date|string|null} d - Date value
- * @returns {string} - Formatted date or empty string
+ * @returns {string} - Formatted date (dd/mm/yyyy) or empty string
  */
 export function formatDate(d) {
   if (!d) return ''
   try {
-    return new Date(d).toLocaleDateString('vi-VN')
+    const date = new Date(d)
+    const day = String(date.getDate()).padStart(2, '0')
+    const month = String(date.getMonth() + 1).padStart(2, '0')
+    const year = date.getFullYear()
+    return `${day}/${month}/${year}`
   } catch {
     return d
   }
