@@ -93,6 +93,45 @@ class EmployeeEmployment extends Model
     }
 
     /**
+     * Get formatted duration (years, months, days)
+     * Example: ['years' => 2, 'months' => 3, 'days' => 12]
+     */
+    public function getFormattedDuration(): array
+    {
+        $end = $this->end_date ?? now();
+        $diff = $this->start_date->diff($end);
+
+        return [
+            'years' => $diff->y,
+            'months' => $diff->m,
+            'days' => $diff->d,
+            'total_days' => $this->getDurationInDays(),
+        ];
+    }
+
+    /**
+     * Get human-readable duration
+     * Example: "2 năm 3 tháng 12 ngày"
+     */
+    public function getHumanDuration(): string
+    {
+        $duration = $this->getFormattedDuration();
+        $parts = [];
+
+        if ($duration['years'] > 0) {
+            $parts[] = $duration['years'] . ' năm';
+        }
+        if ($duration['months'] > 0) {
+            $parts[] = $duration['months'] . ' tháng';
+        }
+        if ($duration['days'] > 0 || empty($parts)) {
+            $parts[] = $duration['days'] . ' ngày';
+        }
+
+        return implode(' ', $parts);
+    }
+
+    /**
      * Check if employment was active during a specific period
      */
     public function wasActiveDuring(Carbon $startDate, Carbon $endDate): bool

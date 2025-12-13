@@ -82,26 +82,127 @@ class Employee extends Model
 
     // Quan hệ: employment periods (chu kỳ làm việc)
     public function employments(){ return $this->hasMany(EmployeeEmployment::class); }
-    
+
     // Lấy employment hiện tại
     public function currentEmployment()
     {
         return $this->employments()->where('is_current', true)->first();
     }
-    
-    // Tính tổng thâm niên (tất cả các employment periods)
-    public function getTotalSeniorityYears(): int
-    {
-        return $this->employments()
-            ->get()
-            ->sum(fn($employment) => $employment->getDurationInYears());
-    }
-    
-    // Tính thâm niên tại employment hiện tại
-    public function getCurrentSeniorityYears(): int
+
+    // ==================== TENURE / SENIORITY METHODS ====================
+
+    /**
+     * A) Current Tenure - Thâm niên đợt hiện tại
+     * Tính từ employment hiện tại (is_current = true)
+     * Dùng cho: đánh giá, thưởng, probation check
+     */
+    public function getCurrentTenure(): array
     {
         $current = $this->currentEmployment();
-        return $current ? $current->getDurationInYears() : 0;
+
+        if (!$current) {
+            return ['years' => 0, 'months' => 0, 'days' => 0, 'total_days' => 0];
+        }
+
+        return $current->getFormattedDuration();
+    }
+
+    public function getCurrentTenureHuman(): string
+    {
+        $current = $this->currentEmployment();
+        return $current ? $current->getHumanDuration() : '0 ngày';
+    }
+
+    /**
+     * B) Cumulative Tenure - Thâm niên tích lũy tại công ty
+     * Cộng tất cả các employment periods
+     * Dùng cho: xét chế độ theo tổng thời gian làm việc
+     */
+    public function getCumulativeTenure(): array
+    {
+        $totalDays = $this->employments()
+            ->get()
+            ->sum(fn($employment) => $employment->getDurationInDays());
+
+        // Convert total days to years/months/days (approximate)
+        $years = floor($totalDays / 365);
+        $remainingDays = $totalDays % 365;
+        $months = floor($remainingDays / 30);
+        $days = $remainingDays % 30;
+
+        return [
+            'years' => $years,
+            'months' => $months,
+            'days' => $days,
+            'total_days' => $totalDays,
+        ];
+    }
+
+    public function getCumulativeTenureHuman(): string
+    {
+        $tenure = $this->getCumulativeTenure();
+        $parts = [];
+
+        if ($tenure['years'] > 0) {
+            $parts[] = $tenure['years'] . ' năm';
+        }
+        if ($tenure['months'] > 0) {
+            $parts[] = $tenure['months'] . ' tháng';
+        }
+        if ($tenure['days'] > 0 || empty($parts)) {
+            $parts[] = $tenure['days'] . ' ngày';
+        }
+
+        return implode(' ', $parts);
+    }
+
+    /**
+     * C) Continuous Tenure - Thâm niên liên tục
+     * Hiện tại = Current tenure (chưa có rule nghỉ ngắn ngày)
+     */
+    public function getContinuousTenure(): array
+    {
+        return $this->getCurrentTenure();
+    }
+
+    public function getContinuousTenureHuman(): string
+    {
+        return $this->getCurrentTenureHuman();
+    }
+
+    /**
+     * Legacy methods (kept for backward compatibility)
+     */
+    public function getTotalSeniorityYears(): int
+    {
+        return $this->getCumulativeTenure()['years'];
+    }
+
+    public function getCurrentSeniorityYears(): int
+    {
+        return $this->getCurrentTenure()['years'];
+    }
+
+    /**
+     * Get employment history for display
+     * Returns array of periods with formatted info
+     */
+    public function getEmploymentHistory(): array
+    {
+        return $this->employments()
+            ->orderBy('start_date')
+            ->get()
+            ->map(function ($employment) {
+                return [
+                    'id' => $employment->id,
+                    'start_date' => $employment->start_date->format('d/m/Y'),
+                    'end_date' => $employment->end_date ? $employment->end_date->format('d/m/Y') : 'nay',
+                    'duration' => $employment->getHumanDuration(),
+                    'is_current' => $employment->is_current,
+                    'end_reason' => $employment->end_reason,
+                ];
+            })
+            ->toArray();
     }
 
     // Quan hệ: hợp đồng

@@ -45,6 +45,14 @@ class EmployeeResource extends JsonResource
             'created_at'               => optional($this->created_at)->toDateTimeString(),
             'updated_at'               => optional($this->updated_at)->toDateTimeString(),
 
+            // Tenure / Seniority info
+            'current_tenure'           => $this->getCurrentTenure(),
+            'current_tenure_text'      => $this->getCurrentTenureHuman(),
+            'cumulative_tenure'        => $this->getCumulativeTenure(),
+            'cumulative_tenure_text'   => $this->getCumulativeTenureHuman(),
+            'employment_history'       => $this->whenLoaded('employments', fn() => $this->getEmploymentHistory()),
+            'current_employment_start' => $this->currentEmployment() ? $this->currentEmployment()->start_date->format('d/m/Y') : null,
+
             // Profile completion
             'completion_score'         => $completion ? $completion['score'] : null,
             'completion_details'       => $completion ? $completion['details'] : null,

@@ -36,7 +36,7 @@ class EmployeeEducationController extends Controller
         $this->authorize('viewProfile', $employee);
 
         // Load relationships for completion calculation
-        $employee->load(['assignments', 'educations', 'relatives', 'experiences', 'employeeSkills']);
+        $employee->load(['assignments', 'educations', 'relatives', 'experiences', 'employeeSkills', 'employments']);
 
         return Inertia::render('EmployeeProfile', [
             'employee'          => (new \App\Http\Resources\EmployeeResource($employee))->resolve(),

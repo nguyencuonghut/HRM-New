@@ -22,7 +22,7 @@ class EmployeeController extends Controller
         $status = $request->get('status', null);
 
         $query = Employee::query()
-            ->with(['assignments', 'educations', 'relatives', 'experiences', 'employeeSkills'])
+            ->with(['assignments', 'educations', 'relatives', 'experiences', 'employeeSkills', 'employments'])
             ->when($search !== '', function($q) use ($search) {
                 $q->where(function($qq) use ($search){
                     $qq->where('full_name','like',"%{$search}%")

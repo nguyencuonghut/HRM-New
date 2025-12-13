@@ -485,18 +485,15 @@ const onFileSelect = (event) => {
 };
 
 const saveDraft = () => {
-    console.log('saveDraft called');
     submitted.value = true;
 
     if (!validateForm()) {
-        console.log('Validation failed in saveDraft');
         return;
     }
 
     saving.value = true;
 
     const submitData = prepareSubmitData(false);
-    console.log('Submit data prepared:', submitData);
 
     if (props.mode === 'edit') {
         const leaveId = props.leaveRequest?.data?.id || props.leaveRequest?.id;
@@ -550,16 +547,8 @@ const submitForApproval = () => {
             },
         });
     } else {
-        console.log('Mode: create, calling LeaveRequestService.store()');
         LeaveRequestService.store(submitData, {
-            onSuccess: (page) => {
-                console.log('Store success:', page);
-            },
-            onError: (errors) => {
-                console.log('Store error:', errors);
-            },
             onFinish: () => {
-                console.log('Store finished');
                 submitting.value = false;
             },
         });
@@ -607,37 +596,25 @@ const prepareSubmitData = (submit = false) => {
 };
 
 const validateForm = () => {
-    console.log('Validating form:', {
-        leave_type_id: form.value.leave_type_id,
-        start_date: form.value.start_date,
-        end_date: form.value.end_date,
-        selectedLeaveType: selectedLeaveType.value?.code
-    });
-
     if (!form.value.leave_type_id || !form.value.start_date || !form.value.end_date) {
-        console.log('Basic validation failed');
         return false;
     }
 
     // Additional validation for PERSONAL_PAID
     if (selectedLeaveType.value?.code === 'PERSONAL_PAID' && !form.value.personal_leave_reason) {
-        console.log('PERSONAL_PAID validation failed');
         return false;
     }
 
     // Additional validation for MATERNITY
     if (selectedLeaveType.value?.code === 'MATERNITY' && !form.value.expected_due_date) {
-        console.log('MATERNITY validation failed');
         return false;
     }
 
     // Additional validation for SICK
     if (selectedLeaveType.value?.code === 'SICK' && !form.value.medical_certificate_path) {
-        console.log('SICK validation failed');
         return false;
     }
 
-    console.log('Validation passed');
     return true;
 };
 

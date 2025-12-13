@@ -80,6 +80,14 @@
                         {{ formatDate(slotProps.data.hire_date) }}
                     </template>
                 </Column>
+                <Column field="current_tenure" header="Thâm niên" sortable style="min-width: 10rem">
+                    <template #body="slotProps">
+                        <span v-if="slotProps.data.current_tenure" class="text-sm">
+                            <span v-if="slotProps.data.current_tenure.years > 0">{{ slotProps.data.current_tenure.years }}y </span><span v-if="slotProps.data.current_tenure.months > 0">{{ slotProps.data.current_tenure.months }}m</span>
+                        </span>
+                        <span v-else class="text-gray-400 text-sm">--</span>
+                    </template>
+                </Column>
                 <Column header="Thao tác" :exportable="false" style="min-width: 12rem">
                     <template #body="slotProps">
                         <div class="flex gap-2">
