@@ -23,8 +23,11 @@ class InitializeLeaveBalanceForContract implements ShouldHandleEventsAfterCommit
 
         Log::info("Initializing leave balances for employee {$employee->id} after contract {$contract->id} approval");
 
-        // Get all leave types that require approval
-        $leaveTypes = LeaveType::where('requires_approval', true)->get();
+        // Only initialize ANNUAL leave (quota-based)
+        // Other types (SICK, PERSONAL_PAID, MATERNITY) are event-based, created when requested
+        $leaveTypes = LeaveType::where('requires_approval', true)
+            ->where('code', 'ANNUAL')
+            ->get();
 
         foreach ($leaveTypes as $leaveType) {
             // Check if balance already exists

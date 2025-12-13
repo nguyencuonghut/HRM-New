@@ -37,9 +37,9 @@ class InitializeLeaveBalances extends Command
         DB::beginTransaction();
         try {
             $employees = $employeeId
-                ? Employee::where('id', $employeeId)->get()
-                : Employee::whereHas('contracts', function ($query) {
-                    $query->where('status', 'ACTIVE');
+                ? Employee::where('employee_code', $employeeId)->get()
+                : Employee::whereHas('employments', function ($query) {
+                    $query->where('is_current', true);
                 })->get();
 
             if ($employees->isEmpty()) {
@@ -47,13 +47,35 @@ class InitializeLeaveBalances extends Command
                 return 1;
             }
 
-            $leaveTypes = LeaveType::where('requires_approval', true)->get();
+            // Initialize all leave types
+            // ANNUAL: có quota (tính theo tháng làm việc)
+            // Other types: event-based (hiển thị với total = 0 để UI đầy đủ)
+            $leaveTypes = LeaveType::where('requires_approval', true)
+                ->get();
 
             $progressBar = $this->output->createProgressBar($employees->count());
             $created = 0;
             $skipped = 0;
 
             foreach ($employees as $employee) {
+                // Skip if employee has no employment in this year
+                $employment = $employee->employments()
+                    ->where('is_current', true)
+                    ->first();
+
+                if (!$employment) {
+                    $this->warn("  ⚠ Employee {$employee->employee_code} has no current employment, skipping...");
+                    $progressBar->advance();
+                    continue;
+                }
+
+                // Check if employment ended before this year
+                if ($employment->end_date && $employment->end_date->year < $year) {
+                    $this->warn("  ⚠ Employee {$employee->employee_code} ended employment before {$year}, skipping...");
+                    $progressBar->advance();
+                    continue;
+                }
+
                 foreach ($leaveTypes as $leaveType) {
                     // Check if balance already exists
                     $exists = LeaveBalance::where('employee_id', $employee->id)
@@ -141,7 +163,8 @@ class InitializeLeaveBalances extends Command
             : $yearEnd;
 
         // Calculate full working months (include partial month as full month)
-        $workingMonths = $workStart->diffInMonths($workEnd) + 1;
+        // floor() + 1 ensures partial month counts as full month
+        $workingMonths = floor($workStart->diffInMonths($workEnd)) + 1;
 
         // Ensure not exceed 12 months
         $workingMonths = min($workingMonths, 12);

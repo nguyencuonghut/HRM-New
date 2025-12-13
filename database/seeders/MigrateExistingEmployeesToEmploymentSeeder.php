@@ -36,18 +36,47 @@ class MigrateExistingEmployeesToEmploymentSeeder extends Seeder
                     continue;
                 }
 
-                // Determine start_date
-                $startDate = $employee->hire_date ?? $employee->created_at->toDateString();
+                // Lấy contract cũ nhất để xác định start_date
+                $oldestContract = Contract::where('employee_id', $employee->id)
+                    ->oldest('start_date')
+                    ->first();
 
-                // Determine if current
-                $isCurrent = in_array($employee->status, ['ACTIVE', 'ON_LEAVE']);
+                $startDate = $oldestContract?->start_date
+                    ?? $employee->hire_date
+                    ?? $employee->created_at->toDateString();
 
-                // Determine end_date and reason
+                // Cập nhật hire_date nếu khác
+                if ($employee->hire_date != $startDate) {
+                    $employee->update(['hire_date' => $startDate]);
+                    $this->command->info("  📅 Updated hire_date for {$employee->employee_code} to {$startDate}");
+                }
+
+                // Lấy contract MỚI NHẤT để xác định end_date và is_current
+                $latestContract = Contract::where('employee_id', $employee->id)
+                    ->latest('end_date')
+                    ->first();
+
+                // Xác định is_current, end_date dựa vào contract mới nhất
+                $isCurrent = true;
                 $endDate = null;
                 $endReason = null;
 
-                if (!$isCurrent) {
-                    // Employee is terminated
+                if ($latestContract && $latestContract->end_date) {
+                    // Nếu contract đã hết hạn (end_date < today)
+                    if ($latestContract->end_date->isPast()) {
+                        $isCurrent = false;
+                        $endDate = $latestContract->end_date->toDateString();
+                        $endReason = 'CONTRACT_END';
+
+                        // Cập nhật employee status nếu cần
+                        if ($employee->status === 'ACTIVE') {
+                            $employee->update(['status' => 'TERMINATED']);
+                            $this->command->info("  📍 Updated status to TERMINATED for {$employee->employee_code} (contract expired {$endDate})");
+                        }
+                    }
+                } elseif (!in_array($employee->status, ['ACTIVE', 'ON_LEAVE'])) {
+                    // Không có contract hoặc contract không có end_date, dựa vào status
+                    $isCurrent = false;
                     $endDate = $employee->updated_at->toDateString();
                     $endReason = match ($employee->status) {
                         'TERMINATED' => 'TERMINATION',

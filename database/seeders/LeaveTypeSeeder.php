@@ -22,29 +22,29 @@ class LeaveTypeSeeder extends Seeder
                 'is_paid' => true,
                 'is_active' => true,
                 'order_index' => 1,
-                'description' => 'Nghỉ phép năm theo quy định (12 ngày/năm)',
+                'description' => 'Nghỉ phép năm (12 ngày/năm + thâm niên, tính theo ngày làm việc)',
             ],
             [
                 'name' => 'Phép ốm',
                 'code' => 'SICK',
                 'color' => '#ef4444', // red
-                'days_per_year' => 30,
+                'days_per_year' => 0, // ✅ Không giới hạn, cần giấy y tế
                 'requires_approval' => true,
                 'is_paid' => true,
                 'is_active' => true,
                 'order_index' => 2,
-                'description' => 'Nghỉ ốm đau có giấy xác nhận của cơ sở y tế',
+                'description' => 'Nghỉ ốm với giấy xác nhận y tế (không giới hạn ngày, công ty trả lương tối đa 30 ngày, BHXH chi trả sau đó)',
             ],
             [
                 'name' => 'Phép riêng có lương',
                 'code' => 'PERSONAL_PAID',
                 'color' => '#3b82f6', // blue
-                'days_per_year' => 3,
+                'days_per_year' => 0, // ✅ Tính theo từng sự kiện, không phải quota
                 'requires_approval' => true,
                 'is_paid' => true,
                 'is_active' => true,
                 'order_index' => 3,
-                'description' => 'Phép riêng: kết hôn, tang lễ, việc gia đình... (có lương)',
+                'description' => 'Phép riêng theo sự kiện: Kết hôn (3 ngày), Con kết hôn (1 ngày), Tang lễ (1-3 ngày tùy quan hệ), Vợ sinh (5-14 ngày), Chuyển nhà (1 ngày)',
             ],
             [
                 'name' => 'Phép không lương',
@@ -55,18 +55,18 @@ class LeaveTypeSeeder extends Seeder
                 'is_paid' => false,
                 'is_active' => true,
                 'order_index' => 4,
-                'description' => 'Nghỉ không lương theo yêu cầu cá nhân',
+                'description' => 'Nghỉ không lương theo thỏa thuận với công ty (không giới hạn)',
             ],
             [
                 'name' => 'Phép thai sản',
                 'code' => 'MATERNITY',
                 'color' => '#ec4899', // pink
-                'days_per_year' => 180,
+                'days_per_year' => 0, // ✅ Tính theo tình huống sinh nở
                 'requires_approval' => true,
                 'is_paid' => true,
                 'is_active' => true,
                 'order_index' => 5,
-                'description' => 'Nghỉ thai sản theo quy định pháp luật (6 tháng)',
+                'description' => 'Nghỉ thai sản: 180 ngày (6 tháng, tính cả T7/CN/lễ), +30 ngày nếu sinh đôi, +15 ngày nếu mổ. BHXH chi trả 100% lương',
             ],
             [
                 'name' => 'Phép học tập',
@@ -77,7 +77,7 @@ class LeaveTypeSeeder extends Seeder
                 'is_paid' => false,
                 'is_active' => true,
                 'order_index' => 6,
-                'description' => 'Nghỉ để học tập, thi cử',
+                'description' => 'Nghỉ học tập, thi cử (theo quy chế công ty)',
             ],
             [
                 'name' => 'Phép công tác',
@@ -88,12 +88,15 @@ class LeaveTypeSeeder extends Seeder
                 'is_paid' => true,
                 'is_active' => true,
                 'order_index' => 7,
-                'description' => 'Công tác tại đơn vị khác hoặc ra ngoài',
+                'description' => 'Công tác ngoài văn phòng (tính là ngày làm việc, không phải nghỉ phép)',
             ],
         ];
 
         foreach ($leaveTypes as $leaveType) {
-            LeaveType::create($leaveType);
+            LeaveType::updateOrCreate(
+                ['code' => $leaveType['code']],
+                $leaveType
+            );
         }
     }
 }

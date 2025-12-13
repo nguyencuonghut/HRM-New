@@ -62,6 +62,7 @@
                             optionValue="id"
                             placeholder="Chọn loại phép"
                             :invalid="submitted && !form.leave_type_id"
+                            dataKey="id"
                             fluid
                             @change="onLeaveTypeChange"
                         >
@@ -87,8 +88,8 @@
                         </small>
                     </div>
 
-                    <!-- Available Days -->
-                    <div v-if="selectedLeaveType">
+                    <!-- Available Days - Only for ANNUAL leave -->
+                    <div v-if="selectedLeaveType?.code === 'ANNUAL'">
                         <label class="block font-bold mb-2">Số ngày phép còn lại</label>
                         <div class="p-3 border rounded-md bg-gray-50">
                             <div class="flex items-center gap-2">
@@ -132,6 +133,110 @@
                         </small>
                     </div>
 
+                    <!-- Personal Leave Reason - Only for PERSONAL_PAID -->
+                    <div v-if="selectedLeaveType?.code === 'PERSONAL_PAID'" class="md:col-span-2">
+                        <label class="block font-bold mb-2 required-field">Lý do nghỉ phép</label>
+                        <Select
+                            v-model="form.personal_leave_reason"
+                            :options="personalLeaveReasons"
+                            optionLabel="label"
+                            optionValue="value"
+                            placeholder="Chọn lý do nghỉ phép"
+                            :invalid="submitted && !form.personal_leave_reason"
+                            fluid
+                            @change="onPersonalReasonChange"
+                        >
+                            <template #option="slotProps">
+                                <div class="flex justify-between items-center w-full">
+                                    <span>{{ slotProps.option.label }}</span>
+                                    <Badge :value="`${slotProps.option.days} ngày`" severity="info" />
+                                </div>
+                            </template>
+                        </Select>
+                        <small v-if="submitted && !form.personal_leave_reason" class="p-error block mt-1">
+                            Vui lòng chọn lý do nghỉ phép
+                        </small>
+                    </div>
+
+                    <!-- Maternity Leave Fields - Only for MATERNITY -->
+                    <template v-if="selectedLeaveType?.code === 'MATERNITY'">
+                        <div class="md:col-span-2">
+                            <label class="block font-bold mb-2 required-field">Ngày dự sinh</label>
+                            <DatePicker
+                                v-model="form.expected_due_date"
+                                showIcon
+                                dateFormat="yy-mm-dd"
+                                :invalid="submitted && !form.expected_due_date"
+                                fluid
+                                @date-select="calculateMaternityDays"
+                            />
+                            <small v-if="submitted && !form.expected_due_date" class="p-error block mt-1">
+                                Vui lòng chọn ngày dự sinh
+                            </small>
+                        </div>
+
+                        <div>
+                            <label class="block font-bold mb-2">Số con sinh</label>
+                            <InputNumber
+                                v-model="form.twins_count"
+                                :min="1"
+                                :max="5"
+                                showButtons
+                                fluid
+                                @input="calculateMaternityDays"
+                            />
+                            <small class="text-gray-500 block mt-1">
+                                Sinh đôi, sinh ba... được cộng thêm 30 ngày/mỗi con từ con thứ 2
+                            </small>
+                        </div>
+
+                        <div>
+                            <label class="block font-bold mb-2">Số con dưới 36 tháng</label>
+                            <InputNumber
+                                v-model="form.children_under_36_months"
+                                :min="0"
+                                :max="5"
+                                showButtons
+                                fluid
+                                @input="calculateMaternityDays"
+                            />
+                            <small class="text-gray-500 block mt-1">
+                                Được cộng thêm 30 ngày nếu có con dưới 36 tháng
+                            </small>
+                        </div>
+
+                        <div class="md:col-span-2">
+                            <div class="flex items-center gap-2">
+                                <Checkbox
+                                    v-model="form.is_caesarean"
+                                    binary
+                                    @change="calculateMaternityDays"
+                                />
+                                <label class="font-bold cursor-pointer" @click="form.is_caesarean = !form.is_caesarean">
+                                    Sinh mổ (cộng thêm 15 ngày)
+                                </label>
+                            </div>
+                        </div>
+                    </template>
+
+                    <!-- Medical Certificate - Only for SICK -->
+                    <div v-if="selectedLeaveType?.code === 'SICK'" class="md:col-span-2">
+                        <label class="block font-bold mb-2 required-field">Giấy xác nhận của bác sĩ</label>
+                        <FileUpload
+                            mode="basic"
+                            accept=".pdf,.jpg,.jpeg,.png"
+                            :maxFileSize="5000000"
+                            chooseLabel="Chọn file"
+                            @select="onFileSelect"
+                        />
+                        <small class="text-gray-500 block mt-1">
+                            Chấp nhận file PDF, JPG, PNG. Tối đa 5MB. (Công ty trả lương tối đa 30 ngày)
+                        </small>
+                        <small v-if="submitted && !form.medical_certificate_path" class="p-error block mt-1">
+                            Vui lòng tải lên giấy xác nhận của bác sĩ
+                        </small>
+                    </div>
+
                     <!-- Calculated Days -->
                     <div v-if="calculatedDays > 0" class="md:col-span-2">
                         <div class="p-4 border-l-4 border-blue-500 bg-blue-50 rounded">
@@ -141,7 +246,8 @@
                                 <span class="text-xl font-bold text-blue-600">{{ calculatedDays }}</span>
                                 <span class="text-gray-600">ngày làm việc (không tính thứ 7, CN)</span>
                             </div>
-                            <div v-if="remainingDays !== null && calculatedDays > remainingDays" class="mt-2 text-red-600">
+                            <!-- Only show warning for ANNUAL leave -->
+                            <div v-if="selectedLeaveType?.code === 'ANNUAL' && remainingDays !== null && calculatedDays > remainingDays" class="mt-2 text-red-600">
                                 <i class="pi pi-exclamation-triangle"></i>
                                 <span class="font-semibold">Vượt {{ calculatedDays - remainingDays }} ngày phép!</span>
                                 <span class="text-sm block mt-1">
@@ -196,9 +302,12 @@ import { ref, computed, watch, onMounted } from 'vue';
 import { Head, usePage } from '@inertiajs/vue3';
 import Button from 'primevue/button';
 import InputText from 'primevue/inputtext';
+import InputNumber from 'primevue/inputnumber';
 import Select from 'primevue/select';
 import DatePicker from 'primevue/datepicker';
 import Textarea from 'primevue/textarea';
+import Checkbox from 'primevue/checkbox';
+import FileUpload from 'primevue/fileupload';
 import Badge from 'primevue/badge';
 import { useToast } from 'primevue/usetoast';
 import { LeaveRequestService } from '@/services/LeaveRequestService';
@@ -209,6 +318,7 @@ import { toYMD } from '@/utils/dateHelper';
 const props = defineProps({
     leaveRequest: Object,
     leaveTypes: Array,
+    personalLeaveReasons: Array, // Personal paid leave reasons
     employee: Object,
     mode: String,
     isAdmin: Boolean,
@@ -230,6 +340,13 @@ const initFormData = () => {
         start_date: null,
         end_date: null,
         reason: leaveData?.reason || '',
+        note: leaveData?.note || '',
+        personal_leave_reason: leaveData?.personal_leave_reason || null,
+        expected_due_date: null,
+        twins_count: leaveData?.twins_count || 1,
+        is_caesarean: leaveData?.is_caesarean || false,
+        children_under_36_months: leaveData?.children_under_36_months || 0,
+        medical_certificate_path: null,
     };
 
     // Convert date strings to Date objects for DatePicker
@@ -246,6 +363,14 @@ const initFormData = () => {
         if (typeof dateStr === 'string' && dateStr.includes('-')) {
             const [y, m, d] = dateStr.split('-').map(Number);
             data.end_date = new Date(y, m - 1, d);
+        }
+    }
+
+    if (leaveData?.expected_due_date) {
+        const dateStr = leaveData.expected_due_date;
+        if (typeof dateStr === 'string' && dateStr.includes('-')) {
+            const [y, m, d] = dateStr.split('-').map(Number);
+            data.expected_due_date = new Date(y, m - 1, d);
         }
     }
 
@@ -292,22 +417,86 @@ const loadRemainingDays = async () => {
 };
 
 const calculateDays = () => {
-    calculatedDays.value = calculateWorkingDays(form.value.start_date, form.value.end_date);
+    if (selectedLeaveType.value?.code === 'PERSONAL_PAID') {
+        // Days are determined by personal_leave_reason
+        const reason = props.personalLeaveReasons?.find(r => r.value === form.value.personal_leave_reason);
+        calculatedDays.value = reason?.days || 0;
+    } else if (selectedLeaveType.value?.code === 'MATERNITY') {
+        // Will be calculated by calculateMaternityDays
+        return;
+    } else {
+        // Normal working days calculation
+        calculatedDays.value = calculateWorkingDays(form.value.start_date, form.value.end_date);
+    }
+};
+
+const onPersonalReasonChange = () => {
+    const reason = props.personalLeaveReasons?.find(r => r.value === form.value.personal_leave_reason);
+    if (reason) {
+        calculatedDays.value = reason.days;
+        // Auto-calculate end date
+        if (form.value.start_date) {
+            const startDate = new Date(form.value.start_date);
+            const endDate = new Date(startDate);
+            endDate.setDate(endDate.getDate() + reason.days - 1);
+            form.value.end_date = endDate;
+        }
+    }
+};
+
+const calculateMaternityDays = () => {
+    let days = 180; // Base 180 days
+
+    // Additional 30 days for twins/triplets (from 2nd child onwards)
+    if (form.value.twins_count > 1) {
+        days += (form.value.twins_count - 1) * 30;
+    }
+
+    // Additional 15 days for caesarean
+    if (form.value.is_caesarean) {
+        days += 15;
+    }
+
+    // Additional 30 days if having children under 36 months
+    if (form.value.children_under_36_months > 0) {
+        days += 30;
+    }
+
+    calculatedDays.value = days;
+
+    // Auto-calculate dates: 60 days before due date, remaining after
+    if (form.value.expected_due_date) {
+        const dueDate = new Date(form.value.expected_due_date);
+
+        // Start date: 60 days before due date
+        const startDate = new Date(dueDate);
+        startDate.setDate(startDate.getDate() - 60);
+        form.value.start_date = startDate;
+
+        // End date: start + total days
+        const endDate = new Date(startDate);
+        endDate.setDate(endDate.getDate() + days - 1);
+        form.value.end_date = endDate;
+    }
+};
+
+const onFileSelect = (event) => {
+    form.value.medical_certificate_path = event.files[0];
 };
 
 const saveDraft = () => {
+    console.log('saveDraft called');
     submitted.value = true;
 
-    if (!validateForm()) return;
+    if (!validateForm()) {
+        console.log('Validation failed in saveDraft');
+        return;
+    }
 
     saving.value = true;
 
-    const submitData = {
-        ...form.value,
-        start_date: toYMD(form.value.start_date),
-        end_date: toYMD(form.value.end_date),
-        submit: false,
-    };
+    const submitData = prepareSubmitData(false);
+    console.log('Submit data prepared:', submitData);
 
     if (props.mode === 'edit') {
         const leaveId = props.leaveRequest?.data?.id || props.leaveRequest?.id;
@@ -326,27 +515,34 @@ const saveDraft = () => {
 };
 
 const submitForApproval = () => {
+    console.log('submitForApproval called');
     submitted.value = true;
 
-    if (!validateForm()) return;
+    if (!validateForm()) {
+        console.log('Validation failed in submitForApproval');
+        return;
+    }
 
-    // Allow submission even if exceeds balance
+    // Allow submission even if exceeds balance (only for ANNUAL leave)
     // The excess days will be marked as unpaid leave
-    if (remainingDays.value !== null && calculatedDays.value > remainingDays.value) {
+    if (selectedLeaveType.value?.code === 'ANNUAL' && remainingDays.value !== null && calculatedDays.value > remainingDays.value) {
         const excessDays = calculatedDays.value - remainingDays.value;
         ToastService.warn(`Vượt ${excessDays} ngày phép. Những ngày này sẽ bị trừ vào công/lương.`);
     }
 
+    console.log('About to prepare submit data');
     submitting.value = true;
 
-    const submitData = {
-        ...form.value,
-        start_date: toYMD(form.value.start_date),
-        end_date: toYMD(form.value.end_date),
-        submit: true,
-    };
+    const submitData = prepareSubmitData(true);
+    console.log('Submit data prepared:', submitData);
+
+    // Debug FormData contents
+    for (let pair of submitData.entries()) {
+        console.log(pair[0] + ': ' + pair[1]);
+    }
 
     if (props.mode === 'edit') {
+        console.log('Mode: edit');
         const leaveId = props.leaveRequest?.data?.id || props.leaveRequest?.id;
         LeaveRequestService.update(leaveId, submitData, {
             onFinish: () => {
@@ -354,16 +550,95 @@ const submitForApproval = () => {
             },
         });
     } else {
+        console.log('Mode: create, calling LeaveRequestService.store()');
         LeaveRequestService.store(submitData, {
+            onSuccess: (page) => {
+                console.log('Store success:', page);
+            },
+            onError: (errors) => {
+                console.log('Store error:', errors);
+            },
             onFinish: () => {
+                console.log('Store finished');
                 submitting.value = false;
             },
         });
     }
 };
 
+const prepareSubmitData = (submit = false) => {
+    // Create FormData for file upload
+    const formData = new FormData();
+
+    // Add basic fields
+    if (form.value.employee_id) formData.append('employee_id', form.value.employee_id);
+    formData.append('leave_type_id', form.value.leave_type_id);
+    formData.append('start_date', toYMD(form.value.start_date));
+    formData.append('end_date', toYMD(form.value.end_date));
+    formData.append('days', calculatedDays.value);
+    if (form.value.reason) formData.append('reason', form.value.reason);
+    if (form.value.note) formData.append('note', form.value.note);
+    formData.append('submit', submit ? '1' : '0'); // Convert boolean to "1" or "0" for FormData
+
+    // Add conditional fields based on leave type
+    if (selectedLeaveType.value?.code === 'PERSONAL_PAID' && form.value.personal_leave_reason) {
+        formData.append('personal_leave_reason', form.value.personal_leave_reason);
+    }
+
+    if (selectedLeaveType.value?.code === 'MATERNITY') {
+        if (form.value.expected_due_date) {
+            formData.append('expected_due_date', toYMD(form.value.expected_due_date));
+        }
+        formData.append('twins_count', form.value.twins_count);
+        formData.append('is_caesarean', form.value.is_caesarean ? '1' : '0');
+        formData.append('children_under_36_months', form.value.children_under_36_months);
+    }
+
+    if (selectedLeaveType.value?.code === 'SICK' && form.value.medical_certificate_path) {
+        formData.append('medical_certificate_path', form.value.medical_certificate_path);
+    }
+
+    // Add _method for PUT/PATCH when editing
+    if (props.mode === 'edit') {
+        formData.append('_method', 'PUT');
+    }
+
+    return formData;
+};
+
 const validateForm = () => {
-    return form.value.leave_type_id && form.value.start_date && form.value.end_date;
+    console.log('Validating form:', {
+        leave_type_id: form.value.leave_type_id,
+        start_date: form.value.start_date,
+        end_date: form.value.end_date,
+        selectedLeaveType: selectedLeaveType.value?.code
+    });
+
+    if (!form.value.leave_type_id || !form.value.start_date || !form.value.end_date) {
+        console.log('Basic validation failed');
+        return false;
+    }
+
+    // Additional validation for PERSONAL_PAID
+    if (selectedLeaveType.value?.code === 'PERSONAL_PAID' && !form.value.personal_leave_reason) {
+        console.log('PERSONAL_PAID validation failed');
+        return false;
+    }
+
+    // Additional validation for MATERNITY
+    if (selectedLeaveType.value?.code === 'MATERNITY' && !form.value.expected_due_date) {
+        console.log('MATERNITY validation failed');
+        return false;
+    }
+
+    // Additional validation for SICK
+    if (selectedLeaveType.value?.code === 'SICK' && !form.value.medical_certificate_path) {
+        console.log('SICK validation failed');
+        return false;
+    }
+
+    console.log('Validation passed');
+    return true;
 };
 
 const goBack = () => {

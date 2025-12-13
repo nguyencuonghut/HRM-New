@@ -22,6 +22,14 @@ class LeaveRequest extends Model
         'end_date',
         'days',
         'reason',
+        // Event-based leave fields
+        'personal_leave_reason',
+        'expected_due_date',
+        'twins_count',
+        'is_caesarean',
+        'children_under_36_months',
+        'medical_certificate_path',
+        // Status fields
         'status',
         'submitted_at',
         'approved_at',
@@ -33,7 +41,11 @@ class LeaveRequest extends Model
     protected $casts = [
         'start_date' => 'date',
         'end_date' => 'date',
+        'expected_due_date' => 'date',
         'days' => 'decimal:2',
+        'twins_count' => 'integer',
+        'is_caesarean' => 'boolean',
+        'children_under_36_months' => 'integer',
         'submitted_at' => 'datetime',
         'approved_at' => 'datetime',
         'cancelled_at' => 'datetime',

@@ -36,7 +36,8 @@ export class LeaveRequestService {
       onError: (errors) => onError && onError(errors),
       onSuccess: (page) => onSuccess && onSuccess(page),
       preserveState: true,
-      preserveScroll: true
+      preserveScroll: true,
+      forceFormData: true, // Required for FormData with Inertia
     });
   }
 
@@ -65,7 +66,8 @@ export class LeaveRequestService {
       onError: (errors) => onError && onError(errors),
       onSuccess: (page) => onSuccess && onSuccess(page),
       preserveState: true,
-      preserveScroll: true
+      preserveScroll: true,
+      forceFormData: true, // Required for FormData with Inertia
     });
   }
 

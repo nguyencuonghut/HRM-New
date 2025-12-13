@@ -64,6 +64,64 @@
                             <label class="block text-sm text-gray-600 mb-1">Lý do nghỉ</label>
                             <p class="p-3 bg-gray-50 rounded border">{{ leaveRequest.reason }}</p>
                         </div>
+                        <div v-if="leaveRequest.note" class="mt-4">
+                            <label class="block text-sm text-gray-600 mb-1">Ghi chú</label>
+                            <p class="p-3 bg-yellow-50 rounded border border-yellow-200">{{ leaveRequest.note }}</p>
+                        </div>
+                    </div>
+
+                    <!-- Event-based Leave Details -->
+                    <div v-if="hasEventDetails" class="card border border-blue-200 bg-blue-50">
+                        <h3 class="text-lg font-semibold mb-4 text-blue-900">Thông tin chi tiết</h3>
+
+                        <!-- PERSONAL_PAID -->
+                        <div v-if="leaveRequest.personal_leave_reason" class="space-y-2">
+                            <div>
+                                <label class="block text-sm text-gray-600 mb-1">Lý do phép riêng</label>
+                                <Badge :value="getPersonalLeaveReasonLabel(leaveRequest.personal_leave_reason)" severity="info" size="large" />
+                            </div>
+                        </div>
+
+                        <!-- MATERNITY -->
+                        <div v-if="leaveRequest.expected_due_date" class="space-y-3">
+                            <div class="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-sm text-gray-600 mb-1">Ngày dự kiến sinh</label>
+                                    <p class="font-medium text-pink-700">{{ formatDate(leaveRequest.expected_due_date) }}</p>
+                                </div>
+                                <div>
+                                    <label class="block text-sm text-gray-600 mb-1">Số con sinh</label>
+                                    <p class="font-medium">{{ leaveRequest.twins_count || 1 }}</p>
+                                </div>
+                            </div>
+                            <div class="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-sm text-gray-600 mb-1">Hình thức sinh</label>
+                                    <Badge
+                                        :value="leaveRequest.is_caesarean ? 'Sinh mổ' : 'Sinh thường'"
+                                        :severity="leaveRequest.is_caesarean ? 'warning' : 'success'"
+                                    />
+                                </div>
+                                <div v-if="leaveRequest.children_under_36_months">
+                                    <label class="block text-sm text-gray-600 mb-1">Con dưới 36 tháng</label>
+                                    <p class="font-medium">{{ leaveRequest.children_under_36_months }}</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- SICK -->
+                        <div v-if="leaveRequest.medical_certificate_path" class="space-y-2">
+                            <label class="block text-sm text-gray-600 mb-1">Giấy chứng nhận y tế</label>
+                            <a
+                                :href="`/storage/${leaveRequest.medical_certificate_path}`"
+                                target="_blank"
+                                class="inline-flex items-center gap-2 px-3 py-2 bg-white border border-gray-300 rounded hover:bg-gray-50"
+                            >
+                                <i class="pi pi-file-pdf text-red-500"></i>
+                                <span class="text-sm font-medium">Xem giấy y tế</span>
+                                <i class="pi pi-external-link text-xs text-gray-400"></i>
+                            </a>
+                        </div>
                     </div>
 
                     <!-- Approval Timeline -->
@@ -240,7 +298,7 @@
 </template>
 
 <script setup>
-import { ref } from 'vue';
+import { ref, computed } from 'vue';
 import { Head } from '@inertiajs/vue3';
 import Button from 'primevue/button';
 import Badge from 'primevue/badge';
@@ -264,6 +322,25 @@ const props = defineProps({
     leaveRequest: Object,
     canApprove: Boolean,
 });
+
+// Check if leave request has any event-based details
+const hasEventDetails = computed(() => {
+    return props.leaveRequest.personal_leave_reason ||
+           props.leaveRequest.expected_due_date ||
+           props.leaveRequest.medical_certificate_path;
+});
+
+// Label mapping for personal leave reasons
+const getPersonalLeaveReasonLabel = (reason) => {
+    const labels = {
+        'MARRIAGE': 'Kết hôn (3 ngày)',
+        'CHILD_MARRIAGE': 'Con kết hôn (1 ngày)',
+        'PARENT_DEATH': 'Cha/mẹ/vợ/chồng mất (3 ngày)',
+        'SIBLING_DEATH': 'Anh/chị/em ruột mất (1 ngày)',
+        'CHILD_BIRTH': 'Vợ sinh con (5-14 ngày)',
+    };
+    return labels[reason] || reason;
+};
 
 const confirm = useConfirm();
 const toast = useToast();

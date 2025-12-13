@@ -33,6 +33,14 @@ return new class extends Migration {
             $t->decimal('days', 5, 2)->default(0);               // Số ngày nghỉ (có thể 0.5 ngày)
             $t->text('reason')->nullable();                      // Lý do nghỉ
 
+            // Fields for event-based leave types (PERSONAL_PAID, MATERNITY, SICK)
+            $t->string('personal_leave_reason')->nullable();     // PERSONAL_PAID: MARRIAGE, CHILD_MARRIAGE, PARENT_DEATH, etc.
+            $t->date('expected_due_date')->nullable();           // MATERNITY: Ngày dự kiến sinh
+            $t->unsignedInteger('twins_count')->nullable();      // MATERNITY: Số con sinh (1, 2, 3...)
+            $t->boolean('is_caesarean')->default(false);         // MATERNITY: Có sinh mổ không
+            $t->unsignedInteger('children_under_36_months')->nullable(); // MATERNITY: Số con dưới 36 tháng
+            $t->string('medical_certificate_path')->nullable();  // SICK: Đường dẫn file giấy y tế
+
             $t->enum('status', [
                 'DRAFT',           // Nháp
                 'PENDING',         // Chờ phê duyệt

@@ -2,22 +2,30 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\StoreLeaveRequestRequest;
 use App\Http\Resources\LeaveRequestResource;
 use App\Models\Employee;
+use App\Models\LeaveBalance;
 use App\Models\LeaveRequest;
 use App\Models\LeaveType;
 use App\Services\LeaveApprovalService;
+use App\Services\LeaveCalculationService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
 
 class LeaveRequestController extends Controller
 {
     protected LeaveApprovalService $approvalService;
+    protected LeaveCalculationService $calculationService;
 
-    public function __construct(LeaveApprovalService $approvalService)
-    {
+    public function __construct(
+        LeaveApprovalService $approvalService,
+        LeaveCalculationService $calculationService
+    ) {
         $this->approvalService = $approvalService;
+        $this->calculationService = $calculationService;
     }
 
     /**
@@ -84,6 +92,7 @@ class LeaveRequestController extends Controller
 
         $data = [
             'leaveTypes' => LeaveType::active()->ordered()->get(),
+            'personalLeaveReasons' => $this->calculationService->getPersonalPaidLeaveReasons(),
             'mode' => 'create',
             'isAdmin' => $isAdmin,
         ];
@@ -110,25 +119,11 @@ class LeaveRequestController extends Controller
     /**
      * Store a newly created leave request
      */
-    public function store(Request $request)
+    public function store(StoreLeaveRequestRequest $request)
     {
+        \Log::info("Store Leave Request", $request->all());
         $user = Auth::user();
-
-        // Determine validation rules based on role
-        $rules = [
-            'leave_type_id' => 'required|exists:leave_types,id',
-            'start_date' => 'required|date',
-            'end_date' => 'required|date|after_or_equal:start_date',
-            'reason' => 'nullable|string|max:1000',
-            'submit' => 'boolean',
-        ];
-
-        // Admin or Super Admin can select employee, others use their own employee_id
-        if ($user->hasAnyRole(['Admin', 'Super Admin'])) {
-            $rules['employee_id'] = 'required|exists:employees,id';
-        }
-
-        $validated = $request->validate($rules);
+        $validated = $request->validated();
 
         // If not Admin or Super Admin, use authenticated user's employee_id
         if (!$user->hasAnyRole(['Admin', 'Super Admin'])) {
@@ -142,14 +137,76 @@ class LeaveRequestController extends Controller
             $validated['employee_id'] = $employee->id;
         }
 
-        // Create temporary instance for overlap check
+        // Get employee and leave type
+        $employee = Employee::findOrFail($validated['employee_id']);
+        $leaveType = LeaveType::findOrFail($validated['leave_type_id']);
+
+        // Additional validations based on leave type
+        if ($leaveType->code === 'PERSONAL_PAID') {
+            $validation = $this->calculationService->validatePersonalPaidLeave($validated);
+            if (!$validation['valid']) {
+                return redirect()->back()
+                    ->withInput()
+                    ->withErrors(['personal_leave_reason' => $validation['message']]);
+            }
+        } elseif ($leaveType->code === 'SICK') {
+            $validation = $this->calculationService->validateSickLeave($validated);
+            if (!$validation['valid']) {
+                return redirect()->back()
+                    ->withInput()
+                    ->withErrors(['medical_certificate_path' => $validation['message']]);
+            }
+        } elseif ($leaveType->code === 'MATERNITY') {
+            $validation = $this->calculationService->validateMaternityLeave($employee, $validated);
+            if (!$validation['valid']) {
+                return redirect()->back()
+                    ->withInput()
+                    ->withErrors(['expected_due_date' => $validation['message']]);
+            }
+        }
+
+        // For ANNUAL leave, check balance
+        if ($leaveType->code === 'ANNUAL') {
+            $year = \Carbon\Carbon::parse($validated['start_date'])->year;
+            $balance = LeaveBalance::where('employee_id', $validated['employee_id'])
+                ->where('leave_type_id', $validated['leave_type_id'])
+                ->where('year', $year)
+                ->first();
+
+            $days = $validated['days'] ?? 0;
+            if (!$balance || $balance->remaining_days < $days) {
+                return redirect()->back()
+                    ->withInput()
+                    ->with([
+                        'message' => 'Số dư phép năm không đủ. Còn lại: ' . ($balance->remaining_days ?? 0) . ' ngày',
+                        'type' => 'error'
+                    ]);
+            }
+        }
+
+        // Handle file upload for medical certificate
+        if ($request->hasFile('medical_certificate_path')) {
+            $path = $request->file('medical_certificate_path')->store('medical-certificates', 'public');
+            $validated['medical_certificate_path'] = $path;
+        }
+
+        // Create leave request
         $leaveRequest = new LeaveRequest([
             'employee_id' => $validated['employee_id'],
             'leave_type_id' => $validated['leave_type_id'],
             'start_date' => $validated['start_date'],
             'end_date' => $validated['end_date'],
+            'days' => $validated['days'],
             'reason' => $validated['reason'] ?? null,
+            'note' => $validated['note'] ?? null,
+            'personal_leave_reason' => $validated['personal_leave_reason'] ?? null,
+            'expected_due_date' => $validated['expected_due_date'] ?? null,
+            'twins_count' => $validated['twins_count'] ?? null,
+            'is_caesarean' => $validated['is_caesarean'] ?? false,
+            'children_under_36_months' => $validated['children_under_36_months'] ?? null,
+            'medical_certificate_path' => $validated['medical_certificate_path'] ?? null,
             'status' => LeaveRequest::STATUS_DRAFT,
+            'created_by' => Auth::id(),
         ]);
 
         // Check for overlapping leave requests
@@ -170,11 +227,6 @@ class LeaveRequestController extends Controller
         }
 
         // Save to database
-        $leaveRequest->created_by = Auth::id();
-        $leaveRequest->save();
-
-        // Calculate days
-        $leaveRequest->days = $leaveRequest->calculateDays();
         $leaveRequest->save();
 
         // Log activity
@@ -248,6 +300,7 @@ class LeaveRequestController extends Controller
         $data = [
             'leaveRequest' => new LeaveRequestResource($leaveRequest->load(['employee', 'leaveType'])),
             'leaveTypes' => LeaveType::active()->ordered()->get(),
+            'personalLeaveReasons' => $this->calculationService->getPersonalPaidLeaveReasons(),
             'mode' => 'edit',
             'isAdmin' => $user->hasAnyRole(['Admin', 'Super Admin']),
         ];
@@ -264,7 +317,7 @@ class LeaveRequestController extends Controller
     /**
      * Update the specified leave request
      */
-    public function update(Request $request, LeaveRequest $leaveRequest)
+    public function update(StoreLeaveRequestRequest $request, LeaveRequest $leaveRequest)
     {
         // Can only update DRAFT requests
         if ($leaveRequest->status !== LeaveRequest::STATUS_DRAFT) {
@@ -274,13 +327,71 @@ class LeaveRequestController extends Controller
             ]);
         }
 
-        $validated = $request->validate([
-            'leave_type_id' => 'required|exists:leave_types,id',
-            'start_date' => 'required|date',
-            'end_date' => 'required|date|after_or_equal:start_date',
-            'reason' => 'nullable|string|max:1000',
-            'submit' => 'boolean',
-        ]);
+        $validated = $request->validated();
+        $employee = $leaveRequest->employee;
+        $leaveType = LeaveType::findOrFail($validated['leave_type_id']);
+
+        // Additional validations based on leave type
+        if ($leaveType->code === 'PERSONAL_PAID') {
+            $validation = $this->calculationService->validatePersonalPaidLeave($validated);
+            if (!$validation['valid']) {
+                return redirect()->back()
+                    ->withInput()
+                    ->withErrors(['personal_leave_reason' => $validation['message']]);
+            }
+        } elseif ($leaveType->code === 'SICK') {
+            $validation = $this->calculationService->validateSickLeave($validated);
+            if (!$validation['valid']) {
+                return redirect()->back()
+                    ->withInput()
+                    ->withErrors(['medical_certificate_path' => $validation['message']]);
+            }
+        } elseif ($leaveType->code === 'MATERNITY') {
+            $validation = $this->calculationService->validateMaternityLeave($employee, $validated);
+            if (!$validation['valid']) {
+                return redirect()->back()
+                    ->withInput()
+                    ->withErrors(['expected_due_date' => $validation['message']]);
+            }
+        }
+
+        // For ANNUAL leave, check balance
+        if ($leaveType->code === 'ANNUAL') {
+            $year = now()->parse($validated['start_date'])->year;
+            $balance = LeaveBalance::where('employee_id', $leaveRequest->employee_id)
+                ->where('leave_type_id', $validated['leave_type_id'])
+                ->where('year', $year)
+                ->first();
+
+            // Calculate used days (excluding current request)
+            $usedDays = LeaveRequest::where('employee_id', $leaveRequest->employee_id)
+                ->where('leave_type_id', $validated['leave_type_id'])
+                ->where('id', '!=', $leaveRequest->id)
+                ->whereIn('status', [LeaveRequest::STATUS_APPROVED, LeaveRequest::STATUS_PENDING])
+                ->whereYear('start_date', $year)
+                ->sum('days');
+
+            $availableDays = ($balance->total ?? 0) - $usedDays;
+
+            if ($availableDays < $validated['days']) {
+                return redirect()->back()
+                    ->withInput()
+                    ->with([
+                        'message' => 'Số dư phép năm không đủ. Còn lại: ' . $availableDays . ' ngày',
+                        'type' => 'error'
+                    ]);
+            }
+        }
+
+        // Handle file upload for medical certificate
+        if ($request->hasFile('medical_certificate_path')) {
+            // Delete old file if exists
+            if ($leaveRequest->medical_certificate_path) {
+                Storage::disk('public')->delete($leaveRequest->medical_certificate_path);
+            }
+            $path = $request->file('medical_certificate_path')->store('medical-certificates', 'public');
+            $validated['medical_certificate_path'] = $path;
+        }
 
         // Set new values for overlap check
         $leaveRequest->leave_type_id = $validated['leave_type_id'];
@@ -305,11 +416,17 @@ class LeaveRequestController extends Controller
         }
 
         // Update with validated data
-        $leaveRequest->reason = $validated['reason'] ?? null;
-        $leaveRequest->save();
-
-        // Recalculate days
-        $leaveRequest->days = $leaveRequest->calculateDays();
+        $leaveRequest->fill([
+            'days' => $validated['days'],
+            'reason' => $validated['reason'] ?? null,
+            'note' => $validated['note'] ?? null,
+            'personal_leave_reason' => $validated['personal_leave_reason'] ?? null,
+            'expected_due_date' => $validated['expected_due_date'] ?? null,
+            'twins_count' => $validated['twins_count'] ?? null,
+            'is_caesarean' => $validated['is_caesarean'] ?? false,
+            'children_under_36_months' => $validated['children_under_36_months'] ?? null,
+            'medical_certificate_path' => $validated['medical_certificate_path'] ?? $leaveRequest->medical_certificate_path,
+        ]);
         $leaveRequest->save();
 
         // Log activity
