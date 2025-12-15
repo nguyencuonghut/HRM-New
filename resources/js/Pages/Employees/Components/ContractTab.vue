@@ -143,8 +143,6 @@ const props = defineProps({
 
 const expandedRows = ref({})
 
-console.log('Contracts:', props.contracts);
-console.log('Expanded Rows:', expandedRows.value);
 function statusSeverity(status) {
   const map = {
     DRAFT: 'secondary',

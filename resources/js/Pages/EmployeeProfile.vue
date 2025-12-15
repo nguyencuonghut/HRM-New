@@ -59,7 +59,7 @@
           </div>
         </div>
 
-        <Tabs value="education">
+        <Tabs v-model:value="activeTab">
       <TabList>
         <Tab value="education">Học vấn</Tab>
         <Tab value="relatives">Người thân</Tab>
@@ -67,6 +67,7 @@
         <Tab value="skills">Kỹ năng</Tab>
         <Tab value="assignments">Phân công</Tab>
         <Tab value="contracts">Hợp đồng</Tab>
+        <Tab value="payroll">Lương hiện tại</Tab>
         <Tab value="leave-balances">Số dư phép</Tab>
         <Tab value="employment-history">Lịch sử làm việc</Tab>
         <Tab value="timeline">Lịch sử</Tab>
@@ -631,9 +632,15 @@
         </Dialog>
       </TabPanel>
 
+
       <!-- TAB HỢP ĐỒNG -->
       <TabPanel value="contracts">
         <ContractTab :contracts="props.contracts || []" />
+      </TabPanel>
+
+      <!-- TAB LƯƠNG HIỆN TẠI -->
+      <TabPanel value="payroll">
+        <PayrollTab :current-payroll="props.current_payroll" />
       </TabPanel>
 
       <!-- TAB SỐ DƯ PHÉP -->
@@ -794,7 +801,8 @@
   </div>
 </template>
 <script setup>
-import { ref, computed, watch, onMounted } from 'vue'
+import PayrollTab from './PayrollTab.vue';
+import { ref, computed, watch, onMounted, onBeforeUnmount } from 'vue'
 import { Head, usePage } from '@inertiajs/vue3'
 import { EmployeeEducationService } from '@/services'
 import { EmployeeRelativeService } from '@/services'
@@ -1426,4 +1434,15 @@ watch(() => [props.educations, props.relatives, props.experiences, props.employe
   // Reload activities when any data changes (indicates a CRUD operation happened)
   loadActivities(activityPagination.value?.current_page || 1)
 }, { deep: true })
+// --- PayrollTab chuyển tab contracts ---
+const activeTab = ref('education');
+function handleGotoContractTab() {
+  activeTab.value = 'contracts';
+}
+onMounted(() => {
+  window.addEventListener('payroll-goto-contract-tab', handleGotoContractTab);
+});
+onBeforeUnmount(() => {
+  window.removeEventListener('payroll-goto-contract-tab', handleGotoContractTab);
+});
 </script>

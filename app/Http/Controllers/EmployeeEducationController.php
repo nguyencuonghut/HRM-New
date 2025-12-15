@@ -38,6 +38,55 @@ class EmployeeEducationController extends Controller
         // Load relationships for completion calculation
         $employee->load(['assignments', 'educations', 'relatives', 'experiences', 'employeeSkills', 'employments']);
 
+        // Lấy employment hiện tại (nếu có)
+        $currentEmployment = $employee->currentEmployment();
+        $activeContractQuery = $employee->contracts()->active()->orderByDesc('start_date');
+        if ($currentEmployment) {
+            $activeContractQuery->where('employment_id', $currentEmployment->id);
+        }
+        $currentContract = $activeContractQuery->with(['appendixes'])->first();
+
+        $currentPayroll = null;
+        if ($currentContract) {
+            // Lấy phụ lục ACTIVE mới nhất (nếu có)
+            $activeAppendix = $currentContract->appendixes()
+                ->where('status', 'ACTIVE')
+                ->where(function($q){
+                    $q->whereNull('end_date')->orWhere('end_date', '>=', now());
+                })
+                ->orderByDesc('effective_date')
+                ->first();
+            if ($activeAppendix) {
+                $currentPayroll = [
+                    'type' => 'appendix',
+                    'source_id' => $activeAppendix->id,
+                    'number' => $activeAppendix->appendix_no,
+                    'effective_date' => optional($activeAppendix->effective_date)->toDateString(),
+                    'base_salary' => $activeAppendix->base_salary,
+                    'insurance_salary' => $activeAppendix->insurance_salary,
+                    'position_allowance' => $activeAppendix->position_allowance,
+                    'other_allowances' => $activeAppendix->other_allowances,
+                    'status' => $activeAppendix->status,
+                    'status_label' => method_exists($activeAppendix, 'getStatusLabel') ? $activeAppendix->getStatusLabel() : $activeAppendix->status,
+                    'title' => $activeAppendix->title,
+                ];
+            } else {
+                $currentPayroll = [
+                    'type' => 'contract',
+                    'source_id' => $currentContract->id,
+                    'number' => $currentContract->contract_number,
+                    'effective_date' => optional($currentContract->start_date)->toDateString(),
+                    'base_salary' => $currentContract->base_salary,
+                    'insurance_salary' => $currentContract->insurance_salary,
+                    'position_allowance' => $currentContract->position_allowance,
+                    'other_allowances' => $currentContract->other_allowances,
+                    'status' => $currentContract->status,
+                    'status_label' => method_exists($currentContract, 'getStatusLabel') ? $currentContract->getStatusLabel() : $currentContract->status,
+                    'title' => $currentContract->contract_type_label,
+                ];
+            }
+        }
+
         return Inertia::render('EmployeeProfile', [
             'employee'          => (new \App\Http\Resources\EmployeeResource($employee))->resolve(),
             'education_levels'  => EducationLevel::orderBy('order_index')->get(['id','name']),
@@ -84,6 +133,8 @@ class EmployeeEducationController extends Controller
                     ->orderByDesc('start_date')
                     ->get()
             )->resolve(),
+            // Lương hiện tại
+            'current_payroll' => $currentPayroll,
         ]);
     }
 
