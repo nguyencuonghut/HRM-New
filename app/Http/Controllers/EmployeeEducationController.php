@@ -77,6 +77,13 @@ class EmployeeEducationController extends Controller
                     ->orderByDesc('start_date')
                     ->get()
             )->resolve(),
+            // Hợp đồng của nhân viên
+            'contracts'        => \App\Http\Resources\ContractResource::collection(
+                $employee->contracts()
+                    ->with(['department:id,name', 'position:id,title', 'appendixes'])
+                    ->orderByDesc('start_date')
+                    ->get()
+            )->resolve(),
         ]);
     }
 

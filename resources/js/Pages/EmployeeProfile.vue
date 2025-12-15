@@ -66,6 +66,7 @@
         <Tab value="experiences">Kinh nghiệm</Tab>
         <Tab value="skills">Kỹ năng</Tab>
         <Tab value="assignments">Phân công</Tab>
+        <Tab value="contracts">Hợp đồng</Tab>
         <Tab value="leave-balances">Số dư phép</Tab>
         <Tab value="employment-history">Lịch sử làm việc</Tab>
         <Tab value="timeline">Lịch sử</Tab>
@@ -630,6 +631,11 @@
         </Dialog>
       </TabPanel>
 
+      <!-- TAB HỢP ĐỒNG -->
+      <TabPanel value="contracts">
+        <ContractTab :contracts="props.contracts || []" />
+      </TabPanel>
+
       <!-- TAB SỐ DƯ PHÉP -->
       <TabPanel value="leave-balances">
         <LeaveBalanceTab :employee="employee" />
@@ -798,6 +804,7 @@ import { EmployeeAssignmentService } from '@/services'
 import { toYMD, formatDate } from '@/utils/dateHelper'
 import ProfileChecklist from '@/Components/ProfileChecklist.vue'
 import LeaveBalanceTab from '@/Pages/Employees/Components/LeaveBalanceTab.vue'
+import ContractTab from '@/Pages/Employees/Components/ContractTab.vue'
 
 const page = usePage()
 
@@ -830,6 +837,7 @@ const props = defineProps({
   skills: { type: Array, default: () => [] },           // master danh mục
   employee_skills: { type: Array, default: () => [] },  // kỹ năng của NV
   assignments: { type: Array, default: () => [] },      // phân công của NV
+  contracts: { type: Array, default: () => [] },        // hợp đồng của NV
 })
 
 // ====== Tab EDUCATION ======

@@ -101,6 +101,11 @@ class ContractResource extends JsonResource
                     ];
                 });
             }),
+
+            // Appendixes
+            'appendixes' => $this->whenLoaded('appendixes', function () {
+                return ContractAppendixResource::collection($this->appendixes);
+            }),
         ];
     }
 }
