@@ -396,8 +396,13 @@ function doDelete() {
 function exportCSV(){ dt.value?.exportCSV() }
 
 function applyStatusFilter() {
-  // lọc server-side nhẹ nhàng (giữ đúng style dùng Inertia GET)
-  EmployeeService.index({
+  // Filter server-side via query params
+  router.get('/employees', {
+    status: statusFilter.value || undefined
+  }, {
+    preserveState: true,
+    preserveScroll: true,
+    only: ['employees'],
     onStart: ()=> loading.value = true,
     onFinish: ()=> loading.value = false,
   })
