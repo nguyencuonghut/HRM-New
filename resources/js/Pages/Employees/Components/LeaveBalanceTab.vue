@@ -97,7 +97,7 @@ onMounted(() => {
                     <div class="flex items-center justify-between">
                         <span class="text-base">{{ balance.leave_type.name }}</span>
                         <Tag
-                            :style="{ backgroundColor: balance.leave_type.color }"
+                            :style="{ backgroundColor: balance.leave_type.color, color: '#ffffff' }"
                             :value="balance.leave_type.code"
                             class="text-xs"
                         />
