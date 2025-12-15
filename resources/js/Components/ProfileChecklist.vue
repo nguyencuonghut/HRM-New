@@ -17,14 +17,17 @@
     <!-- Details List -->
     <div class="space-y-2">
       <div v-for="detail in completionDetails" :key="detail.item"
-           class="flex items-center justify-between p-3 rounded border"
+           class="flex items-center justify-between p-3 rounded border transition-colors"
            :class="getDetailClass(detail.status)">
         <div class="flex items-center gap-2">
-          <i :class="getStatusIcon(detail.status)" />
-          <span class="text-sm">{{ detail.item }}</span>
+          <i :class="getStatusIcon(detail.status) + ' text-base md:text-lg'" />
+          <span class="text-sm font-medium"
+                :class="{'text-gray-900 dark:text-gray-100': detail.status !== 'incomplete', 'text-red-600 dark:text-red-300': detail.status === 'incomplete'}">
+            {{ detail.item }}
+          </span>
         </div>
         <div class="flex items-center gap-2">
-          <span class="text-sm font-medium">{{ detail.score }}/{{ detail.max }}</span>
+          <span class="text-sm font-semibold text-gray-800 dark:text-gray-100">{{ detail.score }}/{{ detail.max }}</span>
           <Tag v-if="detail.status === 'partial'" value="Chưa đủ" severity="warn" size="small" />
         </div>
       </div>
@@ -76,13 +79,13 @@ function getStatusIcon(status) {
 function getDetailClass(status) {
   switch (status) {
     case 'complete':
-      return 'bg-green-50 border-green-200'
+      return 'bg-green-50 border-green-200 dark:bg-green-900/30 dark:border-green-700'
     case 'partial':
-      return 'bg-orange-50 border-orange-200'
+      return 'bg-orange-50 border-orange-200 dark:bg-orange-900/30 dark:border-orange-700'
     case 'incomplete':
-      return 'bg-red-50 border-red-200'
+      return 'bg-red-50 border-red-200 dark:bg-red-900/30 dark:border-red-700'
     default:
-      return 'bg-gray-50 border-gray-200'
+      return 'bg-gray-50 border-gray-200 dark:bg-gray-800/60 dark:border-gray-700'
   }
 }
 </script>
