@@ -19,6 +19,9 @@ class EmployeeResource extends JsonResource
             $completion = ProfileCompletionService::calculateScore($this->resource);
         }
 
+        // Compute status: ACTIVE if any contract is active, else fallback to original status
+        $computedStatus = $this->contracts()->active()->exists() ? 'ACTIVE' : $this->status;
+
         return [
             'id'                       => $this->id,
             'user_id'                  => $this->user_id,
@@ -40,7 +43,7 @@ class EmployeeResource extends JsonResource
             'personal_email'           => $this->personal_email,
             'company_email'            => $this->company_email,
             'hire_date'                => $this->hire_date,
-            'status'                   => $this->status,
+            'status'                   => $computedStatus,
             'si_number'                => $this->si_number,
             'created_at'               => optional($this->created_at)->toDateTimeString(),
             'updated_at'               => optional($this->updated_at)->toDateTimeString(),
