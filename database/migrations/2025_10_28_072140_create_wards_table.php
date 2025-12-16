@@ -11,6 +11,7 @@ return new class extends Migration {
             $table->uuid('province_id')->index(); // Tỉnh/Thành phố cha
             $table->string('code')->nullable()->unique(); // Mã xã/phường
             $table->string('name'); // Tên xã/phường
+            $table->string('type')->nullable(); // Loại (Phường/Xã/Thị trấn)
             $table->timestamps(); // created_at, updated_at
         });
 

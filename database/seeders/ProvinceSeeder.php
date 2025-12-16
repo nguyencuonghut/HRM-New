@@ -18,26 +18,52 @@ class ProvinceSeeder extends Seeder
     {
         $now = now();
 
-        // Danh sách 34 đơn vị cấp tỉnh/thành sau sắp xếp 2025 (chữ in hoa để tránh sai dấu khi so khớp)
-        // Tham chiếu danh sách hiển thị trên infographics Báo Tin tức TTXVN (02/07/2025)
-        // (AN GIANG, BẮC NINH, CÀ MAU, CAO BẰNG, CẦN THƠ, ĐÀ NẴNG, ĐẮK LẮK, ĐIỆN BIÊN,
-        //  ĐỒNG NAI, ĐỒNG THÁP, GIA LAI, HÀ NỘI, HÀ TĨNH, HẢI PHÒNG, HUẾ, HƯNG YÊN,
-        //  KHÁNH HÒA, LAI CHÂU, LẠNG SƠN, LÀO CAI, LÂM ĐỒNG, NGHỆ AN, NINH BÌNH, PHÚ THỌ,
-        //  QUẢNG NGÃI, QUẢNG NINH, QUẢNG TRỊ, SƠN LA, TÂY NINH, THÁI NGUYÊN, THANH HÓA,
-        //  TP HỒ CHÍ MINH, TUYÊN QUANG, VĨNH LONG)
-        $names = [
-            'An Giang','Bắc Ninh','Cà Mau','Cao Bằng','Cần Thơ','Đà Nẵng','Đắk Lắk','Điện Biên',
-            'Đồng Nai','Đồng Tháp','Gia Lai','Hà Nội','Hà Tĩnh','Hải Phòng','Huế','Hưng Yên',
-            'Khánh Hòa','Lai Châu','Lạng Sơn','Lào Cai','Lâm Đồng','Nghệ An','Ninh Bình','Phú Thọ',
-            'Quảng Ngãi','Quảng Ninh','Quảng Trị','Sơn La','Tây Ninh','Thái Nguyên','Thanh Hóa',
-            'TP Hồ Chí Minh','Tuyên Quang','Vĩnh Long',
+        // Danh sách 34 đơn vị cấp tỉnh/thành (có tiền tố "Tỉnh"/"Thành phố" để đồng bộ với dữ liệu JSON wards_all_qd19_2025.json)
+        // Danh sách mã tỉnh/thành theo file đính kèm, giữ nguyên tên cũ để mapping với WardSeeder
+        $codes = [
+            '01','04','08','11','12','14','15','19','20','22','24','25','31','33','37','38','40','42','44','46','48','51','52','56','66','68','75','79','80','82','86','91','92','96'
         ];
-
+        $names = [
+            'Tỉnh An Giang',
+            'Tỉnh Bắc Ninh',
+            'Tỉnh Cà Mau',
+            'Tỉnh Cao Bằng',
+            'Thành phố Cần Thơ',
+            'Thành phố Đà Nẵng',
+            'Tỉnh Đắk Lắk',
+            'Tỉnh Điện Biên',
+            'Tỉnh Đồng Nai',
+            'Tỉnh Đồng Tháp',
+            'Tỉnh Gia Lai',
+            'Thành phố Hà Nội',
+            'Tỉnh Hà Tĩnh',
+            'Thành phố Hải Phòng',
+            'Thành phố Huế',
+            'Tỉnh Hưng Yên',
+            'Tỉnh Khánh Hòa',
+            'Tỉnh Lai Châu',
+            'Tỉnh Lạng Sơn',
+            'Tỉnh Lào Cai',
+            'Tỉnh Lâm Đồng',
+            'Tỉnh Nghệ An',
+            'Tỉnh Ninh Bình',
+            'Tỉnh Phú Thọ',
+            'Tỉnh Quảng Ngãi',
+            'Tỉnh Quảng Ninh',
+            'Tỉnh Quảng Trị',
+            'Tỉnh Sơn La',
+            'Tỉnh Tây Ninh',
+            'Tỉnh Thái Nguyên',
+            'Tỉnh Thanh Hóa',
+            'Thành phố Hồ Chí Minh',
+            'Tỉnh Tuyên Quang',
+            'Tỉnh Vĩnh Long',
+        ];
         $rows = [];
-        foreach ($names as $n) {
+        foreach ($names as $i => $n) {
             $rows[] = [
                 'id' => (string) Str::uuid(), // UUID
-                'code' => Str::slug($n, '_'), // code gợi ý (có thể thay bằng mã TMS/ISO nếu bạn có)
+                'code' => $codes[$i],
                 'name' => $n,
                 'created_at' => $now,
                 'updated_at' => $now,
