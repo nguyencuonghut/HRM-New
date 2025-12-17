@@ -25,8 +25,8 @@ class EmployeeAssignmentSeeder extends Seeder
         $nskd = DB::table('departments')->where('name','Nhóm Nhân Sự Kinh Doanh')->first();
         $nsnm = DB::table('departments')->where('name','Nhóm Nhân Sự Nhà Máy')->first();
         $cl = DB::table('departments')->where('name','Phòng Chất Lượng')->first();
-        $clnl = DB::table('departments')->where('name','Nhóm KCS Nguyên Liệu')->first();
-        $pt = DB::table('departments')->where('name','Bộ Phận Phân Tích')->first();
+        $clnl = DB::table('departments')->where('name','Tổ Chất Lượng Nguyên Liệu')->first();
+        $pt = DB::table('departments')->where('name','Bộ Phận Phòng Thí Nghiệm')->first();
 
         $posTruongKSNB = DB::table('positions')->where('title','Trưởng phòng Kiểm Soát Nội Bộ')->first();
         $posChuyenVienKS = DB::table('positions')->where('title','Chuyên viên Kiểm Soát')->first();

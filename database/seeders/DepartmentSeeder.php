@@ -35,7 +35,7 @@ class DepartmentSeeder extends Seeder
         };
 
         // Ban lãnh đạo (root-level)
-        $banLanhDao = $make('Ban lãnh đạo', 'DEPARTMENT', null, 1);
+        $make('Ban Lãnh Đạo', 'DEPARTMENT', null, 1);
 
         // Phòng Kiểm Soát Nội Bộ
         $ksnb = $make('Phòng Kiểm Soát Nội Bộ', 'DEPARTMENT', null, 2);
@@ -44,10 +44,11 @@ class DepartmentSeeder extends Seeder
 
         // Phòng Hành Chính
         $hcns = $make('Phòng Hành Chính', 'DEPARTMENT', null, 3);
-        $make('Tổ nhà bếp', 'TEAM', $hcns, 1);
-        $make('Tổ tạp vụ', 'TEAM', $hcns, 2);
+        $make('Tổ Nhà Bếp', 'TEAM', $hcns, 1);
+        $make('Tổ Tạp Vụ', 'TEAM', $hcns, 2);
         $make('Ban Bảo Vệ', 'TEAM', $hcns, 3);
         $make('Tổ Lái Xe', 'TEAM', $hcns, 4);
+        $make('Tổ Trồng Rau', 'TEAM', $hcns, 5);
 
         // Phòng Kinh Doanh
         $kd = $make('Phòng Kinh Doanh', 'DEPARTMENT', null, 4);
@@ -61,41 +62,49 @@ class DepartmentSeeder extends Seeder
         // Phòng Kế Toán
         $kt = $make('Phòng Kế Toán', 'DEPARTMENT', null, 5);
         $make('Bộ phận Kế Toán Nhà Máy', 'UNIT', $kt, 1);
-        $make('Bộ phận Kế Toán Kho', 'UNIT', $kt, 2);
-        $make('Tổ Bán Hàng', 'TEAM', $kt, 3);
-        $make('Bộ phận Cân', 'UNIT', $kt, 4);
+        $make('Tổ Kế Toán Kho', 'TEAM', $kt, 2);
+        $make('Tổ Kế Toán Bán Hàng', 'TEAM', $kt, 3);
+        $make('Tổ Cân', 'TEAM', $kt, 4);
 
         // Phòng Thu Mua
         $tm = $make('Phòng Thu Mua', 'DEPARTMENT', null, 6);
         $make('Bộ phận Admin Thu Mua', 'UNIT', $tm, 1);
-        $make('Bộ phận Xuất Nhập Khẩu', 'UNIT', $tm, 2);
-        $make('Bộ phận Mua Hàng', 'UNIT', $tm, 3);
 
         // Phòng Bảo Trì
         $bt = $make('Phòng Bảo Trì', 'DEPARTMENT', null, 7);
-        $make('Bộ phận Bảo Trì Cơ', 'UNIT', $bt, 1);
-        $make('Bộ phận Bảo Trì Điện', 'UNIT', $bt, 2);
 
         // Phòng Sản Xuất
         $sx = $make('Phòng Sản Xuất', 'DEPARTMENT', null, 8);
         $make('Bộ phận Sản Xuất Gia Súc Gia Cầm', 'UNIT', $sx, 1);
         $make('Bộ phận Sản Xuất Thủy Sản', 'UNIT', $sx, 2);
+        $make('Tổ Ra Cám 1', 'TEAM', $sx, 3);
+        $make('Tổ Ra Cám 2', 'TEAM', $sx, 4);
+        $make('Tổ Ra Cám 3', 'TEAM', $sx, 5);
+        $make('Tổ Ra Cám 8', 'TEAM', $sx, 6);
+        $make('Tổ Ra Cám 9', 'TEAM', $sx, 7);
+        $make('Tổ Ra Cám 10', 'TEAM', $sx, 8);
+        $make('Tổ Ra Cám 11', 'TEAM', $sx, 9);
 
         // Bộ phận Kho (root-level Unit)
         $kho = $make('Bộ phận Kho', 'UNIT', null, 9);
         $make('Tổ Kho Nguyên Liệu', 'TEAM', $kho, 1);
         $make('Tổ Kho Thành Phẩm', 'TEAM', $kho, 2);
+        $make('Tổ Kho Thuốc Thú Y', 'TEAM', $kho, 3);
+        $make('Tổ Công Nhật', 'TEAM', $kho, 4);
+        $make('Tổ Bốc Xếp 5', 'TEAM', $kho, 5);
+        $make('Tổ Bốc Xếp 7', 'TEAM', $kho, 6);
+        $make('Tổ Bốc Xếp NL1', 'TEAM', $kho, 7);
 
         // Bộ phận Pháp Chế (root-level Unit)
         $make('Phòng Pháp Chế', 'DEPARTMENT', null, 10);
 
         // Phòng Chất Lượng
         $ktdd = $make('Phòng Chất Lượng', 'DEPARTMENT', null, 11);
-        $make('Bộ Phận Phân Tích', 'UNIT', $ktdd, 1);
-        $make('Tổ Trộn Mix', 'TEAM', $ktdd, 2);
-        $make('Nhóm KCS Nguyên Liệu', 'TEAM', $ktdd, 3);
-        $make('Nhóm KCS Thành Phẩm Gia Súc', 'TEAM', $ktdd, 4);
-        $make('Nhóm KCS Thành Phẩm Thủy Sản', 'TEAM', $ktdd, 5);
+        $make('Bộ Phận Phòng Thí Nghiệm', 'UNIT', $ktdd, 1);
+        $make('Tổ Chất Lượng Nguyên Liệu', 'TEAM', $ktdd, 2);
+        $make('Tổ Chất Lượng Thành Phẩm Gia Súc', 'TEAM', $ktdd, 3);
+        $make('Tổ Chất Lượng Thành Phẩm Thủy Sản', 'TEAM', $ktdd, 4);
+        $make('Tổ Chất Lượng Premix + Nguyên Liệu', 'TEAM', $ktdd, 5);
 
         // Ban Dự Án
         $make('Ban Dự Án', 'DEPARTMENT', null, 12);
@@ -104,12 +113,16 @@ class DepartmentSeeder extends Seeder
         $make('Phòng Trại', 'DEPARTMENT', null, 13);
 
         // Phòng Kỹ Thuật Dinh Dưỡng (chưa có chi tiết)
-        $make('Phòng Kỹ Thuật Dinh Dưỡng', 'DEPARTMENT', null, 14);
+        $ktdd = $make('Phòng Kỹ Thuật Dinh Dưỡng', 'DEPARTMENT', null, 14);
+        $make('Tổ Trộn Mix', 'TEAM', $ktdd, 1);
 
         // Phòng Nhân Sự
         $hcns = $make('Phòng Nhân Sự', 'DEPARTMENT', null, 15);
-        $nskd = $make('Nhóm Nhân Sự Kinh Doanh', 'TEAM', $hcns, 1);
-        $nsnm = $make('Nhóm Nhân Sự Nhà Máy', 'TEAM', $hcns, 2);
+        $make('Nhóm Nhân Sự Kinh Doanh', 'TEAM', $hcns, 1);
+        $make('Nhóm Nhân Sự Nhà Máy', 'TEAM', $hcns, 2);
+
+        // Phòng Bảo Vệ
+        $make('Phòng Bảo Vệ', 'DEPARTMENT', null, 16);
     }
 
     /**
@@ -122,23 +135,21 @@ class DepartmentSeeder extends Seeder
      */
     private function generateCodeFromName(string $name): string
     {
-        // 1. Loại bỏ dấu tiếng Việt và chuẩn hóa về ký tự ASCII
-        // Ví dụ: "Phòng Hành Chính" -> "Phong Hanh Chinh"
         $asciiName = Str::ascii($name);
-
-        // 2. Loại bỏ các ký tự đặc biệt, dấu câu, và chuẩn hóa khoảng trắng
-        // Thay thế các ký tự không phải chữ cái, số, hoặc khoảng trắng bằng khoảng trắng
         $cleanedName = preg_replace('/[^\p{L}\p{N}\s]+/u', ' ', $asciiName);
 
-        // 3. Sử dụng regex để tìm ký tự đầu tiên của mỗi từ và nối lại
-        // Regex: \b(\w) tìm ký tự chữ cái/số đầu tiên sau giới hạn từ.
-        preg_match_all('/\b(\w)/', $cleanedName, $matches);
+        // Lấy số ở cuối (nếu có)
+        preg_match('/(\\d+)$/', trim($cleanedName), $numberMatch);
+        $number = $numberMatch[1] ?? '';
 
-        // 4. Nối các ký tự lại và chuyển thành chữ hoa
-        if (isset($matches[1])) {
-            return strtoupper(implode('', $matches[1]));
+        // Lấy ký tự đầu của mỗi từ (bỏ số ở cuối nếu có)
+        $words = preg_split('/\\s+/', trim($cleanedName));
+        if ($number) array_pop($words); // bỏ số cuối khỏi mảng từ
+
+        $acronym = '';
+        foreach ($words as $w) {
+            if ($w !== '') $acronym .= strtoupper($w[0]);
         }
-
-        return '';
+        return $acronym . $number;
     }
 }
