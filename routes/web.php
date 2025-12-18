@@ -108,7 +108,7 @@ Route::group(['middleware' => 'auth'], function () {
     Route::resource('employees', EmployeeController::class);
 
     // Trang tổng profile (tabs)
-    Route::get('employees/{employee}/profile', [EmployeeEducationController::class, 'profile'])
+    Route::get('employees/{employee}/profile', [EmployeeController::class, 'profile'])
         ->name('employees.profile');
 
     // Educations
