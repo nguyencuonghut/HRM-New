@@ -103,7 +103,7 @@
           <i class="pi pi-exclamation-triangle text-yellow-600 text-2xl"></i>
           <span class="text-yellow-800 font-semibold">Nhân viên hiện chưa có hợp đồng hiệu lực. Không thể xác định thông tin lương.</span>
         </div>
-        <a href="#contract-tab" class="text-blue-600 hover:underline text-sm font-medium">Chuyển sang tab Hợp đồng</a>
+        <button type="button" @click="goToContractTab" class="text-blue-600 hover:underline text-sm font-medium">Chuyển sang tab Hợp đồng</button>
       </div>
     </template>
   </div>
