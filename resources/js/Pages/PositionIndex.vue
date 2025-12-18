@@ -50,11 +50,7 @@
                 <Column field="department_name" header="Phòng ban" sortable style="min-width: 14rem">
                     <template #body="slotProps">
                         <Tag :value="slotProps.data.department_name" severity="info" />
-                    </template>
-                </Column>
-                <Column field="level" header="Cấp bậc" sortable style="min-width: 10rem">
-                    <template #body="slotProps">
-                        <span>{{ slotProps.data.level || '-' }}</span>
+                        <Tag v-if="slotProps.data.department_parent" :value="slotProps.data.department_parent" severity="primary" />
                     </template>
                 </Column>
                 <Column field="position_salary" header="Lương vị trí" sortable style="min-width: 12rem">

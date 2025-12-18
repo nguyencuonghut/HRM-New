@@ -24,7 +24,7 @@ class PositionController extends Controller
         $this->authorize('viewAny', Position::class);
 
         $positions = PositionResource::collection(
-            Position::with('department')->latest()->get()
+            Position::with('department')->orderBy('department_id')->latest()->get()
         )->resolve();
 
         $departments = DepartmentResource::collection(

@@ -1,0 +1,902 @@
+[
+  {
+    "title": "Chủ tịch HĐQT",
+    "team": null,
+    "department": "Ban Lãnh Đạo"
+  },
+  {
+    "title": "Nhân viên kinh doanh",
+    "team": "Bộ phận Kinh Doanh Gia Súc Gia Cầm",
+    "department": "Phòng Kinh Doanh"
+  },
+  {
+    "title": "Nhân viên kỹ thuật trại",
+    "team": "Bộ phận Kỹ Thuật Trại",
+    "department": "Phòng Kinh Doanh"
+  },
+  {
+    "title": "Trưởng vùng kinh doanh",
+    "team": "Bộ phận Kinh Doanh Gia Súc Gia Cầm",
+    "department": "Phòng Kinh Doanh"
+  },
+  {
+    "title": "Giám sát bán hàng",
+    "team": "Bộ phận Kinh Doanh Gia Súc Gia Cầm",
+    "department": "Phòng Kinh Doanh"
+  },
+  {
+    "title": "Giám đốc vùng",
+    "team": "Bộ phận Kinh Doanh Gia Súc Gia Cầm",
+    "department": "Phòng Kinh Doanh"
+  },
+  {
+    "title": "Trưởng nhóm kỹ thuật thị trường gia cầm",
+    "team": "Bộ phận Kỹ Thuật Thị Trường",
+    "department": "Phòng Kinh Doanh"
+  },
+  {
+    "title": "Quyền trưởng vùng kinh doanh",
+    "team": "Bộ phận Kinh Doanh Gia Súc Gia Cầm",
+    "department": "Phòng Kinh Doanh"
+  },
+  {
+    "title": "Nhân viên kỹ thuật thị trường gia cầm",
+    "team": "Bộ phận Kỹ Thuật Thị Trường",
+    "department": "Phòng Kinh Doanh"
+  },
+  {
+    "title": "PGĐ Kinh doanh",
+    "team": "Bộ phận Kinh Doanh Gia Súc Gia Cầm",
+    "department": "Phòng Kinh Doanh"
+  },
+  {
+    "title": "Nhân viên lái xe",
+    "team": "Bộ phận Kinh Doanh Gia Súc Gia Cầm",
+    "department": "Phòng Kinh Doanh"
+  },
+  {
+    "title": "Nhân viên kỹ thuật thị trường thủy sản",
+    "team": "Bộ phận Kỹ Thuật Thị Trường",
+    "department": "Phòng Kinh Doanh"
+  },
+  {
+    "title": "Nhân viên kỹ thuật thị trường",
+    "team": "Bộ phận Kỹ Thuật Thị Trường",
+    "department": "Phòng Kinh Doanh"
+  },
+  {
+    "title": "Nhân viên chăm sóc và phát triển khách hàng KAC",
+    "team": "Bộ phận Sale Admin",
+    "department": "Phòng Kinh Doanh"
+  },
+  {
+    "title": "Trưởng nhóm kỹ thuật thị trường gia súc vùng 1.3.6.7",
+    "team": "Bộ phận Kỹ Thuật Thị Trường",
+    "department": "Phòng Kinh Doanh"
+  },
+  {
+    "title": "Chuyên viên kỹ thuật thị trường thủy sản",
+    "team": "Bộ phận Kỹ Thuật Thị Trường",
+    "department": "Phòng Kinh Doanh"
+  },
+  {
+    "title": "Trưởng nhóm Admin Kinh Doanh",
+    "team": "Bộ phận Sale Admin",
+    "department": "Phòng Kinh Doanh"
+  },
+  {
+    "title": "Nhân viên Sales admin",
+    "team": "Bộ phận Sale Admin",
+    "department": "Phòng Kinh Doanh"
+  },
+  {
+    "title": "Nhân viên kỹ thuật thị trường",
+    "team": "Bộ phận Kỹ Thuật Trại",
+    "department": "Phòng Kinh Doanh"
+  },
+  {
+    "title": "Chuyên viên hỗ trợ",
+    "team": "Bộ phận Kinh Doanh Gia Súc Gia Cầm",
+    "department": "Phòng Kinh Doanh"
+  },
+  {
+    "title": "Nhân viên kĩ thuật thị trường heo",
+    "team": "Bộ phận Kỹ Thuật Trại",
+    "department": "Phòng Kinh Doanh"
+  },
+  {
+    "title": "Phó giám đốc kinh doanh thuốc thú y- phụ trách mảng KAC",
+    "team": "Bộ phận Kinh Doanh Thuốc",
+    "department": "Phòng Kinh Doanh"
+  },
+  {
+    "title": "Nhân viên lái xe",
+    "team": "Bộ phận Kinh Doanh Thuốc",
+    "department": "Phòng Kinh Doanh"
+  },
+  {
+    "title": "Nhân viên kinh doanh thuốc thú y",
+    "team": "Bộ phận Kinh Doanh Thuốc",
+    "department": "Phòng Kinh Doanh"
+  },
+  {
+    "title": "Giám đốc sản xuất",
+    "team": "Bộ phận Sản Xuất Gia Súc Gia Cầm",
+    "department": "Phòng Sản Xuất"
+  },
+  {
+    "title": "Nhân viên thống kê sản xuất",
+    "team": "Bộ phận Sản Xuất Gia Súc Gia Cầm",
+    "department": "Phòng Sản Xuất"
+  },
+  {
+    "title": "Trưởng ca sản xuất",
+    "team": "Bộ phận Sản Xuất Gia Súc Gia Cầm",
+    "department": "Phòng Sản Xuất"
+  },
+  {
+    "title": "Nhân viên vận hành mixer",
+    "team": "Bộ phận Sản Xuất Gia Súc Gia Cầm",
+    "department": "Phòng Sản Xuất"
+  },
+  {
+    "title": "Quyền trưởng bộ phận sản xuất Thủy sản",
+    "team": "Bộ phận Sản Xuất Thủy Sản",
+    "department": "Phòng Sản Xuất"
+  },
+  {
+    "title": "Quyền giám sát sản xuất GSGC",
+    "team": "Bộ phận Sản Xuất Gia Súc Gia Cầm",
+    "department": "Phòng Sản Xuất"
+  },
+  {
+    "title": "Vận hành Ép viên máy cũ",
+    "team": "Bộ phận Sản Xuất Gia Súc Gia Cầm",
+    "department": "Phòng Sản Xuất"
+  },
+  {
+    "title": "Nhân viên vận hành máy ép đùn",
+    "team": "Bộ phận Sản Xuất Gia Súc Gia Cầm",
+    "department": "Phòng Sản Xuất"
+  },
+  {
+    "title": "Vận hành máy ép đùn",
+    "team": "Bộ phận Sản Xuất Thủy Sản",
+    "department": "Phòng Sản Xuất"
+  },
+  {
+    "title": "Công nhân đổ vi lượng",
+    "team": "Bộ phận Sản Xuất Gia Súc Gia Cầm",
+    "department": "Phòng Sản Xuất"
+  },
+  {
+    "title": "Công nhân đổ thuốc",
+    "team": "Bộ phận Sản Xuất Gia Súc Gia Cầm",
+    "department": "Phòng Sản Xuất"
+  },
+  {
+    "title": "Nhân viên thủ kho thành phẩm",
+    "team": "Bộ phận Sản Xuất Gia Súc Gia Cầm",
+    "department": "Phòng Sản Xuất"
+  },
+  {
+    "title": "Công nhân đổ thuốc",
+    "team": "Bộ phận Sản Xuất Thủy Sản",
+    "department": "Phòng Sản Xuất"
+  },
+  {
+    "title": "Nhân viên vận hành mixer",
+    "team": "Bộ phận Sản Xuất Thủy Sản",
+    "department": "Phòng Sản Xuất"
+  },
+  {
+    "title": "Nhân viên vận hành máy ép viên",
+    "team": "Bộ phận Sản Xuất Gia Súc Gia Cầm",
+    "department": "Phòng Sản Xuất"
+  },
+  {
+    "title": "Nhân viên đổ thuốc",
+    "team": "Bộ phận Sản Xuất Thủy Sản",
+    "department": "Phòng Sản Xuất"
+  },
+  {
+    "title": "Nhân viên đổ thuốc",
+    "team": "Bộ phận Sản Xuất Gia Súc Gia Cầm",
+    "department": "Phòng Sản Xuất"
+  },
+  {
+    "title": "Nhân viên vận hành Lò hơi",
+    "team": "Bộ phận Sản Xuất Thủy Sản",
+    "department": "Phòng Sản Xuất"
+  },
+  {
+    "title": "Nhân viên soi bồn + đổ vi lượng",
+    "team": "Bộ phận Sản Xuất Gia Súc Gia Cầm",
+    "department": "Phòng Sản Xuất"
+  },
+  {
+    "title": "Nhân viên vận hành trung tâm",
+    "team": "Bộ phận Sản Xuất Thủy Sản",
+    "department": "Phòng Sản Xuất"
+  },
+  {
+    "title": "Nhân viên vận hành máy ép đùn",
+    "team": "Bộ phận Sản Xuất Thủy Sản",
+    "department": "Phòng Sản Xuất"
+  },
+  {
+    "title": "Thủ kho ra cám",
+    "team": "Bộ phận Sản Xuất Gia Súc Gia Cầm",
+    "department": "Phòng Sản Xuất"
+  },
+  {
+    "title": "Giám đốc bảo trì",
+    "team": null,
+    "department": "Phòng Bảo Trì"
+  },
+  {
+    "title": "Tổ trưởng bảo trì hành chính",
+    "team": null,
+    "department": "Phòng Bảo Trì"
+  },
+  {
+    "title": "Tổ trưởng bảo trì",
+    "team": null,
+    "department": "Phòng Bảo Trì"
+  },
+  {
+    "title": "Chuyên viên bảo trì cơ",
+    "team": null,
+    "department": "Phòng Bảo Trì"
+  },
+  {
+    "title": "Nhân viên bảo trì",
+    "team": null,
+    "department": "Phòng Bảo Trì"
+  },
+  {
+    "title": "Nhân viên Thủ kho bảo trì",
+    "team": null,
+    "department": "Phòng Bảo Trì"
+  },
+  {
+    "title": "Nhân viên bảo trì Điện- Tự Động Hóa",
+    "team": null,
+    "department": "Phòng Bảo Trì"
+  },
+  {
+    "title": "Nhân viên bảo trì điện",
+    "team": null,
+    "department": "Phòng Bảo Trì"
+  },
+  {
+    "title": "Nhân viên bảo trì cơ",
+    "team": null,
+    "department": "Phòng Bảo Trì"
+  },
+  {
+    "title": "Nhân viên bảo trì điện lạnh",
+    "team": null,
+    "department": "Phòng Bảo Trì"
+  },
+  {
+    "title": "Trưởng ban tài chính",
+    "team": null,
+    "department": "Ban Tài Chính"
+  },
+  {
+    "title": "Phó ban tài chính",
+    "team": null,
+    "department": "Ban Tài Chính"
+  },
+  {
+    "title": "Kiểm soát viên kế toán",
+    "team": "Bộ phận Kế Toán Nhà Máy",
+    "department": "Phòng Kế Toán"
+  },
+  {
+    "title": "Phó phòng Kế Toán",
+    "team": "Bộ phận Kế Toán Nhà Máy",
+    "department": "Phòng Kế Toán"
+  },
+  {
+    "title": "Nhân viên kế toán",
+    "team": "Bộ phận Kế Toán Nhà Máy",
+    "department": "Phòng Kế Toán"
+  },
+  {
+    "title": "Kế toán bán hàng",
+    "team": "Tổ Kế Toán Bán Hàng",
+    "department": "Phòng Kế Toán"
+  },
+  {
+    "title": "Kế toán kho",
+    "team": "Tổ Kế Toán Kho",
+    "department": "Phòng Kế Toán"
+  },
+  {
+    "title": "Kế toán trưởng",
+    "team": "Bộ phận Kế Toán Nhà Máy",
+    "department": "Phòng Kế Toán"
+  },
+  {
+    "title": "Nhân viên cân",
+    "team": "Tổ Cân",
+    "department": "Phòng Kế Toán"
+  },
+  {
+    "title": "Kế toán tổng hợp",
+    "team": "Bộ phận Kế Toán Nhà Máy",
+    "department": "Phòng Kế Toán"
+  },
+  {
+    "title": "Nhân viên kế toán thanh toán ngoại",
+    "team": "Bộ phận Kế Toán Nhà Máy",
+    "department": "Phòng Kế Toán"
+  },
+  {
+    "title": "Kế toán kho",
+    "team": "Bộ phận Kế Toán Nhà Máy",
+    "department": "Phòng Kế Toán"
+  },
+  {
+    "title": "Admin thu mua",
+    "team": "Bộ phận Admin Thu Mua",
+    "department": "Phòng Thu Mua"
+  },
+  {
+    "title": "Trưởng phòng thu mua",
+    "team": null,
+    "department": "Phòng Thu Mua"
+  },
+  {
+    "title": "Nhân viên giao nhận",
+    "team": null,
+    "department": "Phòng Thu Mua"
+  },
+  {
+    "title": "Nhân viên XNK",
+    "team": "Bộ phận Xuất Nhập Khẩu",
+    "department": "Phòng Thu Mua"
+  },
+  {
+    "title": "Nhân viên thu mua",
+    "team": null,
+    "department": "Phòng Thu Mua"
+  },
+  {
+    "title": "TBP admin thu mua",
+    "team": "Bộ phận Admin Thu Mua",
+    "department": "Phòng Thu Mua"
+  },
+  {
+    "title": "Giám đốc hành chính",
+    "team": null,
+    "department": "Phòng Hành Chính"
+  },
+  {
+    "title": "Nhân viên Hành chính",
+    "team": null,
+    "department": "Phòng Hành Chính"
+  },
+  {
+    "title": "Trưởng nhóm nhân sự kinh doanh",
+    "team": "Nhóm Nhân Sự Kinh Doanh",
+    "department": "Phòng Nhân Sự"
+  },
+  {
+    "title": "Nhân viên tạp vụ",
+    "team": "Tổ Tạp Vụ",
+    "department": "Phòng Hành Chính"
+  },
+  {
+    "title": "Nhân viên nấu ăn",
+    "team": "Tổ Nhà Bếp",
+    "department": "Phòng Hành Chính"
+  },
+  {
+    "title": "Nhân viên trồng rau",
+    "team": "Tổ Trồng Rau",
+    "department": "Phòng Hành Chính"
+  },
+  {
+    "title": "Nhân viên lái xe",
+    "team": "Tổ Lái Xe",
+    "department": "Phòng Hành Chính"
+  },
+  {
+    "title": "Nhân viên nhân sự",
+    "team": "Nhóm Nhân Sự Nhà Máy",
+    "department": "Phòng Nhân Sự"
+  },
+  {
+    "title": "Nhân viên lái xe chủ tịch",
+    "team": "Tổ Lái Xe",
+    "department": "Phòng Hành Chính"
+  },
+  {
+    "title": "Nhân viên đầu bếp",
+    "team": "Tổ Nhà Bếp",
+    "department": "Phòng Hành Chính"
+  },
+  {
+    "title": "Nhân viên nhân sự",
+    "team": "Nhóm Nhân Sự Kinh Doanh",
+    "department": "Phòng Nhân Sự"
+  },
+  {
+    "title": "Chuyên viên HSE",
+    "team": null,
+    "department": "Phòng Hành Chính"
+  },
+  {
+    "title": "Phó ban pháp chế",
+    "team": null,
+    "department": "Phòng Pháp Chế"
+  },
+  {
+    "title": "Nhân viên pháp chế",
+    "team": null,
+    "department": "Phòng Pháp Chế"
+  },
+  {
+    "title": "Trưởng bộ phận dự án",
+    "team": null,
+    "department": "Ban Dự Án"
+  },
+  {
+    "title": "Phó ban quản lý DA",
+    "team": null,
+    "department": "Ban Dự Án"
+  },
+  {
+    "title": "Nhân viên phát triển trang trại",
+    "team": null,
+    "department": "Ban Dự Án"
+  },
+  {
+    "title": "Chuyên viên dự án",
+    "team": null,
+    "department": "Ban Dự Án"
+  },
+  {
+    "title": "Quyền phó ban an ninh an toàn",
+    "team": null,
+    "department": "Ban Bảo Vệ"
+  },
+  {
+    "title": "Nhân viên bảo vệ",
+    "team": null,
+    "department": "Ban Bảo Vệ"
+  },
+  {
+    "title": "Trưởng ca bảo vệ",
+    "team": null,
+    "department": "Ban Bảo Vệ"
+  },
+  {
+    "title": "Tổ trưởng bảo vệ",
+    "team": null,
+    "department": "Ban Bảo Vệ"
+  },
+  {
+    "title": "Phó phòng kỹ thuật dinh dưỡng",
+    "team": null,
+    "department": "Phòng Kỹ Thuật Dinh Dưỡng"
+  },
+  {
+    "title": "Quyền trưởng phòng kỹ thuật dinh dưỡng",
+    "team": null,
+    "department": "Phòng Kỹ Thuật Dinh Dưỡng"
+  },
+  {
+    "title": "Chuyên viên kỹ thuật dinh dưỡng",
+    "team": null,
+    "department": "Phòng Kỹ Thuật Dinh Dưỡng"
+  },
+  {
+    "title": "Nhân viên kỹ thuật thủy sản",
+    "team": null,
+    "department": "Phòng Kỹ Thuật Dinh Dưỡng"
+  },
+  {
+    "title": "Nhân viên kỹ thuật dinh dưỡng",
+    "team": null,
+    "department": "Phòng Kỹ Thuật Dinh Dưỡng"
+  },
+  {
+    "title": "Nhân viên trộn mix",
+    "team": "Tổ Trộn Mix",
+    "department": "Phòng Kỹ Thuật Dinh Dưỡng"
+  },
+  {
+    "title": "Tổ trưởng trộn mix",
+    "team": "Tổ Trộn Mix",
+    "department": "Phòng Kỹ Thuật Dinh Dưỡng"
+  },
+  {
+    "title": "Giám đốc khối QLCL",
+    "team": null,
+    "department": "Phòng Chất Lượng"
+  },
+  {
+    "title": "Nhân viên KCS",
+    "team": "Nhóm Chất Lượng Thành Phẩm Thủy Sản",
+    "department": "Phòng Chất Lượng"
+  },
+  {
+    "title": "Nhân viên KCS",
+    "team": "Nhóm Chất Lượng Nguyên Liệu",
+    "department": "Phòng Chất Lượng"
+  },
+  {
+    "title": "Nhân viên KCS",
+    "team": "Nhóm Chất Lượng Thành Phẩm Gia Súc",
+    "department": "Phòng Chất Lượng"
+  },
+  {
+    "title": "Nhân viên KCS",
+    "team": "Nhóm Chất Lượng Premix + Nguyên Liệu",
+    "department": "Phòng Chất Lượng"
+  },
+  {
+    "title": "Quyền TBP Lab",
+    "team": "Bộ Phận Phòng Thí Nghiệm",
+    "department": "Phòng Chất Lượng"
+  },
+  {
+    "title": "Nhân viên phân tích",
+    "team": "Bộ Phận Phòng Thí Nghiệm",
+    "department": "Phòng Chất Lượng"
+  },
+  {
+    "title": "Công nhân nghiền mẫu",
+    "team": "Bộ Phận Phòng Thí Nghiệm",
+    "department": "Phòng Chất Lượng"
+  },
+  {
+    "title": "Trưởng nhóm KCS nguyên liệu",
+    "team": "Nhóm Chất Lượng Nguyên Liệu",
+    "department": "Phòng Chất Lượng"
+  },
+  {
+    "title": "Trưởng BP Kho",
+    "team": null,
+    "department": "Bộ phận Kho"
+  },
+  {
+    "title": "Trưởng Kho thành phẩm",
+    "team": "Tổ Kho Thành Phẩm",
+    "department": "Bộ phận Kho"
+  },
+  {
+    "title": "Thủ kho trung chuyển",
+    "team": "Tổ Kho Thành Phẩm",
+    "department": "Bộ phận Kho"
+  },
+  {
+    "title": "Nhân viên thủ kho đi ca",
+    "team": "Tổ Kho Nguyên Liệu",
+    "department": "Bộ phận Kho"
+  },
+  {
+    "title": "Thủ kho TTY",
+    "team": "Tổ Kho Thuốc Thú Y",
+    "department": "Bộ phận Kho"
+  },
+  {
+    "title": "Thủ kho NL Hành chính",
+    "team": "Tổ Kho Nguyên Liệu",
+    "department": "Bộ phận Kho"
+  },
+  {
+    "title": "Lái xe nâng",
+    "team": "Tổ Kho Thành Phẩm",
+    "department": "Bộ phận Kho"
+  },
+  {
+    "title": "Thủ kho kiêm lái xe nâng GHZ",
+    "team": "Tổ Kho Nguyên Liệu",
+    "department": "Bộ phận Kho"
+  },
+  {
+    "title": "Lái xe xúc lật",
+    "team": "Tổ Kho Nguyên Liệu",
+    "department": "Bộ phận Kho"
+  },
+  {
+    "title": "Nhân viên thủ kho nguyên liệu",
+    "team": "Tổ Kho Nguyên Liệu",
+    "department": "Bộ phận Kho"
+  },
+  {
+    "title": "Xe nâng Lật xuất Xá",
+    "team": "Tổ Kho Nguyên Liệu",
+    "department": "Bộ phận Kho"
+  },
+  {
+    "title": "Thủ kho trung chuyển",
+    "team": "Tổ Kho Nguyên Liệu",
+    "department": "Bộ phận Kho"
+  },
+  {
+    "title": "Nhân viên vận hành silo, xá",
+    "team": "Tổ Kho Nguyên Liệu",
+    "department": "Bộ phận Kho"
+  },
+  {
+    "title": "Giám đốc khối kiểm soát",
+    "team": null,
+    "department": "Phòng Kiểm Soát Nội Bộ"
+  },
+  {
+    "title": "Phụ trách CNTT và bảo mật hệ thống",
+    "team": "Bộ phận IT",
+    "department": "Phòng Kiểm Soát Nội Bộ"
+  },
+  {
+    "title": "Trưởng nhóm kiểm soát nội bộ",
+    "team": "Bộ phận Kiểm Soát",
+    "department": "Phòng Kiểm Soát Nội Bộ"
+  },
+  {
+    "title": "Nhân viên IT",
+    "team": "Bộ phận IT",
+    "department": "Phòng Kiểm Soát Nội Bộ"
+  },
+  {
+    "title": "Nhân viên kiểm soát nội bộ",
+    "team": "Bộ phận Kiểm Soát",
+    "department": "Phòng Kiểm Soát Nội Bộ"
+  },
+  {
+    "title": "Trưởng Phòng SX hệ thống trại",
+    "team": null,
+    "department": "Phòng Trại"
+  },
+  {
+    "title": "Trưởng nhóm nhân sự hệ thống trại",
+    "team": null,
+    "department": "Phòng Trại"
+  },
+  {
+    "title": "Tổ trưởng bảo trì hệ thống trại",
+    "team": null,
+    "department": "Phòng Trại"
+  },
+  {
+    "title": "Trưởng nhóm ADM các trại kiêm kế toán hệ thống trại",
+    "team": null,
+    "department": "Phòng Trại"
+  },
+  {
+    "title": "Nhân viên giám sát bán hàng",
+    "team": null,
+    "department": "Phòng Trại"
+  },
+  {
+    "title": "Nhân viên lái xe",
+    "team": null,
+    "department": "Phòng Trại"
+  },
+  {
+    "title": "Nhân viên kỹ thuật trại",
+    "team": null,
+    "department": "Phòng Trại"
+  },
+  {
+    "title": "CNKT trại",
+    "team": null,
+    "department": "Phòng Trại"
+  },
+  {
+    "title": "Nhân viên hành chính tổng hợp",
+    "team": null,
+    "department": "Phòng Trại"
+  },
+  {
+    "title": "Nhân viên bảo trì trại",
+    "team": null,
+    "department": "Phòng Trại"
+  },
+  {
+    "title": "Nhân viên hành chính trại",
+    "team": null,
+    "department": "Phòng Trại"
+  },
+  {
+    "title": "Quản lý hệ thống heo thịt",
+    "team": null,
+    "department": "Phòng Trại"
+  },
+  {
+    "title": "Trưởng phòng heo nái",
+    "team": null,
+    "department": "Phòng Trại"
+  },
+  {
+    "title": "Nhân viên kĩ thuật gia cầm",
+    "team": null,
+    "department": "Phòng Trại"
+  },
+  {
+    "title": "Trưởng phòng heo thịt",
+    "team": null,
+    "department": "Phòng Trại"
+  },
+  {
+    "title": "Bác sĩ thú y",
+    "team": null,
+    "department": "Phòng Trại"
+  },
+  {
+    "title": "Nhân viên kỹ thuật gia công gà",
+    "team": null,
+    "department": "Phòng Trại"
+  },
+  {
+    "title": "Nhân viên Kiểm soát hoạt động",
+    "team": null,
+    "department": "Phòng Trại"
+  },
+  {
+    "title": "Nhân viên thương mại thuộc nhóm mua, bán - hệ thống trại chăn nuôi",
+    "team": null,
+    "department": "Phòng Trại"
+  },
+  {
+    "title": "Nhân viên vận hành máy",
+    "team": null,
+    "department": "Phòng Trại"
+  },
+  {
+    "title": "Quản lý trại",
+    "team": null,
+    "department": "Phòng Trại"
+  },
+  {
+    "title": "Nhân viên pháp chế",
+    "team": null,
+    "department": "Phòng Trại"
+  },
+  {
+    "title": "Trưởng phòng Kỹ thuật hệ thống gia cầm",
+    "team": null,
+    "department": "Phòng Trại"
+  },
+  {
+    "title": "GĐ Kỹ thuật hệ thống heo nái",
+    "team": null,
+    "department": "Phòng Trại"
+  },
+  {
+    "title": "Nhân viên Hành chính",
+    "team": null,
+    "department": "Phòng Trại"
+  },
+  {
+    "title": "Nhân viên IT trại",
+    "team": null,
+    "department": "Phòng Trại"
+  },
+  {
+    "title": "Cộng tác viên",
+    "team": null,
+    "department": "Phòng Trại"
+  },
+  {
+    "title": "Nhân viên bán hàng",
+    "team": null,
+    "department": "Phòng Trại"
+  },
+  {
+    "title": "Chuyên viên hỗ trợ",
+    "team": null,
+    "department": "Phòng Trại"
+  },
+  {
+    "title": "Nhân viên quét dọn",
+    "team": "Tổ Công Nhật",
+    "department": "Bộ phận Kho"
+  },
+  {
+    "title": "Bốc xếp",
+    "team": "Tổ Bốc Xếp 5",
+    "department": "Bộ phận Kho"
+  },
+  {
+    "title": "Bốc xếp",
+    "team": "Tổ Bốc Xếp 7",
+    "department": "Bộ phận Kho"
+  },
+  {
+    "title": "Bốc xếp",
+    "team": "Tổ Bốc Xếp NL 1",
+    "department": "Bộ phận Kho"
+  },
+  {
+    "title": "Bốc xếp",
+    "team": "Tổ Bốc Xếp NL 2",
+    "department": "Bộ phận Kho"
+  },
+  {
+    "title": "Bốc xếp",
+    "team": "Tổ Bốc Xếp NL 3",
+    "department": "Bộ phận Kho"
+  },
+  {
+    "title": "Bốc xếp",
+    "team": "Tổ Bốc Xếp NL 4",
+    "department": "Bộ phận Kho"
+  },
+  {
+    "title": "Bốc xếp",
+    "team": "Tổ Bốc Xếp NL 5",
+    "department": "Bộ phận Kho"
+  },
+  {
+    "title": "Bốc xếp",
+    "team": "Tổ Bốc Xếp NL 6",
+    "department": "Bộ phận Kho"
+  },
+  {
+    "title": "Bốc xếp",
+    "team": "Tổ Bốc Xếp NL 7",
+    "department": "Bộ phận Kho"
+  },
+  {
+    "title": "Bốc xếp",
+    "team": "Tổ Bốc Xếp NL 8",
+    "department": "Bộ phận Kho"
+  },
+  {
+    "title": "Bốc xếp",
+    "team": "Tổ Bốc Xếp NL 9",
+    "department": "Bộ phận Kho"
+  },
+  {
+    "title": "Bốc xếp",
+    "team": "Tổ Bốc Xếp NL 10",
+    "department": "Bộ phận Kho"
+  },
+  {
+    "title": "Ra cám",
+    "team": "Tổ Ra Cám 1",
+    "department": "Phòng Sản Xuất"
+  },
+  {
+    "title": "Ra cám",
+    "team": "Tổ Ra Cám 2",
+    "department": "Phòng Sản Xuất"
+  },
+  {
+    "title": "Ra cám",
+    "team": "Tổ Ra Cám 3",
+    "department": "Phòng Sản Xuất"
+  },
+  {
+    "title": "Ra cám",
+    "team": "Tổ Ra Cám 8",
+    "department": "Phòng Sản Xuất"
+  },
+  {
+    "title": "Ra cám",
+    "team": "Tổ Ra Cám 9",
+    "department": "Phòng Sản Xuất"
+  },
+  {
+    "title": "Ra cám",
+    "team": "Tổ Ra Cám 10",
+    "department": "Phòng Sản Xuất"
+  },
+  {
+    "title": "Nhân viên quét dọn",
+    "team": "Tổ Ra Cám 10",
+    "department": "Phòng Sản Xuất"
+  },
+  {
+    "title": "Nhân viên quét dọn",
+    "team": "Tổ Ra Cám 11",
+    "department": "Phòng Sản Xuất"
+  }
+]

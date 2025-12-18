@@ -3,59 +3,196 @@
 namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
-use Illuminate\Support\Str;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 
-/**
- * Vị trí cơ bản cho: Phòng Kiểm Soát Nội Bộ, Phòng Hành Chính Nhân Sự
- */
 class PositionSeeder extends Seeder
 {
     public function run(): void
     {
         $now = now();
 
-        $deptKSNB = DB::table('departments')->where('name','Phòng Kiểm Soát Nội Bộ')->first();
-        $deptIT = DB::table('departments')->where('name','Bộ phận IT')->first();
-        $deptHC = DB::table('departments')->where('name','Phòng Hành Chính')->first();
-        $deptLX = DB::table('departments')->where('name','Tổ Lái Xe')->first();
-        $deptNS = DB::table('departments')->where('name','Phòng Nhân Sự')->first();
-        $deptCL = DB::table('departments')->where('name','Phòng Chất Lượng')->first();
-        $deptPPT = DB::table('departments')->where('name','Bộ Phận Phân Tích')->first();
-        if (!$deptKSNB || !$deptHC || !$deptNS || !$deptIT || !$deptCL || !$deptPPT) return;
-
-        $rows = [
-            // KSNB
-            ['department_id'=>$deptKSNB->id,'title'=>'Trưởng phòng Kiểm Soát Nội Bộ','level'=>null,'insurance_base_salary'=>15000000,'position_salary'=>18000000,'competency_salary'=>18000000,'allowance' => 3000000],
-            ['department_id'=>$deptKSNB->id,'title'=>'Chuyên viên Kiểm Soát','level'=>'Senior','insurance_base_salary'=>12000000,'position_salary'=>12000000,'competency_salary'=>12000000,'allowance' => 2000000],
-            ['department_id'=>$deptKSNB->id,'title'=>'Nhân viên Kiểm Soát','level'=>'Junior','insurance_base_salary'=>8000000,'position_salary'=>8000000,'competency_salary'=>8000000,'allowance' => 1000000],
-            ['department_id'=>$deptIT->id,'title'=>'Chuyên viên IT','level'=>'Senior','insurance_base_salary'=>18000000,'position_salary'=>18000000,'competency_salary'=>18000000,'allowance' => 4000000],
-            ['department_id'=>$deptIT->id,'title'=>'Nhân viên IT ','level'=>null,'insurance_base_salary'=>10000000,'position_salary'=>9000000,'competency_salary'=>9000000,'allowance' => 1500000],
-
-            // HC
-            ['department_id'=>$deptHC->id,'title'=>'Giám đốc Hành Chính','level'=>null,'insurance_base_salary'=>35000000,'position_salary'=>38000000,'competency_salary'=>38000000,'allowance' => 3000000],
-            ['department_id'=>$deptHC->id,'title'=>'Nhân viên Hành Chính','level'=>null,'insurance_base_salary'=>10000000,'position_salary'=>9000000,'competency_salary'=>9000000,'allowance' => 1500000],
-            ['department_id'=>$deptLX->id,'title'=>'Nhân viên Lái Xe','level'=>null,'insurance_base_salary'=>8000000,'position_salary'=>8000000,'competency_salary'=>8000000,'allowance' => 400000],
-
-            // NS
-            ['department_id'=>$deptNS->id,'title'=>'Trưởng phòng Nhân Sự','level'=>null,'insurance_base_salary'=>35000000,'position_salary'=>38000000,'competency_salary'=>38000000,'allowance' => 3000000],
-            ['department_id'=>$deptNS->id,'title'=>'Trưởng nhóm Nhân Sự Kinh Doanh','level'=>null,'insurance_base_salary'=>13000000,'position_salary'=>15000000,'competency_salary'=>15000000,'allowance' => 2500000],
-            ['department_id'=>$deptNS->id,'title'=>'Nhân viên Nhân Sự','level'=>null,'insurance_base_salary'=>9000000,'position_salary'=>8000000,'competency_salary'=>8000000,'allowance' => 1500000],
-
-            // Chất Lượng
-            ['department_id'=>$deptCL->id,'title'=>'Giám đốc Khối Quản Lý Chất Lượng','level'=>null,'insurance_base_salary'=>25000000,'position_salary'=>2000000,'competency_salary'=>2000000,'allowance' => 3000000],
-            ['department_id'=>$deptCL->id,'title'=>'Trưởng nhóm KCS Nguyên Liệu','level'=>null,'insurance_base_salary'=>18000000,'position_salary'=>18000000,'competency_salary'=>18000000,'allowance' => 2000000],
-            ['department_id'=>$deptCL->id,'title'=>'Nhân viên Chất Lượng','level'=>null,'insurance_base_salary'=>8000000,'position_salary'=>8000000,'competency_salary'=>8000000,'allowance' => 1000000],
-            ['department_id'=>$deptPPT->id,'title'=>'Trưởng bộ phận Phân Tích','level'=>null,'insurance_base_salary'=>15000000,'position_salary'=>15000000,'competency_salary'=>15000000,'allowance' => 2000000],
-            ['department_id'=>$deptPPT->id,'title'=>'Nhân viên Phân Tích','level'=>null,'insurance_base_salary'=>9000000,'position_salary'=>9000000,'competency_salary'=>9000000,'allowance' => 1200000],
-        ];
-
-        foreach ($rows as &$r) {
-            $r['id'] = (string) Str::uuid();
-            $r['created_at'] = $now;
-            $r['updated_at'] = $now;
+        $jsonPath = database_path('data/positions.json');
+        if (!file_exists($jsonPath)) {
+            throw new \RuntimeException("positions.json not found at: {$jsonPath}");
         }
 
-        DB::table('positions')->insert($rows);
+        $data = json_decode(file_get_contents($jsonPath), true);
+        if (!is_array($data) || empty($data)) {
+            throw new \RuntimeException("positions.json invalid or empty");
+        }
+
+        $norm = function (?string $s): string {
+            $s = $s ?? '';
+            $s = str_replace("\xC2\xA0", ' ', $s);
+            $s = trim($s);
+            $s = preg_replace('/\s+/u', ' ', $s);
+            return mb_strtolower($s);
+        };
+
+        // Load departments
+        $departments = DB::table('departments')
+            ->select('id', 'name', 'type', 'parent_id')
+            ->get();
+
+        $deptExact = []; // TYPE|name|parent => node
+        $deptLoose = []; // TYPE|name| => [nodes]
+
+        foreach ($departments as $d) {
+            $nameKey = $norm($d->name);
+            $deptExact[$d->type . '|' . $nameKey . '|' . ($d->parent_id ?? '')] = $d;
+            $deptLoose[$d->type . '|' . $nameKey . '|'][] = $d;
+        }
+
+        $findNode = function (string $type, string $name, ?string $parentId = null)
+            use ($deptExact, $deptLoose, $norm) {
+
+            $nameKey = $norm($name);
+
+            $kExact = $type . '|' . $nameKey . '|' . ($parentId ?? '');
+            if (isset($deptExact[$kExact])) return $deptExact[$kExact];
+
+            $kLoose = $type . '|' . $nameKey . '|';
+            if (!empty($deptLoose[$kLoose]) && count($deptLoose[$kLoose]) === 1) {
+                return $deptLoose[$kLoose][0];
+            }
+            return null;
+        };
+
+        // Existing positions
+        $existing = DB::table('positions')->select('department_id', 'title', 'level')->get();
+        $existsSet = [];
+        foreach ($existing as $p) {
+            $existsSet[$p->department_id . '|' . $norm($p->title) . '|' . $norm($p->level ?? '')] = true;
+        }
+
+        // Logs
+        $log = [
+            'invalid' => [],
+            'unmatched_department' => [],
+            'duplicate_existing' => [],
+            'duplicate_in_json' => [],
+        ];
+
+        $rows = [];
+        $jsonSeen = [];
+
+        foreach ($data as $i => $item) {
+            $title = trim((string)($item['title'] ?? ''));
+            $deptName = trim((string)($item['department'] ?? ''));
+            $teamName = trim((string)($item['team'] ?? ''));
+
+            if ($title === '') {
+                $log['invalid'][] = ['index' => $i, 'item' => $item];
+                continue;
+            }
+
+            // resolve node
+            $deptNode = $deptName !== '' ? $findNode('DEPARTMENT', $deptName) : null;
+
+            // If not found as DEPARTMENT, try UNIT (for cases like "Bộ phận Kho")
+            if (!$deptNode && $deptName !== '') {
+                $deptNode = $findNode('UNIT', $deptName);
+            }
+
+            $targetNode = null;
+
+            // Prefer child under DEPARTMENT/UNIT
+            if ($deptNode && $teamName !== '') {
+                $targetNode = $findNode('UNIT', $teamName, $deptNode->id)
+                           ?? $findNode('TEAM', $teamName, $deptNode->id);
+            }
+
+            // Fallback to unique match globally
+            if (!$targetNode && $teamName !== '') {
+                $targetNode = $findNode('UNIT', $teamName)
+                           ?? $findNode('TEAM', $teamName);
+            }
+
+            // If no team, use department/unit
+            if (!$targetNode && $deptNode && $teamName === '') {
+                $targetNode = $deptNode;
+            }
+
+            if (!$targetNode) {
+                $log['unmatched_department'][] = [
+                    'index' => $i,
+                    'title' => $title,
+                    'department' => $deptName,
+                    'team' => $teamName,
+                ];
+                continue;
+            }
+
+            $level = null;
+            $key = $targetNode->id . '|' . $norm($title) . '|' . $norm($level ?? '');
+
+            if (isset($jsonSeen[$key])) {
+                $log['duplicate_in_json'][] = [
+                    'index' => $i,
+                    'title' => $title,
+                    'resolved_department' => $targetNode->name,
+                    'resolved_type' => $targetNode->type,
+                ];
+                continue;
+            }
+            $jsonSeen[$key] = true;
+
+            if (isset($existsSet[$key])) {
+                $log['duplicate_existing'][] = [
+                    'index' => $i,
+                    'title' => $title,
+                    'resolved_department' => $targetNode->name,
+                    'resolved_type' => $targetNode->type,
+                ];
+                continue;
+            }
+            $existsSet[$key] = true;
+
+            $rows[] = [
+                'id' => (string) Str::uuid(),
+                'department_id' => $targetNode->id,
+                'title' => $title,
+                'level' => null,
+
+                'insurance_base_salary' => 6500000,
+                'position_salary' => 6500000,
+                'competency_salary' => 6500000,
+                'allowance' => 0,
+
+                'created_at' => $now,
+                'updated_at' => $now,
+            ];
+        }
+
+        if (!empty($rows)) {
+            DB::table('positions')->insert($rows);
+        }
+
+        // Print console log
+        dump('=== POSITION SEED SUMMARY ===');
+        dump('Total JSON records:', count($data));
+        dump('Inserted:', count($rows));
+        dump('Invalid:', count($log['invalid']));
+        dump('Unmatched department:', count($log['unmatched_department']));
+        dump('Duplicate existing:', count($log['duplicate_existing']));
+        dump('Duplicate in JSON:', count($log['duplicate_in_json']));
+
+        if (!empty($log['unmatched_department'])) {
+            dump('--- UNMATCHED DEPARTMENT RECORDS ---');
+            dump($log['unmatched_department']);
+        }
+        if (!empty($log['duplicate_existing'])) {
+            dump('--- DUPLICATE EXISTING RECORDS ---');
+            dump($log['duplicate_existing']);
+        }
+        if (!empty($log['duplicate_in_json'])) {
+            dump('--- DUPLICATE IN JSON RECORDS ---');
+            dump($log['duplicate_in_json']);
+        }
+        if (!empty($log['invalid'])) {
+            dump('--- INVALID RECORDS ---');
+            dump($log['invalid']);
+        }
     }
 }

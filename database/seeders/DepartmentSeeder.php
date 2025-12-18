@@ -46,9 +46,8 @@ class DepartmentSeeder extends Seeder
         $hcns = $make('Phòng Hành Chính', 'DEPARTMENT', null, 3);
         $make('Tổ Nhà Bếp', 'TEAM', $hcns, 1);
         $make('Tổ Tạp Vụ', 'TEAM', $hcns, 2);
-        $make('Ban Bảo Vệ', 'TEAM', $hcns, 3);
-        $make('Tổ Lái Xe', 'TEAM', $hcns, 4);
-        $make('Tổ Trồng Rau', 'TEAM', $hcns, 5);
+        $make('Tổ Lái Xe', 'TEAM', $hcns, 3);
+        $make('Tổ Trồng Rau', 'TEAM', $hcns, 4);
 
         // Phòng Kinh Doanh
         $kd = $make('Phòng Kinh Doanh', 'DEPARTMENT', null, 4);
@@ -69,6 +68,7 @@ class DepartmentSeeder extends Seeder
         // Phòng Thu Mua
         $tm = $make('Phòng Thu Mua', 'DEPARTMENT', null, 6);
         $make('Bộ phận Admin Thu Mua', 'UNIT', $tm, 1);
+        $make('Bộ phận Xuất Nhập Khẩu', 'UNIT', $tm, 2);
 
         // Phòng Bảo Trì
         $bt = $make('Phòng Bảo Trì', 'DEPARTMENT', null, 7);
@@ -93,7 +93,16 @@ class DepartmentSeeder extends Seeder
         $make('Tổ Công Nhật', 'TEAM', $kho, 4);
         $make('Tổ Bốc Xếp 5', 'TEAM', $kho, 5);
         $make('Tổ Bốc Xếp 7', 'TEAM', $kho, 6);
-        $make('Tổ Bốc Xếp NL1', 'TEAM', $kho, 7);
+        $make('Tổ Bốc Xếp NL 1', 'TEAM', $kho, 7);
+        $make('Tổ Bốc Xếp NL 2', 'TEAM', $kho, 8);
+        $make('Tổ Bốc Xếp NL 3', 'TEAM', $kho, 9);
+        $make('Tổ Bốc Xếp NL 4', 'TEAM', $kho, 10);
+        $make('Tổ Bốc Xếp NL 5', 'TEAM', $kho, 11);
+        $make('Tổ Bốc Xếp NL 6', 'TEAM', $kho, 12);
+        $make('Tổ Bốc Xếp NL 7', 'TEAM', $kho, 13);
+        $make('Tổ Bốc Xếp NL 8', 'TEAM', $kho, 14);
+        $make('Tổ Bốc Xếp NL 9', 'TEAM', $kho, 15);
+        $make('Tổ Bốc Xếp NL 10', 'TEAM', $kho, 16);
 
         // Bộ phận Pháp Chế (root-level Unit)
         $make('Phòng Pháp Chế', 'DEPARTMENT', null, 10);
@@ -101,10 +110,10 @@ class DepartmentSeeder extends Seeder
         // Phòng Chất Lượng
         $ktdd = $make('Phòng Chất Lượng', 'DEPARTMENT', null, 11);
         $make('Bộ Phận Phòng Thí Nghiệm', 'UNIT', $ktdd, 1);
-        $make('Tổ Chất Lượng Nguyên Liệu', 'TEAM', $ktdd, 2);
-        $make('Tổ Chất Lượng Thành Phẩm Gia Súc', 'TEAM', $ktdd, 3);
-        $make('Tổ Chất Lượng Thành Phẩm Thủy Sản', 'TEAM', $ktdd, 4);
-        $make('Tổ Chất Lượng Premix + Nguyên Liệu', 'TEAM', $ktdd, 5);
+        $make('Nhóm Chất Lượng Nguyên Liệu', 'UNIT', $ktdd, 2);
+        $make('Nhóm Chất Lượng Thành Phẩm Gia Súc', 'UNIT', $ktdd, 3);
+        $make('Nhóm Chất Lượng Thành Phẩm Thủy Sản', 'UNIT', $ktdd, 4);
+        $make('Nhóm Chất Lượng Premix + Nguyên Liệu', 'UNIT', $ktdd, 5);
 
         // Ban Dự Án
         $make('Ban Dự Án', 'DEPARTMENT', null, 12);
@@ -121,8 +130,11 @@ class DepartmentSeeder extends Seeder
         $make('Nhóm Nhân Sự Kinh Doanh', 'TEAM', $hcns, 1);
         $make('Nhóm Nhân Sự Nhà Máy', 'TEAM', $hcns, 2);
 
-        // Phòng Bảo Vệ
-        $make('Phòng Bảo Vệ', 'DEPARTMENT', null, 16);
+        // Ban Bảo Vệ
+        $make('Ban Bảo Vệ', 'DEPARTMENT', null, 16);
+
+        // Ban Tài Chính
+        $make('Ban Tài Chính', 'DEPARTMENT', null, 17);
     }
 
     /**
