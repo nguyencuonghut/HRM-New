@@ -22,6 +22,14 @@ class EmployeeResource extends JsonResource
         // Compute status: ACTIVE if any contract is active, else fallback to original status
         $computedStatus = $this->contracts()->active()->exists() ? 'ACTIVE' : $this->status;
 
+        // Contract presence flags (from withExists in controller)
+        $hasAnyContract = $this->has_any_contract ?? false;
+        $hasActiveContract = $this->has_active_contract ?? false;
+        $hasPendingContract = $this->has_pending_contract ?? false;
+
+        // Derive contract status for UI
+        $contractStatus = $this->getContractStatus($hasAnyContract, $hasActiveContract, $hasPendingContract);
+
         return [
             'id'                       => $this->id,
             'user_id'                  => $this->user_id,
@@ -44,9 +52,17 @@ class EmployeeResource extends JsonResource
             'company_email'            => $this->company_email,
             'hire_date'                => $this->hire_date,
             'status'                   => $computedStatus,
+            'status_label'             => \App\Enums\EmployeeStatus::tryFrom($this->status)?->label() ?? $this->status,
+            'status_severity'          => \App\Enums\EmployeeStatus::tryFrom($this->status)?->severity() ?? 'secondary',
+            'status_icon'              => 'pi ' . (\App\Enums\EmployeeStatus::tryFrom($this->status)?->icon() ?? 'pi-circle'),
             'si_number'                => $this->si_number,
             'created_at'               => optional($this->created_at)->toDateTimeString(),
             'updated_at'               => optional($this->updated_at)->toDateTimeString(),
+
+            // Contract presence
+            'has_any_contract'         => $hasAnyContract,
+            'has_active_contract'      => $hasActiveContract,
+            'contract_status'          => $contractStatus,
 
             // Tenure / Seniority info
             'current_tenure'           => $this->getCurrentTenure(),
@@ -62,6 +78,50 @@ class EmployeeResource extends JsonResource
             'completion_missing'       => $completion ? $completion['missing'] : null,
             'completion_level'         => $completion ? ProfileCompletionService::getCompletionLevel($completion['score']) : null,
             'completion_severity'      => $completion ? ProfileCompletionService::getCompletionSeverity($completion['score']) : null,
+        ];
+    }
+
+    /**
+     * Derive contract status for UI display
+     */
+    protected function getContractStatus(bool $hasAnyContract, bool $hasActiveContract, bool $hasPendingContract): array
+    {
+        if ($hasActiveContract) {
+            return [
+                'label' => 'Có HĐ hiệu lực',
+                'severity' => 'success',
+                'icon' => 'pi pi-check-circle'
+            ];
+        }
+
+        if ($hasPendingContract) {
+            return [
+                'label' => 'HĐ chưa hiệu lực',
+                'severity' => 'warn',
+                'icon' => 'pi pi-clock'
+            ];
+        }
+
+        if ($hasAnyContract) {
+            return [
+                'label' => 'HĐ đã hết hạn',
+                'severity' => 'contrast',
+                'icon' => 'pi pi-calendar-times'
+            ];
+        }
+
+        if ($this->status === 'ACTIVE') {
+            return [
+                'label' => 'Thiếu hợp đồng',
+                'severity' => 'danger',
+                'icon' => 'pi pi-times-circle'
+            ];
+        }
+
+        return [
+            'label' => 'Chưa có HĐ',
+            'severity' => 'secondary',
+            'icon' => 'pi pi-minus-circle'
         ];
     }
 }

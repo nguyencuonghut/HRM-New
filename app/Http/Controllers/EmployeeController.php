@@ -145,6 +145,22 @@ class EmployeeController extends Controller
 
         $query = Employee::query()
             ->with(['assignments', 'educations', 'relatives', 'experiences', 'employeeSkills', 'employments'])
+            // Contract presence flags
+            ->withExists(['contracts as has_any_contract'])
+            ->withExists(['contracts as has_active_contract' => function ($q) {
+                $today = now()->toDateString();
+                $q->where('status', 'ACTIVE')
+                  ->whereDate('start_date', '<=', $today)
+                  ->where(function ($qq) use ($today) {
+                      $qq->whereNull('end_date')
+                         ->orWhereDate('end_date', '>=', $today);
+                  });
+            }])
+            ->withExists(['contracts as has_pending_contract' => function ($q) {
+                $today = now()->toDateString();
+                $q->where('status', 'ACTIVE')
+                  ->whereDate('start_date', '>', $today);
+            }])
             ->when($search !== '', function($q) use ($search) {
                 $q->where(function($qq) use ($search){
                     $qq->where('full_name','like',"%{$search}%")
@@ -153,8 +169,28 @@ class EmployeeController extends Controller
                        ->orWhere('company_email','like',"%{$search}%");
                 });
             })
-            ->when(!is_null($status) && $status !== '', fn($q)=> $q->where('status', $status))
-            ->orderBy('full_name');
+            ->when(!is_null($status) && $status !== '', fn($q)=> $q->where('status', $status));
+
+        // Filter: Thiếu hợp đồng (ACTIVE nhưng không có HĐ nào)
+        if ($request->boolean('missing_contract')) {
+            $query->where('status', 'ACTIVE')
+                  ->whereDoesntHave('contracts');
+        }
+
+        // Filter: Có hợp đồng hiệu lực
+        if ($request->boolean('has_active_contract_filter')) {
+            $query->whereHas('contracts', function ($q) {
+                $today = now()->toDateString();
+                $q->where('status', 'ACTIVE')
+                  ->whereDate('start_date', '<=', $today)
+                  ->where(function ($qq) use ($today) {
+                      $qq->whereNull('end_date')
+                         ->orWhereDate('end_date', '>=', $today);
+                  });
+            });
+        }
+
+        $query->orderBy('full_name');
 
         // Trả mảng (không paginate) giống style RoleIndex.vue
         $employees = EmployeeResource::collection($query->get())->resolve();
@@ -167,9 +203,17 @@ class EmployeeController extends Controller
             ['label'=>'Đã nghỉ việc','value'=>'TERMINATED'],
         ];
 
+        $filters = [
+            'search' => $search,
+            'status' => $status,
+            'missing_contract' => $request->boolean('missing_contract'),
+            'has_active_contract_filter' => $request->boolean('has_active_contract_filter'),
+        ];
+
         return Inertia::render('EmployeeIndex', [
             'employees'     => $employees,
             'statusOptions' => $statusOptions,
+            'filters'       => $filters,
         ]);
     }
 

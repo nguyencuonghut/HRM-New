@@ -22,7 +22,6 @@
                 dataKey="id"
                 :paginator="true"
                 :rows="10"
-                :filters="filters"
                 paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport RowsPerPageDropdown"
                 :rowsPerPageOptions="[5, 10, 25]"
                 currentPageReportTemplate="Hiển thị {first}-{last}/{totalRecords} nhân viên"
@@ -34,7 +33,7 @@
                         <div class="flex gap-2 items-center">
                             <IconField>
                                 <InputIcon><i class="pi pi-search" /></InputIcon>
-                                <InputText v-model="filters['global'].value" placeholder="Tìm kiếm..." />
+                                <InputText v-model="searchQuery" placeholder="Tìm kiếm..." @keyup.enter="applyFilters" />
                             </IconField>
                             <Select
                                 :options="statusOptions"
@@ -45,6 +44,14 @@
                                 showClear
                                 @change="applyStatusFilter"
                             />
+                            <div class="flex items-center gap-2">
+                                <Checkbox v-model="missingContractFilter" :binary="true" inputId="missing_contract" @change="applyFilters" />
+                                <label for="missing_contract" class="cursor-pointer text-sm">Thiếu HĐ</label>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <Checkbox v-model="hasActiveContractFilter" :binary="true" inputId="has_active_contract" @change="applyFilters" />
+                                <label for="has_active_contract" class="cursor-pointer text-sm">Có HĐ hiệu lực</label>
+                            </div>
                             <Checkbox v-model="showIncompleteOnly" :binary="true" inputId="incomplete" @change="applyCompletionFilter" />
                             <label for="incomplete" class="ml-1 cursor-pointer">Hồ sơ chưa đầy đủ (&lt; 80%)</label>
                         </div>
@@ -58,8 +65,20 @@
                 <Column field="company_email" header="Email công ty" style="min-width: 16rem"></Column>
                 <Column field="status" header="Trạng thái" style="min-width: 10rem">
                     <template #body="slotProps">
-                        <Badge :value="statusLabel(slotProps.data.status)"
-                               :severity="statusSeverity(slotProps.data.status)" />
+                        <Tag
+                            :value="slotProps.data.status_label"
+                            :severity="slotProps.data.status_severity"
+                            :icon="slotProps.data.status_icon"
+                        />
+                    </template>
+                </Column>
+                <Column header="Hợp đồng" style="min-width: 12rem">
+                    <template #body="slotProps">
+                        <Tag
+                            :value="slotProps.data.contract_status.label"
+                            :severity="slotProps.data.contract_status.severity"
+                            :icon="slotProps.data.contract_status.icon"
+                        />
                     </template>
                 </Column>
                 <Column field="completion_score" header="% Hoàn thiện" sortable style="min-width: 14rem">
@@ -229,7 +248,7 @@
 </template>
 
 <script setup>
-import { ref, computed, watch } from 'vue'
+import { ref, computed, watch, watchEffect } from 'vue'
 import { FilterMatchMode } from '@primevue/core/api'
 import { Head, router } from '@inertiajs/vue3'
 import Select from 'primevue/select'
@@ -244,6 +263,7 @@ import { toYMD, formatDate } from '@/utils/dateHelper'
 const props = defineProps({
     employees: { type: Array, default: () => [] },
     statusOptions: { type: Array, default: () => [] },
+    filters: { type: Object, default: () => ({}) },
 })
 
 const { errors, hasError, getError } = useFormValidation()
@@ -255,6 +275,10 @@ const dialog = ref(false)
 const deleteDialog = ref(false)
 const submitted = ref(false)
 const loading = ref(false)
+
+// Contract filters
+const missingContractFilter = ref(props.filters.missing_contract || false)
+const hasActiveContractFilter = ref(props.filters.has_active_contract_filter || false)
 const saving = ref(false)
 const deleting = ref(false)
 const current = ref(null)
@@ -262,7 +286,8 @@ const current = ref(null)
 const filters = ref({
   global: { value: null, matchMode: FilterMatchMode.CONTAINS },
 })
-const statusFilter = ref(null)
+const searchQuery = ref(props.filters.search || '')
+const statusFilter = ref(props.filters.status || null)
 const showIncompleteOnly = ref(false)
 
 const genderOptions = [
@@ -306,14 +331,18 @@ const form = ref({
 
 watch(() => props.employees, (val)=> { list.value = [...val] }, { immediate:true, deep:true })
 
-const isEditing = computed(()=> !!form.value.id)
+// Debounced search
+let searchTimeout = null
+watch(searchQuery, (newVal, oldVal) => {
+  if (newVal !== oldVal) {
+    clearTimeout(searchTimeout)
+    searchTimeout = setTimeout(() => {
+      applyFilters()
+    }, 500)
+  }
+})
 
-function statusLabel(v) {
-  const f = props.statusOptions.find(x=>x.value===v); return f? f.label : v
-}
-function statusSeverity(v) {
-  return v==='ACTIVE' ? 'success' : (v==='ON_LEAVE' ? 'info' : 'danger')
-}
+const isEditing = computed(()=> !!form.value.id)
 
 function getProgressBarColor(score) {
   if (score >= 80) return 'background: #22c55e' // green
@@ -396,9 +425,16 @@ function doDelete() {
 function exportCSV(){ dt.value?.exportCSV() }
 
 function applyStatusFilter() {
+  applyFilters()
+}
+
+function applyFilters() {
   // Filter server-side via query params
   router.get('/employees', {
-    status: statusFilter.value || undefined
+    search: searchQuery.value || undefined,
+    status: statusFilter.value || undefined,
+    missing_contract: missingContractFilter.value || undefined,
+    has_active_contract_filter: hasActiveContractFilter.value || undefined,
   }, {
     preserveState: true,
     preserveScroll: true,
