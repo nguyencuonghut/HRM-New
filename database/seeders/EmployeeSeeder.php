@@ -83,7 +83,7 @@ class EmployeeSeeder extends Seeder
                 'emergency_contact_phone' => $r['emergency_contact_phone'] ?? null,
                 'personal_email' => $r['personal_email'] ?? null,
                 'company_email' => $r['company_email'] ?? null,
-                'hire_date' => $r['hire_date'] ?? now()->toDateString(),
+                'hire_date' => $r['hire_date'] ?? null,
                 'status' => $r['status'],
                 'si_number' => $r['si_number'] ?? null,
                 'created_at' => $now,
