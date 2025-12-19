@@ -10,10 +10,12 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 use App\Enums\RewardDisciplineType;
 use App\Enums\RewardDisciplineCategory;
 use App\Enums\RewardDisciplineStatus;
+use Spatie\Activitylog\Traits\LogsActivity;
+use Spatie\Activitylog\LogOptions;
 
 class EmployeeRewardDiscipline extends Model
 {
-    use HasFactory, HasUuids, SoftDeletes;
+    use HasFactory, HasUuids, SoftDeletes, LogsActivity;
 
     protected $fillable = [
         'employee_id',
@@ -102,5 +104,52 @@ class EmployeeRewardDiscipline extends Model
     public function isDiscipline(): bool
     {
         return $this->type === RewardDisciplineType::DISCIPLINE;
+    }
+
+    // Activity Log Configuration
+    public function getActivitylogOptions(): LogOptions
+    {
+        return LogOptions::defaults()
+            ->logOnly([
+                'type',
+                'category',
+                'decision_no',
+                'decision_date',
+                'effective_date',
+                'amount',
+                'description',
+                'issued_by',
+                'status'
+            ])
+            ->logOnlyDirty()
+            ->dontSubmitEmptyLogs()
+            ->setDescriptionForEvent(fn(string $eventName) => match($eventName) {
+                'created' => 'Tạo mới khen thưởng/kỷ luật',
+                'updated' => 'Cập nhật khen thưởng/kỷ luật',
+                'deleted' => 'Xóa khen thưởng/kỷ luật',
+                default => $eventName
+            })
+            ->useLogName('reward-discipline');
+    }
+
+    public function tapActivity(\Spatie\Activitylog\Contracts\Activity $activity, string $eventName)
+    {
+        $properties = $activity->properties->toArray();
+
+        // Thêm thông tin employee
+        $properties['employee_id'] = $this->employee_id;
+        $properties['employee_name'] = $this->employee->full_name ?? null;
+
+        // Thêm label hiển thị
+        $typeLabel = $this->type->label();
+        $categoryLabel = $this->category->label();
+        $properties['label'] = "{$typeLabel}: {$categoryLabel} - QĐ {$this->decision_no}";
+
+        // Thêm thông tin issued_by
+        if ($this->issuedBy) {
+            $properties['issued_by_name'] = $this->issuedBy->full_name;
+        }
+
+        $activity->properties = $properties;
     }
 }

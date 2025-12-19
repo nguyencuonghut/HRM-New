@@ -71,6 +71,24 @@ class EmployeeRewardDisciplineController extends Controller
         $validated['employee_id'] = $employee->id;
 
         $record = EmployeeRewardDiscipline::create($validated);
+        $record->load(['employee', 'issuedBy']);
+
+        activity('reward-discipline')
+            ->performedOn($record)
+            ->causedBy($request->user())
+            ->withProperties([
+                'employee_id' => $employee->id,
+                'employee_name' => $employee->full_name,
+                'label' => $record->type->label() . ': ' . $record->category->label() . ' - QĐ ' . $record->decision_no,
+                'issued_by_name' => $record->issuedBy ? $record->issuedBy->full_name : null,
+                'attributes' => [
+                    'type' => $record->type->value,
+                    'category' => $record->category->value,
+                    'decision_no' => $record->decision_no,
+                    'effective_date' => $record->effective_date->format('d/m/Y'),
+                    'amount' => $record->amount,
+                ]
+            ])->log('Tạo mới khen thưởng/kỷ luật');
 
         return redirect()->back()->with([
             'message' => 'Lưu thành công',
@@ -83,8 +101,24 @@ class EmployeeRewardDisciplineController extends Controller
      */
     public function update(UpdateEmployeeRewardDisciplineRequest $request, Employee $employee, EmployeeRewardDiscipline $rewardDiscipline)
     {
+        $before = $rewardDiscipline->getOriginal();
         $validated = $request->validated();
         $rewardDiscipline->update($validated);
+        $rewardDiscipline->load(['employee', 'issuedBy']);
+        $changed = array_keys($rewardDiscipline->getChanges());
+
+        activity('reward-discipline')
+            ->performedOn($rewardDiscipline)
+            ->causedBy($request->user())
+            ->withProperties([
+                'employee_id' => $employee->id,
+                'employee_name' => $employee->full_name,
+                'label' => $rewardDiscipline->type->label() . ': ' . $rewardDiscipline->category->label() . ' - QĐ ' . $rewardDiscipline->decision_no,
+                'issued_by_name' => $rewardDiscipline->issuedBy ? $rewardDiscipline->issuedBy->full_name : null,
+                'before' => $before,
+                'after' => $rewardDiscipline->getAttributes(),
+                'changed' => $changed,
+            ])->log('Cập nhật khen thưởng/kỷ luật');
 
         return redirect()->back()->with([
             'message' => 'Cập nhật thành công',
@@ -101,6 +135,25 @@ class EmployeeRewardDisciplineController extends Controller
         if ($rewardDiscipline->employee_id !== $employee->id) {
             abort(403, 'Không có quyền');
         }
+
+        $rewardDiscipline->load(['employee', 'issuedBy']);
+
+        activity('reward-discipline')
+            ->performedOn($rewardDiscipline)
+            ->causedBy(request()->user())
+            ->withProperties([
+                'employee_id' => $employee->id,
+                'employee_name' => $employee->full_name,
+                'label' => $rewardDiscipline->type->label() . ': ' . $rewardDiscipline->category->label() . ' - QĐ ' . $rewardDiscipline->decision_no,
+                'issued_by_name' => $rewardDiscipline->issuedBy ? $rewardDiscipline->issuedBy->full_name : null,
+                'deleted' => [
+                    'type' => $rewardDiscipline->type->value,
+                    'category' => $rewardDiscipline->category->value,
+                    'decision_no' => $rewardDiscipline->decision_no,
+                    'effective_date' => $rewardDiscipline->effective_date->format('d/m/Y'),
+                    'amount' => $rewardDiscipline->amount,
+                ]
+            ])->log('Xóa khen thưởng/kỷ luật');
 
         $rewardDiscipline->delete();
 

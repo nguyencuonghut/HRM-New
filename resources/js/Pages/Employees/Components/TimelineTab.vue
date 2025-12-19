@@ -97,6 +97,7 @@ const moduleOptions = [
   { label: 'Người thân', value: 'employee-relative' },
   { label: 'Kinh nghiệm', value: 'employee-experience' },
   { label: 'Kỹ năng', value: 'employee-skill' },
+  { label: 'Khen thưởng & Kỷ luật', value: 'reward-discipline' },
 ]
 
 async function loadActivities(page = 1) {
@@ -138,6 +139,7 @@ function getActivityColor(logName) {
   if (logName.includes('relative')) return 'bg-green-500'
   if (logName.includes('experience')) return 'bg-orange-500'
   if (logName.includes('skill')) return 'bg-pink-500'
+  if (logName.includes('reward-discipline')) return 'bg-yellow-500'
   return 'bg-gray-500'
 }
 
@@ -161,6 +163,7 @@ function getModuleLabel(logName) {
   if (logName.includes('relative')) return 'Người thân'
   if (logName.includes('experience')) return 'Kinh nghiệm'
   if (logName.includes('skill')) return 'Kỹ năng'
+  if (logName.includes('reward-discipline')) return 'KT & KL'
   return logName
 }
 
@@ -170,6 +173,7 @@ function getModuleSeverity(logName) {
   if (logName.includes('relative')) return 'success'
   if (logName.includes('experience')) return 'warn'
   if (logName.includes('skill')) return 'danger'
+  if (logName.includes('reward-discipline')) return 'warning'
   return 'secondary'
 }
 
