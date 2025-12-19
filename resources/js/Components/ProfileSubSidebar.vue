@@ -80,7 +80,8 @@ const navigationGroups = [
       { value: 'assignments', label: 'Phân công', icon: 'pi pi-sitemap' },
       { value: 'contracts', label: 'Hợp đồng', icon: 'pi pi-file-edit' },
       { value: 'payroll', label: 'Lương hiện tại', icon: 'pi pi-wallet' },
-      { value: 'leave-balances', label: 'Số dư phép', icon: 'pi pi-calendar-times' }
+      { value: 'leave-balances', label: 'Số dư phép', icon: 'pi pi-calendar-times' },
+      { value: 'rewards-disciplines', label: 'Khen thưởng & Kỷ luật', icon: 'pi pi-trophy' }
     ]
   },
   {

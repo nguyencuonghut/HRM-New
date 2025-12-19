@@ -10,7 +10,7 @@ return new class extends Migration {
             $table->uuid('id')->primary(); // Khóa chính UUID của phân công/kiêm nhiệm
             $table->uuid('employee_id')->index(); // ID nhân viên
             $table->uuid('department_id')->index(); // Gán vào phòng/ban nào
-        $table->uuid('position_id')->nullable()->index(); // Vị trí/chức danh (có thể null)
+            $table->uuid('position_id')->nullable()->index(); // Vị trí/chức danh (có thể null)
             $table->boolean('is_primary')->default(false)->index(); // Đánh dấu assignment chính
             $table->enum('role_type', ['HEAD','DEPUTY','MEMBER'])->default('MEMBER')->index(); // Vai trò trong đơn vị
             $table->date('start_date')->nullable()->index(); // Ngày bắt đầu hiệu lực

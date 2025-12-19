@@ -147,6 +147,12 @@ Route::group(['middleware' => 'auth'], function () {
     Route::delete('employees/{employee}/assignments/{assignment}', [EmployeeAssignmentController::class, 'destroyForEmployee'])->name('employees.assignments.destroy');
     Route::post('employees/{employee}/assignments/bulk-delete', [EmployeeAssignmentController::class, 'bulkDeleteForEmployee'])->name('employees.assignments.bulk-delete');
 
+    // Rewards & Disciplines (khen thưởng & kỷ luật - nested trong profile)
+    Route::get('employees/{employee}/rewards-disciplines', [\App\Http\Controllers\EmployeeRewardDisciplineController::class, 'index'])->name('employees.rewards-disciplines.index');
+    Route::post('employees/{employee}/rewards-disciplines', [\App\Http\Controllers\EmployeeRewardDisciplineController::class, 'store'])->name('employees.rewards-disciplines.store');
+    Route::put('employees/{employee}/rewards-disciplines/{rewardDiscipline}', [\App\Http\Controllers\EmployeeRewardDisciplineController::class, 'update'])->name('employees.rewards-disciplines.update');
+    Route::delete('employees/{employee}/rewards-disciplines/{rewardDiscipline}', [\App\Http\Controllers\EmployeeRewardDisciplineController::class, 'destroy'])->name('employees.rewards-disciplines.destroy');
+
     // Nhóm kỹ năng (Skill Categories)
     Route::get('skill-categories', [SkillCategoryController::class, 'index'])->name('skill-categories.index');
     Route::post('skill-categories', [SkillCategoryController::class, 'store'])->name('skill-categories.store');

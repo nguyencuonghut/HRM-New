@@ -133,6 +133,8 @@ class EmployeeController extends Controller
             )->resolve(),
             // Lương hiện tại
             'current_payroll' => $currentPayroll,
+            // Khen thưởng & Kỷ luật
+            'rewards_disciplines_data' => EmployeeRewardDisciplineController::getProfileData($employee),
         ]);
     }
 

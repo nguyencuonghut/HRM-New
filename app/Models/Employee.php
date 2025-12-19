@@ -83,6 +83,9 @@ class Employee extends Model
     // Quan hệ: employment periods (chu kỳ làm việc)
     public function employments(){ return $this->hasMany(EmployeeEmployment::class); }
 
+    // Quan hệ: khen thưởng & kỷ luật
+    public function rewardsDisciplines(){ return $this->hasMany(EmployeeRewardDiscipline::class); }
+
     // Lấy employment hiện tại
     public function currentEmployment()
     {

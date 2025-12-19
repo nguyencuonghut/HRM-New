@@ -147,6 +147,17 @@
             />
           </div>
 
+          <!-- KHEN THƯỞNG & KỶ LUẬT -->
+          <div v-show="activeTab === 'rewards-disciplines'" class="content-section">
+            <RewardsDisciplinesTab
+              :employee="props.employee"
+              :records="props.rewards_disciplines_data.records"
+              :stats="props.rewards_disciplines_data.stats"
+              :category-options="props.rewards_disciplines_data.categoryOptions"
+              :head-deputy-employees="props.rewards_disciplines_data.headDeputyEmployees"
+            />
+          </div>
+
           <!-- NHẬT KÝ HOẠT ĐỘNG -->
           <div v-show="activeTab === 'timeline'" class="content-section">
             <TimelineTab :employee-id="props.employee.id" />
@@ -169,6 +180,7 @@ import AssignmentsTab from '@/Pages/Employees/Components/AssignmentsTab.vue'
 import LeaveBalanceTab from '@/Pages/Employees/Components/LeaveBalanceTab.vue'
 import ContractTab from '@/Pages/Employees/Components/ContractTab.vue'
 import PayrollTab from '@/Pages/Employees/Components/PayrollTab.vue'
+import RewardsDisciplinesTab from '@/Pages/Employees/Components/RewardsDisciplinesTab.vue'
 import EmploymentHistoryTab from '@/Pages/Employees/Components/EmploymentHistoryTab.vue'
 import TimelineTab from '@/Pages/Employees/Components/TimelineTab.vue'
 import Card from 'primevue/card'
@@ -187,6 +199,7 @@ const props = defineProps({
   employee_skills: { type: Array, default: () => [] },  // kỹ năng của NV
   assignments: { type: Array, default: () => [] },      // phân công của NV
   contracts: { type: Array, default: () => [] },        // hợp đồng của NV
+  rewards_disciplines_data: { type: Object, default: () => ({ records: [], stats: {}, categoryOptions: {} }) }, // khen thưởng & kỷ luật
 })
 
 // --- PayrollTab chuyển tab contracts ---
