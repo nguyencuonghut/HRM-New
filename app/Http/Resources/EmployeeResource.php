@@ -70,7 +70,7 @@ class EmployeeResource extends JsonResource
             'cumulative_tenure'        => $this->getCumulativeTenure(),
             'cumulative_tenure_text'   => $this->getCumulativeTenureHuman(),
             'employment_history'       => $this->whenLoaded('employments', fn() => $this->getEmploymentHistory()),
-            'current_employment_start' => $this->currentEmployment() ? $this->currentEmployment()->start_date->format('d/m/Y') : null,
+            'current_employment_start' => $this->currentEmployment ? $this->currentEmployment->start_date->format('d/m/Y') : null,
 
             // Profile completion
             'completion_score'         => $completion ? $completion['score'] : null,

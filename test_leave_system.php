@@ -33,7 +33,7 @@ $employee = Employee::where('full_name', 'LIKE', '%Bùi Thị Nết%')->first();
 if ($employee) {
     echo "Employee: {$employee->full_name} (Code: {$employee->employee_code})\n";
 
-    $employment = $employee->currentEmployment();
+    $employment = $employee->currentEmployment;
     if ($employment) {
         echo "Employment Start: {$employment->start_date}\n";
 

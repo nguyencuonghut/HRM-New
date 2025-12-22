@@ -37,6 +37,15 @@ class Contract extends Model
         'created_from_offer' => 'boolean',
     ];
 
+    protected $attributes = [
+        'status' => 'DRAFT',
+        'source' => 'LEGACY',
+        'social_insurance' => true,
+        'health_insurance' => true,
+        'unemployment_insurance' => true,
+        'created_from_offer' => false,
+    ];
+
     public function employee(){ return $this->belongsTo(Employee::class); }
     public function employment(){ return $this->belongsTo(EmployeeEmployment::class, 'employment_id'); }
     public function department(){ return $this->belongsTo(Department::class); }

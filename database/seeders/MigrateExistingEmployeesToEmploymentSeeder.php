@@ -56,15 +56,13 @@ class MigrateExistingEmployeesToEmploymentSeeder extends Seeder
                     ->latest('end_date')
                     ->first();
 
-                // Xác định is_current, end_date dựa vào contract mới nhất
-                $isCurrent = true;
+                // Xác định end_date dựa vào contract mới nhất
                 $endDate = null;
                 $endReason = null;
 
                 if ($latestContract && $latestContract->end_date) {
                     // Nếu contract đã hết hạn (end_date < today)
                     if ($latestContract->end_date->isPast()) {
-                        $isCurrent = false;
                         $endDate = $latestContract->end_date->toDateString();
                         $endReason = 'CONTRACT_END';
 
@@ -76,7 +74,6 @@ class MigrateExistingEmployeesToEmploymentSeeder extends Seeder
                     }
                 } elseif (!in_array($employee->status, ['ACTIVE', 'ON_LEAVE'])) {
                     // Không có contract hoặc contract không có end_date, dựa vào status
-                    $isCurrent = false;
                     $endDate = $employee->updated_at->toDateString();
                     $endReason = match ($employee->status) {
                         'TERMINATED' => 'TERMINATION',
@@ -84,6 +81,9 @@ class MigrateExistingEmployeesToEmploymentSeeder extends Seeder
                         default => 'OTHER',
                     };
                 }
+
+                // is_current sẽ được tự động đồng bộ dựa trên end_date (null = current)
+                $isCurrent = is_null($endDate);
 
                 // Create employment record
                 $employment = EmployeeEmployment::create([
@@ -100,7 +100,8 @@ class MigrateExistingEmployeesToEmploymentSeeder extends Seeder
                     ->whereNull('employment_id')
                     ->update(['employment_id' => $employment->id]);
 
-                $this->command->info("  ✓ Created employment for {$employee->employee_code} (start: {$startDate}, current: " . ($isCurrent ? 'Yes' : 'No') . ")");
+                $contractsCount = Contract::where('employee_id', $employee->id)->count();
+                $this->command->info("  ✓ Created employment for {$employee->employee_code} (start: {$startDate}, end: " . ($endDate ?? 'NULL') . ", current: " . ($isCurrent ? 'Yes' : 'No') . ", contracts: {$contractsCount})");
                 $created++;
             }
 

@@ -14,18 +14,20 @@ class EmployeeEmployment extends Model
 {
     use HasUuids, LogsActivity;
 
+    protected $table = 'employee_employments';
+
     protected $fillable = [
         'employee_id',
         'start_date',
         'end_date',
         'end_reason',
-        'is_current',
         'note',
+        'is_current',
     ];
 
     protected $casts = [
         'start_date' => 'date',
-        'end_date' => 'date',
+        'end_date'   => 'date',
         'is_current' => 'boolean',
     ];
 
@@ -47,7 +49,7 @@ class EmployeeEmployment extends Model
      */
     public function scopeCurrent($query)
     {
-        return $query->where('is_current', true);
+        return $query->whereNull('end_date');
     }
 
     public function scopeForEmployee($query, $employeeId)
@@ -71,7 +73,7 @@ class EmployeeEmployment extends Model
     public function getDurationInDays(): int
     {
         $end = $this->end_date ?? now();
-        return $this->start_date->diffInDays($end);
+        return (int) ceil($this->start_date->diffInDays($end));
     }
 
     /**

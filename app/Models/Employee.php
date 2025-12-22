@@ -81,16 +81,18 @@ class Employee extends Model
     public function employeeSkills(){ return $this->hasMany(EmployeeSkill::class); }
 
     // Quan hệ: employment periods (chu kỳ làm việc)
-    public function employments(){ return $this->hasMany(EmployeeEmployment::class); }
+    public function employments()
+    {
+        return $this->hasMany(EmployeeEmployment::class, 'employee_id')->orderBy('start_date');
+    }
+
+    public function currentEmployment()
+    {
+        return $this->hasOne(EmployeeEmployment::class, 'employee_id')->whereNull('end_date');
+    }
 
     // Quan hệ: khen thưởng & kỷ luật
     public function rewardsDisciplines(){ return $this->hasMany(EmployeeRewardDiscipline::class); }
-
-    // Lấy employment hiện tại
-    public function currentEmployment()
-    {
-        return $this->employments()->where('is_current', true)->first();
-    }
 
     // ==================== TENURE / SENIORITY METHODS ====================
 
@@ -101,7 +103,7 @@ class Employee extends Model
      */
     public function getCurrentTenure(): array
     {
-        $current = $this->currentEmployment();
+        $current = $this->currentEmployment;
 
         if (!$current) {
             return ['years' => 0, 'months' => 0, 'days' => 0, 'total_days' => 0];
@@ -112,7 +114,7 @@ class Employee extends Model
 
     public function getCurrentTenureHuman(): string
     {
-        $current = $this->currentEmployment();
+        $current = $this->currentEmployment;
         return $current ? $current->getHumanDuration() : '0 ngày';
     }
 
@@ -123,21 +125,39 @@ class Employee extends Model
      */
     public function getCumulativeTenure(): array
     {
-        $totalDays = $this->employments()
-            ->get()
-            ->sum(fn($employment) => $employment->getDurationInDays());
+        // Use DateInterval sum for precise calculation
+        $employments = $this->employments()->get();
 
-        // Convert total days to years/months/days (approximate)
-        $years = floor($totalDays / 365);
-        $remainingDays = $totalDays % 365;
-        $months = floor($remainingDays / 30);
-        $days = $remainingDays % 30;
+        if ($employments->isEmpty()) {
+            return ['years' => 0, 'months' => 0, 'days' => 0, 'total_days' => 0];
+        }
+
+        // Sum all employment durations using DateInterval for accuracy
+        $totalYears = 0;
+        $totalMonths = 0;
+        $totalDays = 0;
+        $totalDaysCount = 0;
+
+        foreach ($employments as $employment) {
+            $duration = $employment->getFormattedDuration();
+            $totalYears += $duration['years'];
+            $totalMonths += $duration['months'];
+            $totalDays += $duration['days'];
+            $totalDaysCount += $duration['total_days'];
+        }
+
+        // Normalize: convert excess days/months to upper units
+        $totalMonths += floor($totalDays / 30);
+        $totalDays = $totalDays % 30;
+
+        $totalYears += floor($totalMonths / 12);
+        $totalMonths = $totalMonths % 12;
 
         return [
-            'years' => $years,
-            'months' => $months,
-            'days' => $days,
-            'total_days' => $totalDays,
+            'years' => (int) $totalYears,
+            'months' => (int) $totalMonths,
+            'days' => (int) $totalDays,
+            'total_days' => $totalDaysCount,
         ];
     }
 

@@ -15,8 +15,8 @@ return new class extends Migration
             $table->uuid('id')->primary();
             $table->uuid('employee_id')->index();
 
-            $table->date('start_date')->comment('Ngày bắt đầu đợt làm việc này');
-            $table->date('end_date')->nullable()->comment('Ngày kết thúc (null = đang làm)');
+            $table->date('start_date')->index()->comment('Ngày bắt đầu đợt làm việc');
+            $table->date('end_date')->nullable()->index()->comment('Ngày kết thúc (null = đang làm)');
 
             $table->enum('end_reason', [
                 'RESIGN',           // Nghỉ việc tự nguyện
@@ -27,11 +27,21 @@ return new class extends Migration
                 'MATERNITY_LEAVE',  // Nghỉ sinh
                 'REHIRE',           // Tái tuyển dụng (end_date của đợt cũ)
                 'OTHER'
-            ])->nullable()->comment('Lý do kết thúc');
+            ])->nullable()->index()->comment('Lý do kết thúc');
 
-            $table->boolean('is_current')->default(true)->index()->comment('Đợt làm việc hiện tại?');
+            $table->text('note')->nullable();
 
-            $table->text('note')->nullable()->comment('Ghi chú');
+            // Flag is_current để query nhanh (có thể đồng bộ = resolver)
+            $table->boolean('is_current')->default(false)->index();
+
+            /**
+             * MySQL-safe unique current:
+             * - current_unique_flag = 1 nếu end_date IS NULL (đang làm)
+             * - NULL nếu đã kết thúc
+             * => UNIQUE(employee_id, current_unique_flag) đảm bảo mỗi employee chỉ có 1 row end_date NULL.
+             */
+            $table->unsignedTinyInteger('current_unique_flag')
+                ->storedAs("CASE WHEN end_date IS NULL THEN 1 ELSE NULL END");
 
             $table->timestamps();
 
@@ -41,23 +51,20 @@ return new class extends Migration
                 ->on('employees')
                 ->onDelete('cascade');
 
-            // Indexes
-            $table->index(['employee_id', 'is_current']);
-            $table->index(['employee_id', 'start_date']);
-
-            // Constraint: only one current employment per employee
-            $table->unique(['employee_id', 'is_current'], 'unique_current_employment')
-                ->where('is_current', true);
+            // Unique constraint: only one current employment per employee (MySQL-safe)
+            $table->unique(['employee_id', 'current_unique_flag'], 'uq_employee_one_current_employment');
         });
 
         // Add optional foreign key to contracts
         Schema::table('contracts', function (Blueprint $table) {
-            $table->uuid('employment_id')->nullable()->after('employee_id')->comment('Thuộc đợt làm việc nào');
+            if (!Schema::hasColumn('contracts', 'employment_id')) {
+                $table->uuid('employment_id')->nullable()->after('employee_id')->index()->comment('Thuộc đợt làm việc nào');
 
-            $table->foreign('employment_id')
-                ->references('id')
-                ->on('employee_employments')
-                ->onDelete('set null');
+                $table->foreign('employment_id')
+                    ->references('id')
+                    ->on('employee_employments')
+                    ->onDelete('set null');
+            }
         });
     }
 
@@ -67,8 +74,10 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('contracts', function (Blueprint $table) {
-            $table->dropForeign(['employment_id']);
-            $table->dropColumn('employment_id');
+            if (Schema::hasColumn('contracts', 'employment_id')) {
+                $table->dropForeign(['employment_id']);
+                $table->dropColumn('employment_id');
+            }
         });
 
         Schema::dropIfExists('employee_employments');

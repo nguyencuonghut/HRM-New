@@ -83,6 +83,9 @@ class ContractController extends Controller
 
         $row = Contract::create($payload);
 
+        // Refresh to get employment_id set by Observer
+        $row->refresh();
+
         // Upload attachments nếu có
         if ($request->hasFile('attachments')) {
             foreach ($request->file('attachments') as $file) {

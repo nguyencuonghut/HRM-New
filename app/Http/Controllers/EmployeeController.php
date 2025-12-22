@@ -37,7 +37,7 @@ class EmployeeController extends Controller
         $employee->load(['assignments', 'educations', 'relatives', 'experiences', 'employeeSkills', 'employments']);
 
         // Lấy employment hiện tại (nếu có)
-        $currentEmployment = $employee->currentEmployment();
+        $currentEmployment = $employee->currentEmployment;
         $activeContractQuery = $employee->contracts()->active()->orderByDesc('start_date');
         if ($currentEmployment) {
             $activeContractQuery->where('employment_id', $currentEmployment->id);
