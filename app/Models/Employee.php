@@ -223,6 +223,7 @@ class Employee extends Model
                     'duration' => $employment->getHumanDuration(),
                     'is_current' => $employment->is_current,
                     'end_reason' => $employment->end_reason,
+                    'note' => $employment->note,
                 ];
             })
             ->toArray();

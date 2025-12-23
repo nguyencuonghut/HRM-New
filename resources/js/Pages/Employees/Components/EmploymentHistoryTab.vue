@@ -42,14 +42,6 @@
           <Badge v-else value="Đã kết thúc" severity="secondary" />
         </template>
       </Column>
-      <Column field="end_reason" header="Lý do kết thúc" headerStyle="min-width:12rem">
-        <template #body="{ data }">
-          <span v-if="data.end_reason" class="text-sm text-gray-600">
-            {{ getEndReasonLabel(data.end_reason) }}
-          </span>
-          <span v-else class="text-gray-400">-</span>
-        </template>
-      </Column>
     </DataTable>
 
     <!-- Summary Card -->

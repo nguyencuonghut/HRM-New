@@ -114,27 +114,77 @@ class EmploymentResolver
     }
 
     /**
-     * Optional: when contract is terminated/cancelled and you want to end current employment.
-     * You can call this from terminate flow if you want.
+     * End employment when contract is terminated/cancelled/expired.
+     * Can target specific employment by ID or find current one.
      */
-    public function endCurrentEmployment(string $employeeId, string $endDate, ?string $reason = null, ?string $note = null): void
+    public function endCurrentEmployment(
+        string $employeeId,
+        string $endDate,
+        ?string $reason = null,
+        ?string $note = null,
+        ?string $employmentId = null
+    ): void
     {
-        DB::transaction(function () use ($employeeId, $endDate, $reason, $note) {
-            $current = EmployeeEmployment::where('employee_id', $employeeId)
-                ->whereNull('end_date')
-                ->lockForUpdate()
-                ->first();
+        \Log::info("EmploymentResolver: Ending employment", [
+            'employee_id' => $employeeId,
+            'employment_id' => $employmentId,
+            'end_date' => $endDate,
+            'reason' => $reason,
+            'note' => $note
+        ]);
 
-            if (!$current) return;
+        DB::transaction(function () use ($employeeId, $endDate, $reason, $note, $employmentId) {
+            // If employmentId is provided, use it; otherwise find current employment
+            if ($employmentId) {
+                $employment = EmployeeEmployment::where('id', $employmentId)
+                    ->where('employee_id', $employeeId)
+                    ->lockForUpdate()
+                    ->first();
+            } else {
+                $employment = EmployeeEmployment::where('employee_id', $employeeId)
+                    ->whereNull('end_date')
+                    ->lockForUpdate()
+                    ->first();
+            }
 
-            $current->end_date   = $endDate;
-            $current->end_reason = $reason ?: $current->end_reason;
-            if ($note) $current->note = trim(($current->note ?? '') . "\n" . $note);
-            $current->is_current = false;
-            $current->save();
+            \Log::info("Employment found", [
+                'found' => !is_null($employment),
+                'employment_id' => $employment?->id ?? 'null',
+                'current_end_date' => $employment?->end_date ?? 'null'
+            ]);
+
+            if (!$employment) {
+                \Log::warning("No employment found", [
+                    'employee_id' => $employeeId,
+                    'target_employment_id' => $employmentId
+                ]);
+                return;
+            }
+
+            // Update employment
+            $employment->end_date   = $endDate;
+            $employment->end_reason = $reason ?: $employment->end_reason;
+            if ($note) $employment->note = trim(($employment->note ?? '') . "\n" . $note);
+            $employment->is_current = false;
+
+            \Log::info("Saving employment with", [
+                'employment_id' => $employment->id,
+                'end_date' => $employment->end_date,
+                'end_reason' => $employment->end_reason,
+                'note' => $employment->note,
+                'is_current' => $employment->is_current
+            ]);
+
+            $employment->save();
+
+            \Log::info("Employment saved successfully", [
+                'employment_id' => $employment->id
+            ]);
 
             $this->syncIsCurrentFlags($employeeId);
         });
+
+        \Log::info("Transaction completed for endCurrentEmployment");
     }
 
     /* ---------------- Internals ---------------- */

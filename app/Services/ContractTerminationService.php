@@ -12,6 +12,13 @@ use Carbon\Carbon;
 
 class ContractTerminationService
 {
+    protected EmploymentResolver $employmentResolver;
+
+    public function __construct(EmploymentResolver $employmentResolver)
+    {
+        $this->employmentResolver = $employmentResolver;
+    }
+
     /**
      * Chấm dứt hợp đồng
      */
@@ -34,6 +41,9 @@ class ContractTerminationService
 
             // Xử lý các phụ lục (appendixes) của hợp đồng
             $this->handleAppendixesOnTermination($contract, $terminatedAt);
+
+            // End current employment if this is the last active contract
+            $this->handleEmploymentOnTermination($contract, $terminatedAt, $data);
 
             // Log activity
             activity()
@@ -61,6 +71,73 @@ class ContractTerminationService
             DB::rollBack();
             throw $e;
         }
+    }
+
+    /**
+     * Xử lý employment khi contract bị chấm dứt
+     */
+    protected function handleEmploymentOnTermination(Contract $contract, Carbon $terminatedAt, array $data): void
+    {
+        \Log::info('handleEmploymentOnTermination START', [
+            'contract_id' => $contract->id,
+            'employee_id' => $contract->employee_id,
+            'terminated_at' => $terminatedAt->toDateString(),
+            'data' => $data
+        ]);
+
+        // Kiểm tra xem nhân viên còn contract ACTIVE nào khác không
+        $hasOtherActiveContracts = Contract::where('employee_id', $contract->employee_id)
+            ->where('id', '!=', $contract->id)
+            ->whereIn('status', ['ACTIVE', 'SUSPENDED'])
+            ->exists();
+
+        \Log::info('Checking other active contracts', [
+            'employee_id' => $contract->employee_id,
+            'hasOtherActiveContracts' => $hasOtherActiveContracts
+        ]);
+
+        // Nếu không còn contract ACTIVE nào khác, kết thúc employment hiện tại
+        if (!$hasOtherActiveContracts) {
+            $mappedReason = $this->mapTerminationReasonToEmploymentReason($data['termination_reason']);
+            \Log::info('Calling endCurrentEmployment', [
+                'employee_id' => $contract->employee_id,
+                'employment_id' => $contract->employment_id,
+                'end_date' => $terminatedAt->toDateString(),
+                'reason' => $mappedReason,
+                'note' => $data['termination_note'] ?? null
+            ]);
+
+            $this->employmentResolver->endCurrentEmployment(
+                employeeId: $contract->employee_id,
+                endDate: $terminatedAt->toDateString(),
+                reason: $mappedReason,
+                note: $data['termination_note'] ?? null,
+                employmentId: $contract->employment_id  // Pass employment_id from contract
+            );
+
+            \Log::info('endCurrentEmployment completed');
+        } else {
+            \Log::info('Employee has other active contracts, NOT ending employment');
+        }
+    }
+
+    /**
+     * Map Contract's termination_reason to Employment's end_reason
+     */
+    protected function mapTerminationReasonToEmploymentReason(string $contractReason): string
+    {
+        return match($contractReason) {
+            'EXPIRATION' => 'CONTRACT_END',        // Hết hạn → Hết hạn hợp đồng
+            'RESIGNATION' => 'RESIGN',             // Nhân viên nghỉ → Nghỉ việc
+            'DISMISSAL' => 'TERMINATION',          // Công ty sa thải → Sa thải
+            'MUTUAL' => 'RESIGN',                  // Thỏa thuận → Nghỉ việc
+            'PROBATION_FAILED' => 'TERMINATION',   // Không qua thử việc → Sa thải
+            'BREACH' => 'TERMINATION',             // Vi phạm → Sa thải
+            'RETIREMENT' => 'RETIREMENT',          // Nghỉ hưu → Nghỉ hưu
+            'FORCE_MAJEURE' => 'LAYOFF',           // Bất khả kháng → Cho thôi việc
+            'DECEASED' => 'OTHER',                 // Qua đời → Khác
+            default => 'OTHER',                    // Các trường hợp khác
+        };
     }
 
     /**

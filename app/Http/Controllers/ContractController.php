@@ -609,6 +609,7 @@ class ContractController extends Controller
     public function terminate(Request $request, Contract $contract, ContractTerminationService $service)
     {
         $this->authorize('update', $contract);
+        \Log::info('Terminating contract', ['contract_id' => $contract->id, 'user_id' => $request->user()->id]);
 
         $validated = $request->validate([
             'terminated_at' => 'required|date',

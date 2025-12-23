@@ -46,6 +46,11 @@ class ContractObserver
                 return;
             }
 
+            // Handle employment end when contract status becomes EXPIRED or CANCELLED
+            if (in_array($contract->status, ['EXPIRED', 'CANCELLED']) && $contract->isDirty('status')) {
+                $this->handleEmploymentEndOnContractEnd($contract);
+            }
+
             // Skip if employment_id is already set (prevent infinite loop)
             // This happens when resolver calls $contract->save() to update employment_id
             if ($contract->employment_id) {
@@ -81,6 +86,54 @@ class ContractObserver
                 'contract_id' => $contract->id,
                 'error' => $e->getMessage(),
                 'trace' => $e->getTraceAsString(),
+            ]);
+        }
+    }
+
+    /**
+     * Handle employment end when contract expires or is cancelled
+     */
+    protected function handleEmploymentEndOnContractEnd(Contract $contract): void
+    {
+        \Log::info("ContractObserver: Handling employment end on contract end", [
+            'contract_id' => $contract->id,
+            'status' => $contract->status,
+        ]);
+        try {
+            // Check if employee has other active contracts
+            $hasOtherActiveContracts = Contract::where('employee_id', $contract->employee_id)
+                ->where('id', '!=', $contract->id)
+                ->whereIn('status', ['ACTIVE', 'SUSPENDED'])
+                ->exists();
+
+            // If no other active contracts, end current employment
+            if (!$hasOtherActiveContracts) {
+                $endDate = $contract->end_date ?? now();
+                $reason = $contract->status === 'EXPIRED' ? 'CONTRACT_END' : 'OTHER';
+                $note = $contract->status === 'EXPIRED'
+                    ? "Hợp đồng {$contract->contract_number} hết hạn"
+                    : "Hợp đồng {$contract->contract_number} bị hủy";
+
+                $this->resolver->endCurrentEmployment(
+                    employeeId: $contract->employee_id,
+                    endDate: $endDate->toDateString(),
+                    reason: $reason,
+                    note: $note,
+                    employmentId: $contract->employment_id  // Pass employment_id from contract
+                );
+
+                Log::info("ContractObserver: Ended employment due to contract end", [
+                    'contract_id' => $contract->id,
+                    'employee_id' => $contract->employee_id,
+                    'employment_id' => $contract->employment_id,
+                    'status' => $contract->status,
+                    'end_date' => $endDate->toDateString(),
+                ]);
+            }
+        } catch (\Exception $e) {
+            Log::error("ContractObserver: Failed to end employment on contract end", [
+                'contract_id' => $contract->id,
+                'error' => $e->getMessage(),
             ]);
         }
     }
