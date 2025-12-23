@@ -165,7 +165,7 @@
         </div>
         <div>
           <label class="block font-bold mb-2 required-field">Số HĐ</label>
-          <InputText v-model.trim="form.contract_number" class="w-full" placeholder="VD: HĐ-2025-001" :invalid="submitted && !form.contract_number" />
+          <InputText v-model="form.contract_number" class="w-full" placeholder="VD: HĐ-2025-001" :invalid="submitted && !form.contract_number" />
           <small class="text-red-500" v-if="submitted && !form.contract_number">Số hợp đồng là bắt buộc.</small>
           <small class="text-red-500" v-if="hasError('contract_number')">{{ errors.contract_number }}</small>
         </div>
@@ -228,12 +228,12 @@
         </div>
         <div>
           <label class="block font-bold mb-2">Thời gian làm việc</label>
-          <InputText v-model.trim="form.working_time" class="w-full" placeholder="VD: T2–T6 08:00–17:00" />
+          <InputText v-model="form.working_time" class="w-full" placeholder="VD: T2–T6 08:00–17:00" />
         </div>
 
         <div class="md:col-span-2">
           <label class="block font-bold mb-2">Địa điểm làm việc</label>
-          <InputText v-model.trim="form.work_location" class="w-full" placeholder="VD: Văn phòng Ninh Bình" />
+          <InputText v-model="form.work_location" class="w-full" placeholder="VD: Văn phòng Ninh Bình" />
         </div>
 
         <!-- Other allowances (repeater) -->
@@ -245,7 +245,7 @@
           <div v-if="!form.other_allowances || form.other_allowances.length===0" class="text-gray-500 text-sm">Chưa có phụ cấp khác.</div>
           <div v-for="(al, idx) in form.other_allowances" :key="idx" class="grid grid-cols-12 gap-2 mb-2">
             <div class="col-span-6">
-              <InputText v-model.trim="al.name" class="w-full" placeholder="Tên phụ cấp" />
+              <InputText v-model="al.name" class="w-full" placeholder="Tên phụ cấp" />
             </div>
             <div class="col-span-5">
               <InputText v-model.number="al.amount" type="number" class="w-full" placeholder="Số tiền VND/tháng" />
@@ -265,7 +265,7 @@
         </div>
         <div>
           <label class="block font-bold mb-2">Source ID (nếu có)</label>
-          <InputText v-model.trim="form.source_id" class="w-full" placeholder="offers.id hoặc để trống" />
+          <InputText v-model="form.source_id" class="w-full" placeholder="offers.id hoặc để trống" />
           <small class="text-red-500" v-if="hasError('source_id')">{{ errors.source_id }}</small>
         </div>
 
@@ -284,7 +284,7 @@
 
         <div class="md:col-span-2">
           <label class="block font-bold mb-2">Ghi chú</label>
-          <Textarea v-model.trim="form.note" autoResize rows="3" class="w-full" />
+          <Textarea v-model="form.note" autoResize rows="3" class="w-full" />
         </div>
       </div>
 

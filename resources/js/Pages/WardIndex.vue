@@ -84,11 +84,11 @@
                 </div>
                 <div>
                     <label for="code" class="block font-bold mb-3">Mã</label>
-                    <InputText id="code" v-model.trim="ward.code" class="w-full" placeholder="Nhập mã (tùy chọn)" />
+                    <InputText id="code" v-model="ward.code" class="w-full" placeholder="Nhập mã (tùy chọn)" />
                 </div>
                 <div>
                     <label for="name" class="block font-bold mb-3 required-field">Tên Phường/Xã</label>
-                    <InputText id="name" v-model.trim="ward.name" autofocus :invalid="submitted && !ward.name" class="w-full" />
+                    <InputText id="name" v-model="ward.name" autofocus :invalid="submitted && !ward.name" class="w-full" />
                     <small class="text-red-500" v-if="submitted && !ward.name">Tên là bắt buộc.</small>
                 </div>
             </div>
@@ -132,6 +132,7 @@ import { ref, computed } from 'vue';
 import { usePage, Head } from '@inertiajs/vue3';
 import { WardService } from '@/services';
 import Select from 'primevue/select';
+import { trimStringValues } from '@/utils/stringHelpers';
 
 const { props } = usePage();
 
@@ -176,15 +177,18 @@ const hideDialog = () => {
 const saveWard = () => {
     submitted.value = true;
     if (ward.value.name && ward.value.name.trim() && ward.value.province_id) {
+        // Trim all string values before sending
+        const trimmedWard = trimStringValues(ward.value);
+
         if (ward.value.id) {
-            WardService.update(ward.value.id, ward.value, {
+            WardService.update(ward.value.id, trimmedWard, {
                 onSuccess: () => {
                     wardDialog.value = false;
                     ward.value = {};
                 }
             });
         } else {
-            WardService.store(ward.value, {
+            WardService.store(trimmedWard, {
                 onSuccess: () => {
                     wardDialog.value = false;
                     ward.value = {};

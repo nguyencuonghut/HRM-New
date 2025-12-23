@@ -77,11 +77,11 @@
       <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
           <label class="block font-bold mb-2">Công ty</label>
-          <InputText v-model.trim="form.company_name" class="w-full" />
+          <InputText v-model="form.company_name" class="w-full" />
         </div>
         <div>
           <label class="block font-bold mb-2">Chức danh</label>
-          <InputText v-model.trim="form.position_title" class="w-full" />
+          <InputText v-model="form.position_title" class="w-full" />
         </div>
         <div>
           <label class="block font-bold mb-2">Bắt đầu</label>
@@ -97,11 +97,11 @@
         </div>
         <div class="md:col-span-2">
           <label class="block font-bold mb-2">Mô tả công việc</label>
-          <Textarea v-model.trim="form.responsibilities" autoResize rows="3" class="w-full" />
+          <Textarea v-model="form.responsibilities" autoResize rows="3" class="w-full" />
         </div>
         <div class="md:col-span-2">
           <label class="block font-bold mb-2">Thành tích</label>
-          <Textarea v-model.trim="form.achievements" autoResize rows="3" class="w-full" />
+          <Textarea v-model="form.achievements" autoResize rows="3" class="w-full" />
         </div>
       </div>
       <template #footer>

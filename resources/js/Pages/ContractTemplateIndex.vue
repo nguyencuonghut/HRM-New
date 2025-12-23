@@ -81,7 +81,7 @@
       <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
           <label class="block font-bold mb-2 required-field">Tên mẫu</label>
-          <InputText v-model.trim="form.name" class="w-full" :invalid="submitted && !form.name || hasError('name')" />
+          <InputText v-model="form.name" class="w-full" :invalid="submitted && !form.name || hasError('name')" />
           <small class="text-red-500" v-if="submitted && !form.name">Tên mẫu là bắt buộc.</small>
           <small class="text-red-500" v-if="hasError('name')">{{ errors.name }}</small>
         </div>
@@ -104,7 +104,7 @@
         <!-- BLADE: body_path -->
         <div v-if="form.engine === 'BLADE'">
           <label class="block font-bold mb-2 required-field">Blade View</label>
-          <InputText v-model.trim="form.body_path" class="w-full" placeholder="vd: contracts/templates/default"
+          <InputText v-model="form.body_path" class="w-full" placeholder="vd: contracts/templates/default"
                      :invalid="submitted && form.engine === 'BLADE' && !form.body_path || hasError('body_path')" />
           <small class="text-red-500" v-if="submitted && form.engine === 'BLADE' && !form.body_path">Blade View là bắt buộc.</small>
           <small class="text-red-500" v-if="hasError('body_path')">{{ errors.body_path }}</small>
@@ -159,7 +159,7 @@
 
         <div class="md:col-span-2">
           <label class="block font-bold mb-2">Mô tả</label>
-          <Textarea v-model.trim="form.description" autoResize rows="2" class="w-full" />
+          <Textarea v-model="form.description" autoResize rows="2" class="w-full" />
         </div>
 
         <!-- LIQUID: content editor -->

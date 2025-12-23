@@ -77,7 +77,7 @@
       <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
           <label class="block font-bold mb-2">Họ tên</label>
-          <InputText v-model.trim="form.full_name" class="w-full" />
+          <InputText v-model="form.full_name" class="w-full" />
         </div>
         <div>
           <label class="block font-bold mb-2">Quan hệ</label>
@@ -96,15 +96,15 @@
         </div>
         <div>
           <label class="block font-bold mb-2">SĐT</label>
-          <InputText v-model.trim="form.phone" class="w-full" />
+          <InputText v-model="form.phone" class="w-full" />
         </div>
         <div class="md:col-span-2">
           <label class="block font-bold mb-2">Nghề nghiệp</label>
-          <InputText v-model.trim="form.occupation" class="w-full" />
+          <InputText v-model="form.occupation" class="w-full" />
         </div>
         <div class="md:col-span-2">
           <label class="block font-bold mb-2">Địa chỉ</label>
-          <InputText v-model.trim="form.address" class="w-full" />
+          <InputText v-model="form.address" class="w-full" />
         </div>
         <div class="md:col-span-2 flex items-center gap-2">
           <Checkbox v-model="form.is_emergency_contact" :binary="true" />
@@ -112,7 +112,7 @@
         </div>
         <div class="md:col-span-2">
           <label class="block font-bold mb-2">Ghi chú</label>
-          <Textarea v-model.trim="form.note" autoResize rows="3" class="w-full" />
+          <Textarea v-model="form.note" autoResize rows="3" class="w-full" />
         </div>
       </div>
       <template #footer>

@@ -126,7 +126,7 @@
         </div>
         <div class="md:col-span-2">
           <label class="block font-bold mb-2">Ghi chú</label>
-          <Textarea v-model.trim="form.note" autoResize rows="3" class="w-full" />
+          <Textarea v-model="form.note" autoResize rows="3" class="w-full" />
         </div>
       </div>
       <template #footer>

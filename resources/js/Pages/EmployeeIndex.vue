@@ -125,14 +125,14 @@
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                     <label class="block font-bold mb-2 required-field">Mã nhân viên</label>
-                    <InputText v-model.trim="form.employee_code" :invalid="submitted && !form.employee_code || hasError('employee_code')" fluid />
+                    <InputText v-model="form.employee_code" :invalid="submitted && !form.employee_code || hasError('employee_code')" fluid />
                     <small v-if="submitted && !form.employee_code" class="p-error block mt-1">Mã nhân viên là bắt buộc</small>
                     <small v-if="hasError('employee_code')" class="p-error block mt-1">{{ getError('employee_code') }}</small>
                 </div>
 
                 <div>
                     <label class="block font-bold mb-2 required-field">Họ và tên</label>
-                    <InputText v-model.trim="form.full_name" :invalid="submitted && !form.full_name || hasError('full_name')" fluid />
+                    <InputText v-model="form.full_name" :invalid="submitted && !form.full_name || hasError('full_name')" fluid />
                     <small v-if="submitted && !form.full_name" class="p-error block mt-1">Họ tên là bắt buộc</small>
                     <small v-if="hasError('full_name')" class="p-error block mt-1">{{ getError('full_name') }}</small>
                 </div>
@@ -154,18 +154,18 @@
 
                 <div>
                     <label class="block font-bold mb-2">SĐT</label>
-                    <InputText v-model.trim="form.phone" fluid />
+                    <InputText v-model="form.phone" fluid />
                 </div>
 
                 <div>
                     <label class="block font-bold mb-2">Email công ty</label>
-                    <InputText v-model.trim="form.company_email" type="email" fluid :invalid="hasError('company_email')" />
+                    <InputText v-model="form.company_email" type="email" fluid :invalid="hasError('company_email')" />
                     <small v-if="hasError('company_email')" class="p-error block mt-1">{{ getError('company_email') }}</small>
                 </div>
 
                 <div>
                     <label class="block font-bold mb-2">Email cá nhân</label>
-                    <InputText v-model.trim="form.personal_email" type="email" fluid />
+                    <InputText v-model="form.personal_email" type="email" fluid />
                 </div>
 
                 <div>
@@ -187,7 +187,7 @@
                             v-model:provinceId="form.province_id"
                         />
                     </div>
-                    <InputText v-model.trim="form.address_street" placeholder="Số nhà, đường..." fluid />
+                    <InputText v-model="form.address_street" placeholder="Số nhà, đường..." fluid />
                 </div>
 
                 <div class="md:col-span-2">
@@ -198,12 +198,12 @@
                             v-model:provinceId="form.temp_province_id"
                         />
                     </div>
-                    <InputText v-model.trim="form.temp_address_street" placeholder="Số nhà, đường..." fluid />
+                    <InputText v-model="form.temp_address_street" placeholder="Số nhà, đường..." fluid />
                 </div>
 
                 <div>
                     <label class="block font-bold mb-2">CCCD</label>
-                    <InputText v-model.trim="form.cccd" fluid />
+                    <InputText v-model="form.cccd" fluid />
                 </div>
 
                 <div>
@@ -213,17 +213,17 @@
 
                 <div>
                     <label class="block font-bold mb-2">Nơi cấp CCCD</label>
-                    <InputText v-model.trim="form.cccd_issued_by" fluid />
+                    <InputText v-model="form.cccd_issued_by" fluid />
                 </div>
 
                 <div>
                     <label class="block font-bold mb-2">SĐT khẩn cấp</label>
-                    <InputText v-model.trim="form.emergency_contact_phone" fluid />
+                    <InputText v-model="form.emergency_contact_phone" fluid />
                 </div>
 
                 <div>
                     <label class="block font-bold mb-2">Mã số BHXH</label>
-                    <InputText v-model.trim="form.si_number" fluid />
+                    <InputText v-model="form.si_number" fluid />
                 </div>
             </div>
 
@@ -259,6 +259,7 @@ import AddressSelector from '@/Components/AddressSelector.vue'
 import { EmployeeService } from '@/services';
 import { useFormValidation } from '@/composables/useFormValidation'
 import { toYMD, formatDate } from '@/utils/dateHelper'
+import { trimStringValues } from '@/utils/stringHelpers'
 
 const props = defineProps({
     employees: { type: Array, default: () => [] },
@@ -384,8 +385,11 @@ function save() {
   if (!form.value.employee_code || !form.value.full_name || !form.value.status) return
   saving.value = true
 
+  // Trim all string values before sending to backend
+  const trimmedForm = trimStringValues(form.value)
+
   // Format dates to Laravel format (Y-m-d) using helper to avoid timezone issues
-  const payload = { ...form.value }
+  const payload = { ...trimmedForm }
   payload.dob = toYMD(payload.dob)
   payload.cccd_issued_on = toYMD(payload.cccd_issued_on)
   payload.hire_date = toYMD(payload.hire_date)

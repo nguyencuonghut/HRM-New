@@ -59,11 +59,11 @@
       <div class="flex flex-col gap-6">
         <div>
           <label class="block font-bold mb-3">Mã</label>
-          <InputText v-model.trim="form.code" class="w-full" placeholder="Mã (tùy chọn)" />
+          <InputText v-model="form.code" class="w-full" placeholder="Mã (tùy chọn)" />
         </div>
         <div>
           <label class="block font-bold mb-3 required-field">Tên trình độ</label>
-          <InputText v-model.trim="form.name" autofocus :invalid="submitted && !form.name" class="w-full" />
+          <InputText v-model="form.name" autofocus :invalid="submitted && !form.name" class="w-full" />
           <small class="text-red-500" v-if="submitted && !form.name">Tên là bắt buộc.</small>
         </div>
         <div>

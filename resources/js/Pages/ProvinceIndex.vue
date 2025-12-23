@@ -70,12 +70,12 @@
             <div class="flex flex-col gap-6">
                 <div>
                     <label for="code" class="block font-bold mb-3 required-field">Mã</label>
-                    <InputText id="code" v-model.trim="province.code" autofocus :invalid="submitted && !province.code" class="w-full" />
+                    <InputText id="code" v-model="province.code" autofocus :invalid="submitted && !province.code" class="w-full" />
                     <small class="text-red-500" v-if="submitted && !province.code">Mã là bắt buộc.</small>
                 </div>
                 <div>
                     <label for="name" class="block font-bold mb-3 required-field">Tên Tỉnh/Thành phố</label>
-                    <InputText id="name" v-model.trim="province.name" :invalid="submitted && !province.name" class="w-full" />
+                    <InputText id="name" v-model="province.name" :invalid="submitted && !province.name" class="w-full" />
                     <small class="text-red-500" v-if="submitted && !province.name">Tên là bắt buộc.</small>
                 </div>
             </div>
@@ -118,6 +118,7 @@
 import { ref, computed } from 'vue';
 import { usePage, Head } from '@inertiajs/vue3';
 import { ProvinceService } from '@/services';
+import { trimStringValues } from '@/utils/stringHelpers';
 
 const { props } = usePage();
 
@@ -157,15 +158,18 @@ const hideDialog = () => {
 const saveProvince = () => {
     submitted.value = true;
     if (province.value.name && province.value.name.trim() && province.value.code && province.value.code.trim()) {
+        // Trim all string values before sending
+        const trimmedProvince = trimStringValues(province.value);
+
         if (province.value.id) {
-            ProvinceService.update(province.value.id, province.value, {
+            ProvinceService.update(province.value.id, trimmedProvince, {
                 onSuccess: () => {
                     provinceDialog.value = false;
                     province.value = {};
                 }
             });
         } else {
-            ProvinceService.store(province.value, {
+            ProvinceService.store(trimmedProvince, {
                 onSuccess: () => {
                     provinceDialog.value = false;
                     province.value = {};

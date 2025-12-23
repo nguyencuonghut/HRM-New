@@ -138,7 +138,7 @@
                     <label for="name" class="block font-bold mb-3">Tên</label>
                     <InputText
                         id="name"
-                        v-model.trim="department.name"
+                        v-model="department.name"
                         required="true"
                         autofocus
                         :invalid="(submitted && !department.name) || hasError('name')"
@@ -152,7 +152,7 @@
                     <label for="code" class="block font-bold mb-3">Mã</label>
                     <InputText
                         id="code"
-                        v-model.trim="department.code"
+                        v-model="department.code"
                         :invalid="hasError('code')"
                         fluid
                         placeholder="Nhập mã"

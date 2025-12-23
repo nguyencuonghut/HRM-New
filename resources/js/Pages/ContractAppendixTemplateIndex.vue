@@ -81,14 +81,14 @@
       <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
           <label class="block font-bold mb-2 required-field">Tên mẫu</label>
-          <InputText v-model.trim="form.name" class="w-full" :invalid="submitted && !form.name || hasError('name')" />
+          <InputText v-model="form.name" class="w-full" :invalid="submitted && !form.name || hasError('name')" />
           <small class="text-red-500" v-if="submitted && !form.name">Tên mẫu là bắt buộc.</small>
           <small class="text-red-500" v-if="hasError('name')">{{ errors.name }}</small>
         </div>
 
         <div>
           <label class="block font-bold mb-2 required-field">Mã phụ lục</label>
-          <InputText v-model.trim="form.code" class="w-full" placeholder="VD: PL-LUONG-01"
+          <InputText v-model="form.code" class="w-full" placeholder="VD: PL-LUONG-01"
                      :invalid="submitted && !form.code || hasError('code')" />
           <small class="text-red-500" v-if="submitted && !form.code">Mã phụ lục là bắt buộc.</small>
           <small class="text-red-500" v-if="hasError('code')">{{ errors.code }}</small>
@@ -151,7 +151,7 @@
 
         <div class="md:col-span-2">
           <label class="block font-bold mb-2">Mô tả</label>
-          <Textarea v-model.trim="form.description" autoResize rows="2" class="w-full" />
+          <Textarea v-model="form.description" autoResize rows="2" class="w-full" />
         </div>
       </div>
 

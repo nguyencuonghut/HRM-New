@@ -105,7 +105,7 @@
               @click="edit(sp.data)"
               v-tooltip="'Chỉnh sửa'"
             />
-            
+
             <!-- Delete: Only for DRAFT/REJECTED -->
             <Button
               v-if="['DRAFT', 'REJECTED'].includes(sp.data.status)"
@@ -116,7 +116,7 @@
               @click="confirmDelete(sp.data)"
               v-tooltip="'Xóa'"
             />
-            
+
             <!-- Generate PDF: Always available -->
             <Button
               icon="pi pi-file"
@@ -125,7 +125,7 @@
               @click="generateAppendix(sp.data)"
               v-tooltip="'Sinh phụ lục (PDF)'"
             />
-            
+
             <!-- Submit for approval: DRAFT -->
             <Button
               v-if="sp.data.status === 'DRAFT'"
@@ -136,7 +136,7 @@
               @click="submitForApproval(sp.data)"
               v-tooltip="'Gửi phê duyệt'"
             />
-            
+
             <!-- Resubmit: REJECTED -->
             <Button
               v-if="sp.data.status === 'REJECTED'"
@@ -147,7 +147,7 @@
               @click="submitForApproval(sp.data)"
               v-tooltip="'Gửi lại phê duyệt'"
             />
-            
+
             <!-- Recall: PENDING_APPROVAL -->
             <Button
               v-if="sp.data.status === 'PENDING_APPROVAL'"
@@ -158,7 +158,7 @@
               @click="recall(sp.data)"
               v-tooltip="'Thu hồi'"
             />
-            
+
             <!-- Approve: PENDING_APPROVAL -->
             <Button
               v-if="sp.data.status === 'PENDING_APPROVAL'"
@@ -169,7 +169,7 @@
               @click="approve(sp.data)"
               v-tooltip="'Phê duyệt'"
             />
-            
+
             <!-- Reject: PENDING_APPROVAL -->
             <Button
               v-if="sp.data.status === 'PENDING_APPROVAL'"
@@ -192,7 +192,7 @@
       <div>
         <label class="block font-bold mb-2 required-field">Số PL</label>
         <InputText
-          v-model.trim="form.appendix_no"
+          v-model="form.appendix_no"
           class="w-full"
           :invalid="(submitted && !form.appendix_no) || hasError('appendix_no')"
         />
@@ -273,12 +273,12 @@
       </div>
       <div class="md:col-span-2">
         <label class="block font-bold mb-2">Thời gian làm việc</label>
-        <InputText v-model.trim="form.working_time" class="w-full" :invalid="hasError('working_time')" />
+        <InputText v-model="form.working_time" class="w-full" :invalid="hasError('working_time')" />
         <small class="text-red-500" v-if="hasError('working_time')">{{ errors.working_time }}</small>
       </div>
       <div class="md:col-span-2">
         <label class="block font-bold mb-2">Địa điểm</label>
-        <InputText v-model.trim="form.work_location" class="w-full" :invalid="hasError('work_location')" />
+        <InputText v-model="form.work_location" class="w-full" :invalid="hasError('work_location')" />
         <small class="text-red-500" v-if="hasError('work_location')">{{ errors.work_location }}</small>
       </div>
 
@@ -293,7 +293,7 @@
         </div>
         <div v-for="(al, idx) in form.other_allowances" :key="idx" class="grid grid-cols-12 gap-2 mb-2">
           <div class="col-span-6">
-            <InputText v-model.trim="al.name" class="w-full" placeholder="Tên phụ cấp" />
+            <InputText v-model="al.name" class="w-full" placeholder="Tên phụ cấp" />
           </div>
           <div class="col-span-5">
             <InputText v-model.number="al.amount" type="number" class="w-full" placeholder="Số tiền VND/tháng" />
@@ -306,7 +306,7 @@
 
       <div class="md:col-span-2">
         <label class="block font-bold mb-2">Tóm tắt</label>
-        <Textarea v-model.trim="form.summary" autoResize rows="2" class="w-full" :invalid="hasError('summary')" />
+        <Textarea v-model="form.summary" autoResize rows="2" class="w-full" :invalid="hasError('summary')" />
         <small class="text-red-500" v-if="hasError('summary')">{{ errors.summary }}</small>
       </div>
 
@@ -322,7 +322,7 @@
 
       <div class="md:col-span-2">
         <label class="block font-bold mb-2">Ghi chú</label>
-        <Textarea v-model.trim="form.note" autoResize rows="3" class="w-full" :invalid="hasError('note')" />
+        <Textarea v-model="form.note" autoResize rows="3" class="w-full" :invalid="hasError('note')" />
         <small class="text-red-500" v-if="hasError('note')">{{ errors.note }}</small>
       </div>
     </div>

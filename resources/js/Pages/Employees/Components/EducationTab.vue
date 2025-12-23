@@ -109,7 +109,7 @@
         </div>
         <div>
           <label class="block font-bold mb-2">Chuyên ngành</label>
-          <InputText v-model.trim="form.major" class="w-full" />
+          <InputText v-model="form.major" class="w-full" />
         </div>
         <div>
           <label class="block font-bold mb-2">Hình thức học</label>
@@ -133,7 +133,7 @@
         </div>
         <div>
           <label class="block font-bold mb-2">Số hiệu văn bằng</label>
-          <InputText v-model.trim="form.certificate_no" class="w-full" />
+          <InputText v-model="form.certificate_no" class="w-full" />
         </div>
         <div>
           <label class="block font-bold mb-2">Ngày tốt nghiệp</label>
@@ -141,11 +141,11 @@
         </div>
         <div class="md:col-span-2">
           <label class="block font-bold mb-2">Xếp loại</label>
-          <InputText v-model.trim="form.grade" class="w-full" />
+          <InputText v-model="form.grade" class="w-full" />
         </div>
         <div class="md:col-span-2">
           <label class="block font-bold mb-2">Ghi chú</label>
-          <Textarea v-model.trim="form.note" autoResize rows="3" class="w-full" />
+          <Textarea v-model="form.note" autoResize rows="3" class="w-full" />
         </div>
       </div>
       <template #footer>

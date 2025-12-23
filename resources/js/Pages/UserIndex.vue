@@ -83,7 +83,7 @@
                     <label for="name" class="block font-bold mb-3">{{ t('users.name') }}</label>
                     <InputText
                         id="name"
-                        v-model.trim="user.name"
+                        v-model="user.name"
                         required="true"
                         autofocus
                         :invalid="submitted && !user.name || hasError('name')"
@@ -96,7 +96,7 @@
                     <label for="email" class="block font-bold mb-3">{{ t('users.email') }}</label>
                     <InputText
                         id="email"
-                        v-model.trim="user.email"
+                        v-model="user.email"
                         required="true"
                         :invalid="submitted && !user.email || hasError('email')"
                         fluid
@@ -215,6 +215,7 @@ import { UserService } from '@/services';
 import { useI18n } from '@/composables/useI18n';
 import { useFormValidation } from '@/composables/useFormValidation';
 import { usePermission } from '@/composables/usePermission';
+import { trimStringValues } from '@/utils/stringHelpers';
 
 // Define props
 const props = defineProps({
@@ -322,15 +323,18 @@ const saveUser = () => {
 
     saving.value = true;
 
+    // Trim all string values before sending
+    const trimmedUser = trimStringValues(user.value);
+
     const userData = {
-        name: user.value.name,
-        email: user.value.email,
-        roles: user.value.roles,
+        name: trimmedUser.name,
+        email: trimmedUser.email,
+        roles: trimmedUser.roles,
     };
 
     if (!isEditing.value) {
-        userData.password = user.value.password;
-        userData.password_confirmation = user.value.password_confirmation;
+        userData.password = trimmedUser.password;
+        userData.password_confirmation = trimmedUser.password_confirmation;
     }
 
     const onSuccess = (page) => {
