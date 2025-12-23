@@ -146,7 +146,7 @@ class EmployeeController extends Controller
         $status = $request->get('status', null);
 
         $query = Employee::query()
-            ->with(['assignments', 'educations', 'relatives', 'experiences', 'employeeSkills', 'employments'])
+            ->with(['assignments', 'educations', 'relatives', 'experiences', 'employeeSkills', 'employments', 'currentEmployment'])
             // Contract presence flags
             ->withExists(['contracts as has_any_contract'])
             ->withExists(['contracts as has_active_contract' => function ($q) {

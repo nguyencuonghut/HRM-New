@@ -26,6 +26,8 @@
                 :rowsPerPageOptions="[5, 10, 25]"
                 currentPageReportTemplate="Hiển thị {first}-{last}/{totalRecords} nhân viên"
                 :loading="loading"
+                scrollable
+                scrollHeight="600px"
             >
                 <template #header>
                     <div class="flex flex-wrap gap-2 items-center justify-between">
@@ -58,12 +60,28 @@
                     </div>
                 </template>
 
-                <Column selectionMode="multiple" style="width: 3rem" :exportable="false"></Column>
-                <Column field="employee_code" header="Mã NV" sortable style="min-width: 10rem"></Column>
-                <Column field="full_name" header="Họ tên" sortable style="min-width: 16rem"></Column>
-                <Column field="phone" header="SĐT" style="min-width: 10rem"></Column>
-                <Column field="company_email" header="Email công ty" style="min-width: 16rem"></Column>
-                <Column field="status" header="Trạng thái" style="min-width: 10rem">
+                <!-- Frozen Left: Checkbox + Mã NV + Họ tên -->
+                <Column selectionMode="multiple" frozen style="width: 3rem" :exportable="false"></Column>
+                <Column field="employee_code" header="Mã NV" frozen sortable style="min-width: 8rem"></Column>
+                <Column field="full_name" header="Họ tên" frozen sortable style="min-width: 14rem"></Column>
+
+                <!-- Scrollable Middle: Các cột gộp để giảm chiều ngang -->
+                <Column header="Liên hệ" style="min-width: 14rem">
+                    <template #body="slotProps">
+                        <div class="flex flex-col gap-1 text-sm">
+                            <div v-if="slotProps.data.phone" class="flex items-center gap-1">
+                                <i class="pi pi-phone text-xs text-gray-500"></i>
+                                <span>{{ slotProps.data.phone }}</span>
+                            </div>
+                            <div v-if="slotProps.data.company_email" class="flex items-center gap-1">
+                                <i class="pi pi-envelope text-xs text-gray-500"></i>
+                                <span class="truncate">{{ slotProps.data.company_email }}</span>
+                            </div>
+                        </div>
+                    </template>
+                </Column>
+
+                <Column field="status" header="Trạng thái" style="min-width: 9rem">
                     <template #body="slotProps">
                         <Tag
                             :value="slotProps.data.status_label"
@@ -72,7 +90,8 @@
                         />
                     </template>
                 </Column>
-                <Column header="Hợp đồng" style="min-width: 12rem">
+
+                <Column header="Hợp đồng" style="min-width: 10rem">
                     <template #body="slotProps">
                         <Tag
                             :value="slotProps.data.contract_status.label"
@@ -81,12 +100,13 @@
                         />
                     </template>
                 </Column>
-                <Column field="completion_score" header="% Hoàn thiện" sortable style="min-width: 14rem">
+
+                <Column field="completion_score" header="% Hoàn thiện" sortable style="min-width: 11rem">
                     <template #body="slotProps">
                         <div class="flex items-center gap-2">
                             <ProgressBar :value="slotProps.data.completion_score || 0"
                                          :showValue="false"
-                                         style="height: 8px; width: 80px"
+                                         style="height: 8px; width: 60px"
                                          :pt="{
                                            value: { style: getProgressBarColor(slotProps.data.completion_score) }
                                          }" />
@@ -94,25 +114,33 @@
                         </div>
                     </template>
                 </Column>
-                <Column field="hire_date" header="Ngày vào" sortable style="min-width: 10rem">
+
+                <Column header="Thời gian" sortable :sortField="'hire_date'" style="min-width: 11rem">
                     <template #body="slotProps">
-                        {{ formatDate(slotProps.data.hire_date) }}
+                        <div class="flex flex-col gap-1 text-sm">
+                            <!-- Ngày vào (từ employment history hoặc hire_date) -->
+                            <div v-if="slotProps.data.current_employment_start || slotProps.data.hire_date" class="flex items-center gap-1">
+                                <i class="pi pi-calendar text-xs text-gray-500"></i>
+                                <span class="text-gray-700">{{ slotProps.data.current_employment_start || formatDate(slotProps.data.hire_date) }}</span>
+                            </div>
+                            <!-- Thâm niên -->
+                            <div v-if="slotProps.data.current_tenure" class="flex items-center gap-1">
+                                <i class="pi pi-clock text-xs text-gray-500"></i>
+                                <span class="text-gray-600">
+                                    <span v-if="slotProps.data.current_tenure.years > 0">{{ slotProps.data.current_tenure.years }}năm </span><span v-if="slotProps.data.current_tenure.months > 0">{{ slotProps.data.current_tenure.months }}th</span>
+                                </span>
+                            </div>
+                        </div>
                     </template>
                 </Column>
-                <Column field="current_tenure" header="Thâm niên" sortable style="min-width: 10rem">
-                    <template #body="slotProps">
-                        <span v-if="slotProps.data.current_tenure" class="text-sm">
-                            <span v-if="slotProps.data.current_tenure.years > 0">{{ slotProps.data.current_tenure.years }} năm </span><span v-if="slotProps.data.current_tenure.months > 0">{{ slotProps.data.current_tenure.months }} tháng</span>
-                        </span>
-                        <span v-else class="text-gray-400 text-sm">--</span>
-                    </template>
-                </Column>
-                <Column header="Thao tác" :exportable="false" style="min-width: 12rem">
+
+                <!-- Frozen Right: Thao tác -->
+                <Column header="Thao tác" frozen alignFrozen="right" :exportable="false" style="min-width: 10rem">
                     <template #body="slotProps">
                         <div class="flex gap-2">
-                            <Button icon="pi pi-id-card" variant="outlined" rounded @click="goProfile(slotProps.data)" />
-                            <Button icon="pi pi-pencil" variant="outlined" rounded @click="edit(slotProps.data)" />
-                            <Button icon="pi pi-trash" variant="outlined" rounded severity="danger"
+                            <Button icon="pi pi-id-card" variant="outlined" rounded size="small" @click="goProfile(slotProps.data)" />
+                            <Button icon="pi pi-pencil" variant="outlined" rounded size="small" @click="edit(slotProps.data)" />
+                            <Button icon="pi pi-trash" variant="outlined" rounded size="small" severity="danger"
                                     @click="confirmDelete(slotProps.data)" />
                         </div>
                     </template>
