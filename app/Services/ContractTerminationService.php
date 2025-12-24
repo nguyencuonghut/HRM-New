@@ -13,10 +13,14 @@ use Carbon\Carbon;
 class ContractTerminationService
 {
     protected EmploymentResolver $employmentResolver;
+    protected EmployeeStatusService $statusService;
 
-    public function __construct(EmploymentResolver $employmentResolver)
-    {
+    public function __construct(
+        EmploymentResolver $employmentResolver,
+        EmployeeStatusService $statusService
+    ) {
         $this->employmentResolver = $employmentResolver;
+        $this->statusService = $statusService;
     }
 
     /**
@@ -114,6 +118,16 @@ class ContractTerminationService
                 note: $data['termination_note'] ?? null,
                 employmentId: $contract->employment_id  // Pass employment_id from contract
             );
+
+            // Update employee status using service
+            $employee = $contract->employee;
+            if ($employee) {
+                $this->statusService->syncFromContracts($employee);
+                \Log::info('Updated employee status after contract termination', [
+                    'employee_id' => $employee->id,
+                    'new_status' => $employee->fresh()->status
+                ]);
+            }
 
             \Log::info('endCurrentEmployment completed');
         } else {

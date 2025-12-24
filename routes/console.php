@@ -27,3 +27,9 @@ Schedule::command('leave:reset-carried-forward')
     ->yearlyOn(4, 1, '00:00')
     ->withoutOverlapping()
     ->appendOutputTo(storage_path('logs/leave-reset-carried-forward.log'));
+
+// End expired leave requests (daily at 01:00)
+Schedule::command('leave:end-expired')
+    ->dailyAt('01:00')
+    ->withoutOverlapping()
+    ->appendOutputTo(storage_path('logs/leave-end-expired.log'));

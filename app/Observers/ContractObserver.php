@@ -4,15 +4,20 @@ namespace App\Observers;
 
 use App\Models\Contract;
 use App\Services\EmploymentResolver;
+use App\Services\EmployeeStatusService;
 use Illuminate\Support\Facades\Log;
 
 class ContractObserver
 {
     protected EmploymentResolver $resolver;
+    protected EmployeeStatusService $statusService;
 
-    public function __construct(EmploymentResolver $resolver)
-    {
+    public function __construct(
+        EmploymentResolver $resolver,
+        EmployeeStatusService $statusService
+    ) {
         $this->resolver = $resolver;
+        $this->statusService = $statusService;
     }
 
     /**
@@ -51,6 +56,13 @@ class ContractObserver
                 $this->handleEmploymentEndOnContractEnd($contract);
             }
 
+            // Handle employee status sync when contract status changes
+            // This handles LEGACY contracts (backfill) which are created directly with status ACTIVE/TERMINATED
+            // and also handles status updates (e.g., ACTIVE → TERMINATED)
+            if ($contract->isDirty('status') || $contract->wasRecentlyCreated) {
+                $this->syncEmployeeStatusOnContractChange($contract);
+            }
+
             // Skip if employment_id is already set (prevent infinite loop)
             // This happens when resolver calls $contract->save() to update employment_id
             if ($contract->employment_id) {
@@ -86,6 +98,72 @@ class ContractObserver
                 'contract_id' => $contract->id,
                 'error' => $e->getMessage(),
                 'trace' => $e->getTraceAsString(),
+            ]);
+        }
+    }
+
+    /**
+     * Sync employee status when contract status changes
+     * Handles both LEGACY (backfill) and status updates
+     */
+    protected function syncEmployeeStatusOnContractChange(Contract $contract): void
+    {
+        try {
+            $employee = $contract->employee;
+            if (!$employee) {
+                return;
+            }
+
+            // Only sync for meaningful status changes
+            $statusesThatAffectEmployee = ['ACTIVE', 'TERMINATED', 'EXPIRED', 'CANCELLED', 'SUSPENDED'];
+
+            if (!in_array($contract->status, $statusesThatAffectEmployee)) {
+                Log::debug("ContractObserver: Skipping employee status sync - status not relevant", [
+                    'contract_id' => $contract->id,
+                    'status' => $contract->status,
+                ]);
+                return;
+            }
+
+            // For LEGACY contracts created with ACTIVE status (backfill)
+            if ($contract->source === 'LEGACY' && $contract->wasRecentlyCreated && $contract->status === 'ACTIVE') {
+                Log::info("ContractObserver: LEGACY contract created with ACTIVE status, syncing employee", [
+                    'contract_id' => $contract->id,
+                    'employee_id' => $employee->id,
+                ]);
+                $this->statusService->syncFromContracts($employee);
+                return;
+            }
+
+            // For LEGACY contracts created with TERMINATED status (backfill for past employees)
+            if ($contract->source === 'LEGACY' && $contract->wasRecentlyCreated && $contract->status === 'TERMINATED') {
+                Log::info("ContractObserver: LEGACY contract created with TERMINATED status, syncing employee", [
+                    'contract_id' => $contract->id,
+                    'employee_id' => $employee->id,
+                ]);
+                $this->statusService->syncFromContracts($employee);
+                return;
+            }
+
+            // For status changes (any source)
+            if ($contract->isDirty('status')) {
+                $oldStatus = $contract->getOriginal('status');
+                $newStatus = $contract->status;
+
+                Log::info("ContractObserver: Contract status changed, syncing employee", [
+                    'contract_id' => $contract->id,
+                    'employee_id' => $employee->id,
+                    'old_status' => $oldStatus,
+                    'new_status' => $newStatus,
+                    'source' => $contract->source,
+                ]);
+
+                $this->statusService->syncFromContracts($employee);
+            }
+        } catch (\Exception $e) {
+            Log::error("ContractObserver: Failed to sync employee status on contract change", [
+                'contract_id' => $contract->id,
+                'error' => $e->getMessage(),
             ]);
         }
     }

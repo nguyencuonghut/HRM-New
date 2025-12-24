@@ -17,8 +17,10 @@ use App\Listeners\SendContractApprovedNotification;
 use App\Listeners\SendContractRejectedNotification;
 use App\Models\Employee;
 use App\Models\Contract;
+use App\Models\EmployeeAbsence;
 use App\Observers\EmployeeObserver;
 use App\Observers\ContractObserver;
+use App\Observers\EmployeeAbsenceObserver;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -44,6 +46,7 @@ class AppServiceProvider extends ServiceProvider
         // Register observers
         Employee::observe(EmployeeObserver::class);
         Contract::observe(ContractObserver::class);
+        EmployeeAbsence::observe(EmployeeAbsenceObserver::class);
 
         // Event listeners use #[ListensTo] attributes and are auto-discovered
         // No need to manually register with Event::listen()
