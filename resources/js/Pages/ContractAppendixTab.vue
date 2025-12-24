@@ -188,143 +188,242 @@
 
   <!-- Dialog tạo/sửa phụ lục -->
   <Dialog v-model:visible="dialog" :style="{ width: '800px' }" header="Phụ lục hợp đồng" :modal="true">
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-      <div>
-        <label class="block font-bold mb-2 required-field">Số PL</label>
-        <InputText
-          v-model="form.appendix_no"
-          class="w-full"
-          :invalid="(submitted && !form.appendix_no) || hasError('appendix_no')"
-        />
-        <small class="text-red-500" v-if="submitted && !form.appendix_no">Số phụ lục là bắt buộc.</small>
-        <small class="text-red-500" v-if="hasError('appendix_no')">{{ errors.appendix_no }}</small>
-      </div>
-      <div>
-        <label class="block font-bold mb-2 required-field">Loại</label>
-        <Select
-          v-model="form.appendix_type"
-          :options="typeOptions"
-          optionLabel="label"
-          optionValue="value"
-          showClear
-          fluid
-          :invalid="(submitted && !form.appendix_type) || hasError('appendix_type')"
-        />
-        <small class="text-red-500" v-if="submitted && !form.appendix_type">Loại phụ lục là bắt buộc.</small>
-        <small class="text-red-500" v-if="hasError('appendix_type')">{{ errors.appendix_type }}</small>
-      </div>
-      <div>
-        <label class="block font-bold mb-2 required-field">Hiệu lực từ</label>
-        <DatePicker
-          v-model="form.effective_date"
-          dateFormat="yy-mm-dd"
-          showIcon
-          fluid
-          :invalid="(submitted && !form.effective_date) || hasError('effective_date')"
-        />
-        <small class="text-red-500" v-if="submitted && !form.effective_date">Ngày hiệu lực là bắt buộc.</small>
-        <small class="text-red-500" v-if="hasError('effective_date')">{{ errors.effective_date }}</small>
-      </div>
-      <div>
-        <label class="block font-bold mb-2">Đến</label>
-        <DatePicker v-model="form.end_date" dateFormat="yy-mm-dd" showIcon fluid :invalid="hasError('end_date')" />
-        <small class="text-red-500" v-if="hasError('end_date')">{{ errors.end_date }}</small>
-      </div>
-
-      <div>
-        <label class="block font-bold mb-2 required-field">Trạng thái</label>
-        <Select
-          v-model="form.status"
-          :options="statusOptions"
-          optionLabel="label"
-          optionValue="value"
-          fluid
-          :invalid="(submitted && !form.status) || hasError('status')"
-        />
-        <small class="text-gray-500 text-xs mt-1">Dùng khi backfill dữ liệu lịch sử</small>
-        <small class="text-red-500" v-if="submitted && !form.status">Trạng thái là bắt buộc.</small>
-        <small class="text-red-500" v-if="hasError('status')">{{ errors.status }}</small>
-      </div>
-
-      <div>
-        <label class="block font-bold mb-2">Lương cơ bản</label>
-        <InputText type="number" v-model.number="form.base_salary" class="w-full" :invalid="hasError('base_salary')" />
-        <small class="text-red-500" v-if="hasError('base_salary')">{{ errors.base_salary }}</small>
-      </div>
-      <div>
-        <label class="block font-bold mb-2">Lương BH</label>
-        <InputText
-          type="number"
-          v-model.number="form.insurance_salary"
-          class="w-full"
-          :invalid="hasError('insurance_salary')"
-        />
-        <small class="text-red-500" v-if="hasError('insurance_salary')">{{ errors.insurance_salary }}</small>
-      </div>
-      <div>
-        <label class="block font-bold mb-2">PC vị trí</label>
-        <InputText
-          type="number"
-          v-model.number="form.position_allowance"
-          class="w-full"
-          :invalid="hasError('position_allowance')"
-        />
-        <small class="text-red-500" v-if="hasError('position_allowance')">{{ errors.position_allowance }}</small>
-      </div>
-      <div class="md:col-span-2">
-        <label class="block font-bold mb-2">Thời gian làm việc</label>
-        <InputText v-model="form.working_time" class="w-full" :invalid="hasError('working_time')" />
-        <small class="text-red-500" v-if="hasError('working_time')">{{ errors.working_time }}</small>
-      </div>
-      <div class="md:col-span-2">
-        <label class="block font-bold mb-2">Địa điểm</label>
-        <InputText v-model="form.work_location" class="w-full" :invalid="hasError('work_location')" />
-        <small class="text-red-500" v-if="hasError('work_location')">{{ errors.work_location }}</small>
-      </div>
-
-      <!-- Other allowances (repeater) -->
-      <div class="md:col-span-2">
-        <div class="flex items-center justify-between mb-2">
-          <label class="block font-bold">Phụ cấp khác</label>
-          <Button size="small" icon="pi pi-plus" label="Thêm phụ cấp" @click="addAllowance" />
+    <!-- Thông tin chung -->
+    <div class="mb-6">
+      <h5 class="font-bold text-gray-700 mb-3 pb-2 border-b">Thông tin chung</h5>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div>
+          <label class="block font-bold mb-2 required-field">Số PL</label>
+          <InputText
+            v-model="form.appendix_no"
+            class="w-full"
+            :invalid="(submitted && !form.appendix_no) || hasError('appendix_no')"
+          />
+          <small class="text-red-500" v-if="submitted && !form.appendix_no">Số phụ lục là bắt buộc.</small>
+          <small class="text-red-500" v-if="hasError('appendix_no')">{{ getError('appendix_no') }}</small>
         </div>
-        <div v-if="!form.other_allowances || form.other_allowances.length === 0" class="text-gray-500 text-sm">
-          Chưa có phụ cấp khác.
+        <div>
+          <label class="block font-bold mb-2 required-field">Loại</label>
+          <Select
+            v-model="form.appendix_type"
+            :options="typeOptions"
+            optionLabel="label"
+            optionValue="value"
+            showClear
+            fluid
+            :invalid="(submitted && !form.appendix_type) || hasError('appendix_type')"
+          />
+          <small class="text-red-500" v-if="submitted && !form.appendix_type">Loại phụ lục là bắt buộc.</small>
+          <small class="text-red-500" v-if="hasError('appendix_type')">{{ getError('appendix_type') }}</small>
         </div>
-        <div v-for="(al, idx) in form.other_allowances" :key="idx" class="grid grid-cols-12 gap-2 mb-2">
-          <div class="col-span-6">
-            <InputText v-model="al.name" class="w-full" placeholder="Tên phụ cấp" />
-          </div>
-          <div class="col-span-5">
-            <InputText v-model.number="al.amount" type="number" class="w-full" placeholder="Số tiền VND/tháng" />
-          </div>
-          <div class="col-span-1 flex items-center justify-end">
-            <Button icon="pi pi-trash" severity="danger" text @click="removeAllowance(idx)" />
-          </div>
+        <div>
+          <label class="block font-bold mb-2 required-field">Hiệu lực từ</label>
+          <DatePicker
+            v-model="form.effective_date"
+            dateFormat="yy-mm-dd"
+            showIcon
+            fluid
+            :invalid="(submitted && !form.effective_date) || hasError('effective_date')"
+          />
+          <small class="text-red-500" v-if="submitted && !form.effective_date">Ngày hiệu lực là bắt buộc.</small>
+          <small class="text-red-500" v-if="hasError('effective_date')">{{ getError('effective_date') }}</small>
+        </div>
+        <div v-if="showField('end_date')">
+          <label class="block font-bold mb-2" :class="{ 'required-field': currentSchema.required?.includes('end_date') }">Đến</label>
+          <DatePicker v-model="form.end_date" dateFormat="yy-mm-dd" showIcon fluid :invalid="hasError('end_date')" />
+          <small class="text-red-500" v-if="hasError('end_date')">{{ getError('end_date') }}</small>
+        </div>
+
+        <div v-if="showStatusField" class="md:col-span-2">
+          <label class="block font-bold mb-2 required-field">Trạng thái</label>
+          <Select
+            v-model="form.status"
+            :options="statusOptions"
+            optionLabel="label"
+            optionValue="value"
+            fluid
+            :invalid="(submitted && !form.status) || hasError('status')"
+          />
+          <small class="text-gray-500 text-xs mt-1">Dùng khi backfill dữ liệu lịch sử</small>
+          <small class="text-red-500" v-if="submitted && !form.status">Trạng thái là bắt buộc.</small>
+          <small class="text-red-500" v-if="hasError('status')">{{ getError('status') }}</small>
         </div>
       </div>
+    </div>
 
-      <div class="md:col-span-2">
-        <label class="block font-bold mb-2">Tóm tắt</label>
-        <Textarea v-model="form.summary" autoResize rows="2" class="w-full" :invalid="hasError('summary')" />
-        <small class="text-red-500" v-if="hasError('summary')">{{ errors.summary }}</small>
-      </div>
+    <!-- Nội dung thay đổi (dynamic theo type) -->
+    <div v-if="form.appendix_type" class="mb-6">
+      <h5 class="font-bold text-gray-700 mb-3 pb-2 border-b">{{ currentSchema.sectionTitle || 'Nội dung thay đổi' }}</h5>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <!-- DEPARTMENT: department_id -->
+        <div v-if="showField('department_id')" class="md:col-span-2">
+          <label class="block font-bold mb-2 required-field">Phòng/Ban mới</label>
+          <Select
+            v-model="form.department_id"
+            :options="props.departments"
+            optionLabel="name"
+            optionValue="id"
+            showClear
+            filter
+            fluid
+            placeholder="-- Chọn phòng/ban --"
+            :invalid="(submitted && currentSchema.required?.includes('department_id') && !form.department_id) || hasError('department_id')"
+          />
+          <small class="text-red-500" v-if="submitted && currentSchema.required?.includes('department_id') && !form.department_id">
+            Phòng/Ban là bắt buộc.
+          </small>
+          <small class="text-red-500" v-if="hasError('department_id')">{{ getError('department_id') }}</small>
+        </div>
 
-      <!-- Attachments -->
-      <div class="md:col-span-2">
-        <AttachmentUploader
-          ref="attachmentUploader"
-          :existingAttachments="form.attachments"
-          @update:newFiles="form.newAttachments = $event"
-          @update:deleteIds="form.deleteAttachments = $event"
-        />
-      </div>
+        <!-- POSITION: position_id -->
+        <div v-if="showField('position_id')" class="md:col-span-2">
+          <label class="block font-bold mb-2 required-field">Chức danh mới</label>
+          <Select
+            v-model="form.position_id"
+            :options="props.positions"
+            optionLabel="title"
+            optionValue="id"
+            showClear
+            filter
+            fluid
+            placeholder="-- Chọn chức danh --"
+            :invalid="(submitted && currentSchema.required?.includes('position_id') && !form.position_id) || hasError('position_id')"
+          />
+          <small class="text-red-500" v-if="submitted && currentSchema.required?.includes('position_id') && !form.position_id">
+            Chức danh là bắt buộc.
+          </small>
+          <small class="text-red-500" v-if="hasError('position_id')">{{ getError('position_id') }}</small>
+        </div>
 
-      <div class="md:col-span-2">
-        <label class="block font-bold mb-2">Ghi chú</label>
-        <Textarea v-model="form.note" autoResize rows="3" class="w-full" :invalid="hasError('note')" />
-        <small class="text-red-500" v-if="hasError('note')">{{ errors.note }}</small>
+        <!-- SALARY: base_salary, insurance_salary, position_allowance -->
+        <div v-if="showField('base_salary')">
+          <label class="block font-bold mb-2" :class="{ 'required-field': currentSchema.required?.includes('base_salary') }">Lương cơ bản</label>
+          <InputText
+            type="number"
+            v-model.number="form.base_salary"
+            class="w-full"
+            placeholder="VND/tháng"
+            :invalid="(submitted && currentSchema.required?.includes('base_salary') && !form.base_salary) || hasError('base_salary')"
+          />
+          <small class="text-red-500" v-if="submitted && currentSchema.required?.includes('base_salary') && !form.base_salary">
+            Lương cơ bản là bắt buộc.
+          </small>
+          <small class="text-red-500" v-if="hasError('base_salary')">{{ getError('base_salary') }}</small>
+        </div>
+        <div v-if="showField('insurance_salary')">
+          <label class="block font-bold mb-2">Lương BH</label>
+          <InputText
+            type="number"
+            v-model.number="form.insurance_salary"
+            class="w-full"
+            placeholder="VND/tháng"
+            :invalid="hasError('insurance_salary')"
+          />
+          <small class="text-red-500" v-if="hasError('insurance_salary')">{{ getError('insurance_salary') }}</small>
+        </div>
+        <div v-if="showField('position_allowance')" :class="{ 'md:col-span-2': !showField('insurance_salary') }">
+          <label class="block font-bold mb-2">PC vị trí</label>
+          <InputText
+            type="number"
+            v-model.number="form.position_allowance"
+            class="w-full"
+            placeholder="VND/tháng"
+            :invalid="hasError('position_allowance')"
+          />
+          <small class="text-red-500" v-if="hasError('position_allowance')">{{ getError('position_allowance') }}</small>
+        </div>
+
+        <!-- WORKING_TERMS: working_time, work_location -->
+        <div v-if="showField('working_time')" class="md:col-span-2">
+          <label class="block font-bold mb-2" :class="{ 'required-field': currentSchema.required?.includes('working_time') }">
+            Thời gian làm việc
+          </label>
+          <InputText
+            v-model="form.working_time"
+            class="w-full"
+            placeholder="VD: T2-T6, 08:00-17:00"
+            :invalid="(submitted && currentSchema.required?.includes('working_time') && !form.working_time) || hasError('working_time')"
+          />
+          <small class="text-red-500" v-if="submitted && currentSchema.required?.includes('working_time') && !form.working_time">
+            Thời gian làm việc là bắt buộc.
+          </small>
+          <small class="text-red-500" v-if="hasError('working_time')">{{ getError('working_time') }}</small>
+        </div>
+        <div v-if="showField('work_location')" class="md:col-span-2">
+          <label class="block font-bold mb-2" :class="{ 'required-field': currentSchema.required?.includes('work_location') }">
+            Địa điểm
+          </label>
+          <InputText
+            v-model="form.work_location"
+            class="w-full"
+            placeholder="VD: Văn phòng Hà Nội"
+            :invalid="(submitted && currentSchema.required?.includes('work_location') && !form.work_location) || hasError('work_location')"
+          />
+          <small class="text-red-500" v-if="submitted && currentSchema.required?.includes('work_location') && !form.work_location">
+            Địa điểm là bắt buộc.
+          </small>
+          <small class="text-red-500" v-if="hasError('work_location')">{{ getError('work_location') }}</small>
+        </div>
+
+        <!-- Other allowances (repeater) - for SALARY, ALLOWANCE types -->
+        <div v-if="showField('other_allowances')" class="md:col-span-2">
+          <div class="flex items-center justify-between mb-2">
+            <label class="block font-bold">Phụ cấp khác</label>
+            <Button size="small" icon="pi pi-plus" label="Thêm phụ cấp" @click="addAllowance" />
+          </div>
+          <div v-if="!form.other_allowances || form.other_allowances.length === 0" class="text-gray-500 text-sm">
+            Chưa có phụ cấp khác.
+          </div>
+          <div v-for="(al, idx) in form.other_allowances" :key="idx" class="grid grid-cols-12 gap-2 mb-2">
+            <div class="col-span-6">
+              <InputText v-model="al.name" class="w-full" placeholder="Tên phụ cấp" />
+            </div>
+            <div class="col-span-5">
+              <InputText v-model.number="al.amount" type="number" class="w-full" placeholder="Số tiền VND/tháng" />
+            </div>
+            <div class="col-span-1 flex items-center justify-end">
+              <Button icon="pi pi-trash" severity="danger" text @click="removeAllowance(idx)" />
+            </div>
+          </div>
+        </div>
+
+        <!-- Summary: for all types -->
+        <div v-if="showField('summary')" class="md:col-span-2">
+          <label class="block font-bold mb-2" :class="{ 'required-field': currentSchema.required?.includes('summary') }">
+            Tóm tắt
+          </label>
+          <Textarea
+            v-model="form.summary"
+            autoResize
+            rows="2"
+            class="w-full"
+            placeholder="Mô tả ngắn gọn nội dung thay đổi..."
+            :invalid="(submitted && currentSchema.required?.includes('summary') && !form.summary) || hasError('summary')"
+          />
+          <small class="text-red-500" v-if="submitted && currentSchema.required?.includes('summary') && !form.summary">
+            Tóm tắt là bắt buộc.
+          </small>
+          <small class="text-red-500" v-if="hasError('summary')">{{ getError('summary') }}</small>
+        </div>
       </div>
+    </div>
+
+    <!-- Đính kèm -->
+    <div class="mb-4">
+      <h5 class="font-bold text-gray-700 mb-3 pb-2 border-b">Đính kèm</h5>
+      <AttachmentUploader
+        ref="attachmentUploader"
+        :existingAttachments="form.attachments"
+        @update:newFiles="form.newAttachments = $event"
+        @update:deleteIds="form.deleteAttachments = $event"
+      />
+    </div>
+
+    <!-- Ghi chú -->
+    <div>
+      <h5 class="font-bold text-gray-700 mb-3 pb-2 border-b">Ghi chú</h5>
+      <Textarea v-model="form.note" autoResize rows="3" class="w-full" placeholder="Ghi chú thêm (không bắt buộc)..." :invalid="hasError('note')" />
+      <small class="text-red-500" v-if="hasError('note')">{{ getError('note') }}</small>
     </div>
     <template #footer>
       <Button label="Hủy" icon="pi pi-times" text @click="closeDialog" />
@@ -503,12 +602,15 @@ import { useFormValidation } from '@/composables/useFormValidation'
 import { toYMD, formatDate } from '@/utils/dateHelper'
 import AttachmentUploader from '@/Components/AttachmentUploader.vue'
 
-const { errors, hasError } = useFormValidation()
+const { errors, hasError, getError } = useFormValidation()
 
 const props = defineProps({
   contractId: { type: String, required: true },
   appendixes: { type: Array, default: () => [] },
-  appendixTemplates: { type: Array, default: () => [] }
+  appendixTemplates: { type: Array, default: () => [] },
+  departments: { type: Array, default: () => [] },
+  positions: { type: Array, default: () => [] },
+  canBackfill: { type: Boolean, default: false }
 })
 
 const rows = computed(() => props.appendixes || [])
@@ -537,6 +639,7 @@ const form = ref({
   id: null,
   appendix_no: '',
   appendix_type: null,
+  source: 'WORKFLOW',
   effective_date: null,
   end_date: null,
   status: 'DRAFT',
@@ -544,6 +647,8 @@ const form = ref({
   insurance_salary: null,
   position_allowance: null,
   other_allowances: [],
+  department_id: null,
+  position_id: null,
   working_time: '',
   work_location: '',
   summary: '',
@@ -563,13 +668,67 @@ const typeOptions = [
   { value: 'OTHER', label: 'Khác' }
 ]
 
+// Type-driven schema: xác định field nào hiển thị và required cho từng type
+const appendixTypeSchema = {
+  SALARY: {
+    show: ['base_salary', 'insurance_salary', 'position_allowance', 'other_allowances', 'summary'],
+    required: ['base_salary'],
+    sectionTitle: 'Thông tin lương'
+  },
+  ALLOWANCE: {
+    show: ['position_allowance', 'other_allowances', 'summary'],
+    requiredAtLeastOne: ['position_allowance', 'other_allowances'],
+    sectionTitle: 'Thông tin phụ cấp'
+  },
+  POSITION: {
+    show: ['position_id', 'base_salary', 'position_allowance', 'summary'],
+    required: ['position_id'],
+    sectionTitle: 'Thông tin chức danh mới'
+  },
+  DEPARTMENT: {
+    show: ['department_id', 'summary'],
+    required: ['department_id'],
+    sectionTitle: 'Thông tin đơn vị mới'
+  },
+  WORKING_TERMS: {
+    show: ['working_time', 'work_location', 'summary'],
+    required: ['working_time', 'work_location'],
+    sectionTitle: 'Điều kiện làm việc mới'
+  },
+  EXTENSION: {
+    show: ['end_date', 'summary'],
+    required: ['end_date'],
+    sectionTitle: 'Thông tin gia hạn'
+  },
+  OTHER: {
+    show: ['summary'],
+    required: ['summary'],
+    sectionTitle: 'Nội dung thay đổi'
+  }
+}
+
+// Computed: schema cho type hiện tại
+const currentSchema = computed(() => {
+  return appendixTypeSchema[form.value.appendix_type] || { show: [], required: [], sectionTitle: '' }
+})
+
+// Helper: check xem field có hiển thị không
+const showField = (fieldName) => {
+  if (!form.value.appendix_type) return true // Chưa chọn type thì hiện tất cả
+  return currentSchema.value.show.includes(fieldName)
+}
+
+// Computed: show status field chỉ khi backfill hoặc edit legacy appendix
+const showStatusField = computed(() => {
+  return props.canBackfill || form.value.source === 'LEGACY'
+})
+
 const statusOptions = [
   { value: 'DRAFT', label: 'Nháp' },
   { value: 'PENDING_APPROVAL', label: 'Chờ phê duyệt' },
-  { value: 'APPROVED', label: 'Đã phê duyệt' },
-  { value: 'REJECTED', label: 'Bị từ chối' },
   { value: 'ACTIVE', label: 'Đang hiệu lực' },
-  { value: 'EXPIRED', label: 'Hết hiệu lực' }
+  { value: 'REJECTED', label: 'Bị từ chối' },
+  { value: 'CANCELLED', label: 'Đã hủy' }
 ]
 
 const statusSeverity = (s) =>
@@ -608,6 +767,7 @@ function reset() {
     id: null,
     appendix_no: '',
     appendix_type: null,
+    source: 'WORKFLOW',
     effective_date: null,
     end_date: null,
     status: 'DRAFT',
@@ -615,6 +775,8 @@ function reset() {
     insurance_salary: null,
     position_allowance: null,
     other_allowances: [],
+    department_id: null,
+    position_id: null,
     working_time: '',
     work_location: '',
     summary: '',
@@ -636,8 +798,40 @@ function closeDialog() {
 function save() {
   submitted.value = true
 
-  if (!form.value.appendix_no || !form.value.appendix_type || !form.value.effective_date || !form.value.status) {
+  // Basic validation
+  if (!form.value.appendix_no || !form.value.appendix_type || !form.value.effective_date) {
     return
+  }
+
+  // Status required only if showing status field
+  if (showStatusField.value && !form.value.status) {
+    return
+  }
+
+  // Type-specific validation
+  const schema = currentSchema.value
+
+  // Check required fields
+  if (schema.required) {
+    for (const field of schema.required) {
+      if (!form.value[field]) {
+        return // Validation failed
+      }
+    }
+  }
+
+  // Check requiredAtLeastOne (for ALLOWANCE type)
+  if (schema.requiredAtLeastOne) {
+    const hasAtLeastOne = schema.requiredAtLeastOne.some(field => {
+      const value = form.value[field]
+      if (field === 'other_allowances') {
+        return Array.isArray(value) && value.length > 0
+      }
+      return value && value > 0
+    })
+    if (!hasAtLeastOne) {
+      return // Validation failed
+    }
   }
 
   saving.value = true

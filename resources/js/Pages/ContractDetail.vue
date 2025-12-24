@@ -111,6 +111,9 @@
           :contract-id="contract.id"
           :appendixes="appendixes"
           :appendix-templates="appendixTemplates"
+          :departments="departments"
+          :positions="positions"
+          :can-backfill="canBackfill"
         />
       </TabPanel>
 
@@ -225,6 +228,9 @@ const props = defineProps({
   contract:          { type: Object, required: true },
   appendixes:        { type: Array,  default: () => [] },
   appendixTemplates: { type: Array,  default: () => [] },
+  departments:       { type: Array,  default: () => [] },
+  positions:         { type: Array,  default: () => [] },
+  canBackfill:       { type: Boolean, default: false },
   timeline:          { type: Array,  default: () => [] },
   contractTimeline:  { type: Array,  default: () => [] },
   activeTab:         { type: String, default: 'general' } // nhận từ BE

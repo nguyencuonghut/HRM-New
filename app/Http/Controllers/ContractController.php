@@ -222,7 +222,7 @@ class ContractController extends Controller
         ]);
     }
 
-    public function show(Contract $contract)
+    public function show(Request $request, Contract $contract)
     {
         $this->authorize('view', $contract);
 
@@ -262,12 +262,27 @@ class ContractController extends Controller
 
         $activeTab = request('tab', 'general'); // default nếu không truyền
 
+        // Load data for appendix form
+        $departments = Department::select('id','name','code')->orderBy('name')->get();
+        $positions = Position::select('id','title','department_id')->orderBy('title')->get();
+        $appendixTemplates = \App\Models\ContractAppendixTemplate::where('is_active', true)
+            ->select('id','name','code','appendix_type','is_default')
+            ->orderBy('name')
+            ->get();
+
+        // Check if user can backfill (for status field visibility)
+        $canBackfill = $request->user()->can('create', \App\Models\ContractAppendix::class);
+
         return \Inertia\Inertia::render('ContractDetail', [
             'contract'   => new ContractResource($contract)->resolve(),
             'appendixes' => ContractAppendixResource::collection($appendixes)->resolve(),
             'timeline'   => ContractTimelineResource::collection($timeline)->resolve(),
             'contractTimeline' => $contractTimeline,
             'activeTab'   => $activeTab,
+            'departments' => $departments,
+            'positions'   => $positions,
+            'appendixTemplates' => $appendixTemplates,
+            'canBackfill' => $canBackfill,
         ]);
     }
 
