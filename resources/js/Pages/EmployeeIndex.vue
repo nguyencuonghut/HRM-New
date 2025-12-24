@@ -396,19 +396,6 @@ const form = ref({
 
 watch(() => props.employees.data, (val)=> { list.value = [...val] }, { immediate:true, deep:true })
 
-// Debounced search - increased to 800ms for better performance
-const SEARCH_DEBOUNCE = 800
-let searchTimeout = null
-watch(searchQuery, (newVal, oldVal) => {
-  if (newVal !== oldVal) {
-    clearTimeout(searchTimeout)
-    searching.value = true
-    searchTimeout = setTimeout(() => {
-      applyFilters()
-    }, SEARCH_DEBOUNCE)
-  }
-})
-
 const isEditing = computed(()=> !!form.value.id)
 
 function getProgressBarColor(score) {
@@ -446,9 +433,19 @@ function onPage(event) {
 }
 
 function handleSearchClick() {
-  clearTimeout(searchTimeout)
   searching.value = true
-  applyFilters()
+  router.get('/employees', {
+    search: searchQuery.value || undefined,
+    status: statusFilter.value || undefined,
+    missing_contract: missingContractFilter.value || undefined,
+    has_active_contract_filter: hasActiveContractFilter.value || undefined,
+  }, {
+    preserveState: true,
+    preserveScroll: true,
+    only: ['employees'],
+    onStart: () => searching.value = true,
+    onFinish: () => searching.value = false,
+  })
 }
 
 function openNew() {
@@ -534,8 +531,8 @@ function applyFilters() {
     preserveState: true,
     preserveScroll: true,
     only: ['employees'],
-    onStart: ()=> loading.value = true,
-    onFinish: ()=> loading.value = false,
+    onStart: ()=> { loading.value = true; searching.value = false },
+    onFinish: ()=> { loading.value = false; searching.value = false },
   })
 }
 
