@@ -146,7 +146,7 @@ class EmployeeController extends Controller
         $status = $request->get('status', null);
         $perPage = $request->get('per_page', 20); // Default 20 per page
 
-        // Query with optimized select - include all fields needed by EmployeeResource and relationships
+        // Query with optimized select - minimal queries for best performance
         $query = Employee::query()
             ->select([
                 'id',
@@ -156,21 +156,23 @@ class EmployeeController extends Controller
                 'company_email',
                 'status',
                 'hire_date',
+                'dob',
+                'gender',
+                'cccd',
                 'created_at'
             ])
             ->with([
-                'ward.district.province',
-                'currentEmployment',
-                'employments',
-                'contracts',
-                // Relationships needed for completion score calculation
+                'currentEmployment:id,employee_id,start_date,end_date'
+            ])
+            // Count relationships for completion score (fast, no data loading)
+            ->withCount([
                 'assignments',
                 'educations',
                 'relatives',
                 'experiences',
                 'employeeSkills'
             ])
-            // Contract presence flags
+            // Contract presence flags - only load what's needed for UI
             ->withExists(['contracts as has_any_contract'])
             ->withExists(['contracts as has_active_contract' => function ($q) {
                 $today = now()->toDateString();
@@ -180,11 +182,6 @@ class EmployeeController extends Controller
                       $qq->whereNull('end_date')
                          ->orWhereDate('end_date', '>=', $today);
                   });
-            }])
-            ->withExists(['contracts as has_pending_contract' => function ($q) {
-                $today = now()->toDateString();
-                $q->where('status', 'ACTIVE')
-                  ->whereDate('start_date', '>', $today);
             }])
             ->when($search !== '', function($q) use ($search) {
                 $q->where(function($qq) use ($search){

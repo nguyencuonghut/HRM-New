@@ -421,10 +421,7 @@ function applyCompletionFilter() {
   if (showIncompleteOnly.value) {
     list.value = props.employees.data.filter(e => (e.completion_score || 0) < 80)
   } else {
-    list.value = props.employees.data.filter(e => {
-      if (!statusFilter.value) return true
-      return e.status === statusFilter.value
-    })
+    list.value = [...props.employees.data]
   }
 }
 

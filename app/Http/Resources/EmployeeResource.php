@@ -9,23 +9,37 @@ class EmployeeResource extends JsonResource
 {
     public function toArray($request)
     {
-        // Calculate completion score if relationships are loaded
+        // Calculate completion score - use withCount for better performance
         $completion = null;
-        if ($this->relationLoaded('assignments') &&
-            $this->relationLoaded('educations') &&
-            $this->relationLoaded('relatives') &&
-            $this->relationLoaded('experiences') &&
-            $this->relationLoaded('employeeSkills')) {
-            $completion = ProfileCompletionService::calculateScore($this->resource);
-        }
 
-        // Compute status: ACTIVE if any contract is active, else fallback to original status
-        $computedStatus = $this->contracts()->active()->exists() ? 'ACTIVE' : $this->status;
+        // Check if we have counts (from withCount) or full relations (from eager loading)
+        $hasCountData = isset($this->assignments_count) &&
+                        isset($this->educations_count) &&
+                        isset($this->relatives_count) &&
+                        isset($this->experiences_count) &&
+                        isset($this->employee_skills_count);
+
+        $hasFullData = $this->relationLoaded('assignments') &&
+                       $this->relationLoaded('educations') &&
+                       $this->relationLoaded('relatives') &&
+                       $this->relationLoaded('experiences') &&
+                       $this->relationLoaded('employeeSkills');
+
+        if ($hasFullData) {
+            // Full calculation for profile page
+            $completion = ProfileCompletionService::calculateScore($this->resource);
+        } elseif ($hasCountData) {
+            // Quick estimation for index page based on counts
+            $completion = $this->estimateCompletionFromCounts();
+        }
 
         // Contract presence flags (from withExists in controller)
         $hasAnyContract = $this->has_any_contract ?? false;
         $hasActiveContract = $this->has_active_contract ?? false;
         $hasPendingContract = $this->has_pending_contract ?? false;
+
+        // Compute status: ACTIVE if any contract is active, else fallback to original status
+        $computedStatus = $hasActiveContract ? 'ACTIVE' : $this->status;
 
         // Derive contract status for UI
         $contractStatus = $this->getContractStatus($hasAnyContract, $hasActiveContract, $hasPendingContract);
@@ -72,7 +86,7 @@ class EmployeeResource extends JsonResource
             'employment_history'       => $this->whenLoaded('employments', fn() => $this->getEmploymentHistory()),
             'current_employment_start' => $this->currentEmployment ? $this->currentEmployment->start_date->format('d/m/Y') : null,
 
-            // Profile completion
+            // Profile completion - only calculate for profile page, not index
             'completion_score'         => $completion ? $completion['score'] : null,
             'completion_details'       => $completion ? $completion['details'] : null,
             'completion_missing'       => $completion ? $completion['missing'] : null,
@@ -122,6 +136,40 @@ class EmployeeResource extends JsonResource
             'label' => 'Chưa có HĐ',
             'severity' => 'secondary',
             'icon' => 'pi pi-minus-circle'
+        ];
+    }
+
+    /**
+     * Quick estimation of completion score based on counts only (for index page performance)
+     */
+    protected function estimateCompletionFromCounts(): array
+    {
+        $score = 0;
+        $total = 100;
+
+        // Basic info (40 points)
+        $basicScore = 0;
+        if ($this->full_name) $basicScore += 5;
+        if ($this->employee_code) $basicScore += 5;
+        if ($this->phone) $basicScore += 5;
+        if ($this->company_email) $basicScore += 5;
+        if ($this->hire_date) $basicScore += 5;
+        if ($this->dob) $basicScore += 5;
+        if ($this->gender) $basicScore += 5;
+        if ($this->cccd) $basicScore += 5;
+        $score += $basicScore;
+
+        // Relationships based on counts (60 points)
+        if (($this->assignments_count ?? 0) > 0) $score += 15;
+        if (($this->educations_count ?? 0) > 0) $score += 15;
+        if (($this->relatives_count ?? 0) > 0) $score += 10;
+        if (($this->experiences_count ?? 0) > 0) $score += 10;
+        if (($this->employee_skills_count ?? 0) > 0) $score += 10;
+
+        return [
+            'score' => min(100, $score),
+            'details' => null,
+            'missing' => null
         ];
     }
 }
