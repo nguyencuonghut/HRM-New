@@ -46,6 +46,11 @@ return new class extends Migration {
             $table->string('si_number')->nullable()->index(); // Mã số BHXH (nếu đã tham gia)
 
             $table->timestamps(); // created_at, updated_at
+
+            // Performance indexes
+            $table->index('employee_code', 'idx_employees_code');
+            $table->index(['status', 'created_at'], 'idx_employees_status_created');
+            $table->fullText(['employee_code', 'full_name', 'phone', 'company_email'], 'idx_employees_search');
         });
 
         // Gợi ý (tuỳ bạn bật FK hay không):

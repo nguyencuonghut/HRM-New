@@ -20,10 +20,14 @@
                 v-model:selection="selected"
                 :value="list || []"
                 dataKey="id"
+                :lazy="true"
                 :paginator="true"
-                :rows="10"
+                :rows="employees.meta.per_page"
+                :totalRecords="employees.meta.total"
+                :first="(employees.meta.current_page - 1) * employees.meta.per_page"
+                @page="onPage($event)"
                 paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport RowsPerPageDropdown"
-                :rowsPerPageOptions="[5, 10, 25]"
+                :rowsPerPageOptions="[10, 20, 50, 100]"
                 currentPageReportTemplate="Hiển thị {first}-{last}/{totalRecords} nhân viên"
                 :loading="loading"
                 scrollable
@@ -35,8 +39,15 @@
                         <div class="flex gap-2 items-center">
                             <IconField>
                                 <InputIcon><i class="pi pi-search" /></InputIcon>
-                                <InputText v-model="searchQuery" placeholder="Tìm kiếm..." @keyup.enter="applyFilters" />
+                                <InputText v-model="searchQuery" placeholder="Tìm kiếm..." @keyup.enter="handleSearchClick" />
                             </IconField>
+                            <Button
+                                icon="pi pi-search"
+                                label="Tìm"
+                                @click="handleSearchClick"
+                                :loading="searching"
+                                size="small"
+                            />
                             <Select
                                 :options="statusOptions"
                                 optionLabel="label"
@@ -124,7 +135,7 @@
                                 <span class="text-gray-700">{{ slotProps.data.current_employment_start || formatDate(slotProps.data.hire_date) }}</span>
                             </div>
                             <!-- Thâm niên -->
-                            <div v-if="slotProps.data.current_tenure" class="flex items-center gap-1">
+                            <div v-if="slotProps.data.current_tenure.years && slotProps.data.current_tenure.months" class="flex items-center gap-1">
                                 <i class="pi pi-clock text-xs text-gray-500"></i>
                                 <span class="text-gray-600">
                                     <span v-if="slotProps.data.current_tenure.years > 0">{{ slotProps.data.current_tenure.years }}năm </span><span v-if="slotProps.data.current_tenure.months > 0">{{ slotProps.data.current_tenure.months }}th</span>
@@ -145,6 +156,18 @@
                         </div>
                     </template>
                 </Column>
+
+                <template #empty>
+                    <div class="text-center py-8">
+                        <i class="pi pi-inbox text-5xl text-gray-400 mb-3"></i>
+                        <p class="text-gray-500 text-lg">Không tìm thấy nhân viên</p>
+                        <p class="text-gray-400 text-sm mt-1">Thử thay đổi bộ lọc hoặc tìm kiếm</p>
+                    </div>
+                </template>
+
+                <template #loadingicon>
+                    <i class="pi pi-spin pi-spinner text-primary" style="font-size: 2rem"></i>
+                </template>
             </DataTable>
         </div>
 
@@ -290,7 +313,14 @@ import { toYMD, formatDate } from '@/utils/dateHelper'
 import { trimStringValues } from '@/utils/stringHelpers'
 
 const props = defineProps({
-    employees: { type: Array, default: () => [] },
+    employees: {
+        type: Object,
+        default: () => ({
+            data: [],
+            meta: { total: 0, per_page: 20, current_page: 1 },
+            links: []
+        })
+    },
     statusOptions: { type: Array, default: () => [] },
     filters: { type: Object, default: () => ({}) },
 })
@@ -298,12 +328,18 @@ const props = defineProps({
 const { errors, hasError, getError } = useFormValidation()
 
 const dt = ref()
-const list = ref([...props.employees])
+const list = ref([...props.employees.data])
 const selected = ref([])
 const dialog = ref(false)
 const deleteDialog = ref(false)
 const submitted = ref(false)
 const loading = ref(false)
+const searching = ref(false) // Separate loading state for search
+
+// Watch for props.employees changes and update list
+watch(() => props.employees.data, (newData) => {
+    list.value = [...newData]
+}, { deep: true })
 
 // Contract filters
 const missingContractFilter = ref(props.filters.missing_contract || false)
@@ -358,16 +394,18 @@ const form = ref({
   si_number: '',
 })
 
-watch(() => props.employees, (val)=> { list.value = [...val] }, { immediate:true, deep:true })
+watch(() => props.employees.data, (val)=> { list.value = [...val] }, { immediate:true, deep:true })
 
-// Debounced search
+// Debounced search - increased to 800ms for better performance
+const SEARCH_DEBOUNCE = 800
 let searchTimeout = null
 watch(searchQuery, (newVal, oldVal) => {
   if (newVal !== oldVal) {
     clearTimeout(searchTimeout)
+    searching.value = true
     searchTimeout = setTimeout(() => {
       applyFilters()
-    }, 500)
+    }, SEARCH_DEBOUNCE)
   }
 })
 
@@ -381,13 +419,39 @@ function getProgressBarColor(score) {
 
 function applyCompletionFilter() {
   if (showIncompleteOnly.value) {
-    list.value = props.employees.filter(e => (e.completion_score || 0) < 80)
+    list.value = props.employees.data.filter(e => (e.completion_score || 0) < 80)
   } else {
-    list.value = props.employees.filter(e => {
+    list.value = props.employees.data.filter(e => {
       if (!statusFilter.value) return true
       return e.status === statusFilter.value
     })
   }
+}
+
+function onPage(event) {
+  const page = event.page + 1
+  const perPage = event.rows
+
+  router.get('/employees', {
+    page: page,
+    per_page: perPage,
+    search: searchQuery.value || undefined,
+    status: statusFilter.value || undefined,
+    missing_contract: missingContractFilter.value || undefined,
+    has_active_contract_filter: hasActiveContractFilter.value || undefined,
+  }, {
+    preserveState: true,
+    preserveScroll: true,
+    only: ['employees'],
+    onStart: () => loading.value = true,
+    onFinish: () => loading.value = false,
+  })
+}
+
+function handleSearchClick() {
+  clearTimeout(searchTimeout)
+  searching.value = true
+  applyFilters()
 }
 
 function openNew() {
@@ -438,7 +502,9 @@ function confirmDelete(row){ current.value = row; deleteDialog.value = true }
 function doDelete() {
   deleting.value = true
   EmployeeService.destroy(current.value.id, {
-    onStart: () => { deleting.value = true },
+    onStart: () => {
+      deleting.value = true
+    },
     onSuccess: () => {
       // Không cần gọi EmployeeService.index(); backend đã redirect kèm flash
     },

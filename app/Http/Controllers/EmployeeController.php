@@ -144,9 +144,32 @@ class EmployeeController extends Controller
 
         $search = trim((string)$request->get('search',''));
         $status = $request->get('status', null);
+        $perPage = $request->get('per_page', 20); // Default 20 per page
 
+        // Query with optimized select - include all fields needed by EmployeeResource and relationships
         $query = Employee::query()
-            ->with(['assignments', 'educations', 'relatives', 'experiences', 'employeeSkills', 'employments', 'currentEmployment'])
+            ->select([
+                'id',
+                'employee_code',
+                'full_name',
+                'phone',
+                'company_email',
+                'status',
+                'hire_date',
+                'created_at'
+            ])
+            ->with([
+                'ward.district.province',
+                'currentEmployment',
+                'employments',
+                'contracts',
+                // Relationships needed for completion score calculation
+                'assignments',
+                'educations',
+                'relatives',
+                'experiences',
+                'employeeSkills'
+            ])
             // Contract presence flags
             ->withExists(['contracts as has_any_contract'])
             ->withExists(['contracts as has_active_contract' => function ($q) {
@@ -192,10 +215,10 @@ class EmployeeController extends Controller
             });
         }
 
-        $query->orderBy('full_name');
+        $query->orderBy('created_at', 'desc');
 
-        // Trả mảng (không paginate) giống style RoleIndex.vue
-        $employees = EmployeeResource::collection($query->get())->resolve();
+        // Server-side pagination for better performance
+        $employees = $query->paginate($perPage);
 
         // Dùng cho filter trạng thái
         $statusOptions = [
@@ -213,7 +236,18 @@ class EmployeeController extends Controller
         ];
 
         return Inertia::render('EmployeeIndex', [
-            'employees'     => $employees,
+            'employees' => [
+                'data' => EmployeeResource::collection($employees->items())->resolve(),
+                'links' => $employees->linkCollection()->toArray(),
+                'meta' => [
+                    'current_page' => $employees->currentPage(),
+                    'from' => $employees->firstItem(),
+                    'last_page' => $employees->lastPage(),
+                    'per_page' => $employees->perPage(),
+                    'to' => $employees->lastItem(),
+                    'total' => $employees->total(),
+                ]
+            ],
             'statusOptions' => $statusOptions,
             'filters'       => $filters,
         ]);
