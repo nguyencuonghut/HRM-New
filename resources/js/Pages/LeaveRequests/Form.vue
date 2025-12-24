@@ -25,7 +25,7 @@
                             optionLabel="full_name"
                             optionValue="id"
                             placeholder="Chọn nhân viên"
-                            :invalid="submitted && !form.employee_id"
+                            :invalid="(submitted && !form.employee_id) || hasError('employee_id')"
                             fluid
                             showClear
                             filter
@@ -47,8 +47,11 @@
                             fluid
                         />
 
-                        <small v-if="isAdmin && submitted && !form.employee_id" class="p-error block mt-1">
+                        <small v-if="isAdmin && (submitted && !form.employee_id)" class="text-red-500">
                             Vui lòng chọn nhân viên
+                        </small>
+                        <small v-if="hasError('employee_id')" class="p-error block mt-1">
+                            {{ getError('employee_id') }}
                         </small>
                     </div>
 
@@ -61,7 +64,7 @@
                             optionLabel="name"
                             optionValue="id"
                             placeholder="Chọn loại phép"
-                            :invalid="submitted && !form.leave_type_id"
+                            :invalid="(submitted && !form.leave_type_id) || hasError('leave_type_id')"
                             dataKey="id"
                             fluid
                             @change="onLeaveTypeChange"
@@ -83,8 +86,11 @@
                                 </div>
                             </template>
                         </Select>
-                        <small v-if="submitted && !form.leave_type_id" class="p-error block mt-1">
+                        <small v-if="submitted && !form.leave_type_id" class="text-red-500">
                             Vui lòng chọn loại phép
+                        </small>
+                        <small v-if="hasError('leave_type_id')" class="p-error block mt-1">
+                            {{ getError('leave_type_id') }}
                         </small>
                     </div>
 
@@ -107,12 +113,15 @@
                             v-model="form.start_date"
                             showIcon
                             dateFormat="yy-mm-dd"
-                            :invalid="submitted && !form.start_date"
+                            :invalid="(submitted && !form.start_date) || hasError('start_date')"
                             fluid
                             @date-select="calculateDays"
                         />
-                        <small v-if="submitted && !form.start_date" class="p-error block mt-1">
+                        <small v-if="submitted && !form.start_date" class="text-red-500">
                             Vui lòng chọn ngày bắt đầu
+                        </small>
+                        <small v-if="hasError('start_date')" class="p-error block mt-1">
+                            {{ getError('start_date') }}
                         </small>
                     </div>
 
@@ -123,13 +132,16 @@
                             v-model="form.end_date"
                             showIcon
                             dateFormat="yy-mm-dd"
-                            :invalid="submitted && !form.end_date"
+                            :invalid="(submitted && !form.end_date) || hasError('end_date')"
                             :minDate="form.start_date"
                             fluid
                             @date-select="calculateDays"
                         />
-                        <small v-if="submitted && !form.end_date" class="p-error block mt-1">
+                        <small v-if="submitted && !form.end_date" class="text-red-500">
                             Vui lòng chọn ngày kết thúc
+                        </small>
+                        <small v-if="hasError('end_date')" class="p-error block mt-1">
+                            {{ getError('end_date') }}
                         </small>
                     </div>
 
@@ -142,7 +154,7 @@
                             optionLabel="label"
                             optionValue="value"
                             placeholder="Chọn lý do nghỉ phép"
-                            :invalid="submitted && !form.personal_leave_reason"
+                            :invalid="(submitted && !form.personal_leave_reason) || hasError('personal_leave_reason')"
                             fluid
                             @change="onPersonalReasonChange"
                         >
@@ -153,8 +165,11 @@
                                 </div>
                             </template>
                         </Select>
-                        <small v-if="submitted && !form.personal_leave_reason" class="p-error block mt-1">
+                        <small v-if="submitted && !form.personal_leave_reason" class="text-red-500">
                             Vui lòng chọn lý do nghỉ phép
+                        </small>
+                        <small v-if="hasError('personal_leave_reason')" class="p-error block mt-1">
+                            {{ getError('personal_leave_reason') }}
                         </small>
                     </div>
 
@@ -166,12 +181,15 @@
                                 v-model="form.expected_due_date"
                                 showIcon
                                 dateFormat="yy-mm-dd"
-                                :invalid="submitted && !form.expected_due_date"
+                                :invalid="(submitted && !form.expected_due_date) || hasError('expected_due_date')"
                                 fluid
                                 @date-select="calculateMaternityDays"
                             />
-                            <small v-if="submitted && !form.expected_due_date" class="p-error block mt-1">
+                            <small v-if="submitted && !form.expected_due_date" class="text-red-500">
                                 Vui lòng chọn ngày dự sinh
+                            </small>
+                            <small v-if="hasError('expected_due_date')" class="p-error block mt-1">
+                                {{ getError('expected_due_date') }}
                             </small>
                         </div>
 
@@ -227,13 +245,17 @@
                             accept=".pdf,.jpg,.jpeg,.png"
                             :maxFileSize="5000000"
                             chooseLabel="Chọn file"
+                            :class="{ 'p-invalid': (submitted && !form.medical_certificate_path) || hasError('medical_certificate_path') }"
                             @select="onFileSelect"
                         />
                         <small class="text-gray-500 block mt-1">
                             Chấp nhận file PDF, JPG, PNG. Tối đa 5MB. (Công ty trả lương tối đa 30 ngày)
                         </small>
-                        <small v-if="submitted && !form.medical_certificate_path" class="p-error block mt-1">
+                        <small v-if="submitted && !form.medical_certificate_path" class="text-red-500">
                             Vui lòng tải lên giấy xác nhận của bác sĩ
+                        </small>
+                        <small v-if="hasError('medical_certificate_path')" class="p-error block mt-1">
+                            {{ getError('medical_certificate_path') }}
                         </small>
                     </div>
 
@@ -310,6 +332,7 @@ import Checkbox from 'primevue/checkbox';
 import FileUpload from 'primevue/fileupload';
 import Badge from 'primevue/badge';
 import { useToast } from 'primevue/usetoast';
+import { useFormValidation } from '@/composables/useFormValidation';
 import { LeaveRequestService } from '@/services/LeaveRequestService';
 import { ToastService } from '@/services/ToastService';
 import { calculateWorkingDays } from '@/utils/leaveHelpers';
@@ -328,6 +351,7 @@ const props = defineProps({
 const toast = useToast();
 ToastService.init(toast);
 const page = usePage();
+const { errors, hasError, getError } = useFormValidation();
 
 // Initialize form with proper date conversion
 const initFormData = () => {
