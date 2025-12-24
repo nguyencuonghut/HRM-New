@@ -135,10 +135,10 @@
                                 <span class="text-gray-700">{{ slotProps.data.current_employment_start || formatDate(slotProps.data.hire_date) }}</span>
                             </div>
                             <!-- Thâm niên -->
-                            <div v-if="slotProps.data.current_tenure.years && slotProps.data.current_tenure.months" class="flex items-center gap-1">
+                            <div v-if="slotProps.data.cumulative_tenure.years || slotProps.data.cumulative_tenure.months" class="flex items-center gap-1">
                                 <i class="pi pi-clock text-xs text-gray-500"></i>
                                 <span class="text-gray-600">
-                                    <span v-if="slotProps.data.current_tenure.years > 0">{{ slotProps.data.current_tenure.years }}năm </span><span v-if="slotProps.data.current_tenure.months > 0">{{ slotProps.data.current_tenure.months }}th</span>
+                                    <span v-if="slotProps.data.cumulative_tenure.years > 0">{{ slotProps.data.cumulative_tenure.years }} năm </span><span v-if="slotProps.data.cumulative_tenure.months > 0">{{ slotProps.data.cumulative_tenure.months }} tháng</span>
                                 </span>
                             </div>
                         </div>
