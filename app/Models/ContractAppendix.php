@@ -30,4 +30,6 @@ class ContractAppendix extends Model
     public function contract(){ return $this->belongsTo(Contract::class); }
     public function approver(){ return $this->belongsTo(User::class,'approver_id'); }
     public function attachments(){ return $this->hasMany(ContractAppendixAttachment::class,'appendix_id'); }
+    public function department(){ return $this->belongsTo(Department::class); }
+    public function position(){ return $this->belongsTo(Position::class); }
 }

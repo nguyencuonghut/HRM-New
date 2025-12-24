@@ -35,13 +35,61 @@
 
       <TabPanel :value="0">
         <div class="pt-4">
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div><b>Nhân viên:</b> {{ contract.employee?.full_name }} ({{ contract.employee?.employee_code }})</div>
-            <div><b>Đơn vị:</b> {{ contract.department?.name }}</div>
-            <div><b>Chức danh:</b> {{ contract.position?.title }}</div>
-            <div><b>Loại HĐ:</b> {{ contract.contract_type_label }}</div>
-            <div><b>Bắt đầu:</b> {{ formatDate(contract.start_date) }}</div>
-            <div><b>Kết thúc:</b> {{ formatDate(contract.end_date) || '—' }}</div>
+          <!-- Thông tin hợp đồng gốc (snapshot) -->
+          <div class="mb-6">
+            <h3 class="text-lg font-semibold mb-3 flex items-center gap-2">
+              <i class="pi pi-file text-primary"></i>
+              Thông tin hợp đồng (tại thời điểm ký)
+            </h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div><b>Nhân viên:</b> {{ contract.employee?.full_name }} ({{ contract.employee?.employee_code }})</div>
+              <div><b>Đơn vị (theo HĐ):</b> {{ contract.department?.name || '—' }}</div>
+              <div><b>Chức danh (theo HĐ):</b> {{ contract.position?.title || '—' }}</div>
+              <div><b>Loại HĐ:</b> {{ contract.contract_type_label }}</div>
+              <div><b>Bắt đầu:</b> {{ formatDate(contract.start_date) }}</div>
+              <div><b>Kết thúc:</b> {{ formatDate(contract.end_date) || '—' }}</div>
+            </div>
+          </div>
+
+          <!-- Thông tin hiện tại (sau phụ lục) -->
+          <div v-if="activeDeptAppendix || activePosAppendix" class="mb-6 p-4 bg-blue-50 border border-blue-200 rounded">
+            <h4 class="font-semibold text-blue-700 mb-3 flex items-center gap-2">
+              <i class="pi pi-refresh"></i>
+              Thông tin hiện tại (được cập nhật bởi phụ lục)
+            </h4>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <!-- Current Department -->
+              <div v-if="activeDeptAppendix">
+                <div class="text-gray-600 text-sm mb-1">Đơn vị hiện tại:</div>
+                <div class="font-medium">{{ activeDeptAppendix.department?.name || '—' }}</div>
+                <div class="flex items-center gap-2 mt-1">
+                  <Badge :value="`PL-${activeDeptAppendix.appendix_no}`" severity="info" class="text-xs" />
+                  <span class="text-xs text-gray-500">
+                    Hiệu lực từ {{ formatDate(activeDeptAppendix.effective_date) }}
+                  </span>
+                </div>
+              </div>
+              <div v-else>
+                <div class="text-gray-600 text-sm mb-1">Đơn vị hiện tại:</div>
+                <div class="text-gray-500 italic">Trùng với hợp đồng</div>
+              </div>
+
+              <!-- Current Position -->
+              <div v-if="activePosAppendix">
+                <div class="text-gray-600 text-sm mb-1">Chức danh hiện tại:</div>
+                <div class="font-medium">{{ activePosAppendix.position?.title || '—' }}</div>
+                <div class="flex items-center gap-2 mt-1">
+                  <Badge :value="`PL-${activePosAppendix.appendix_no}`" severity="info" class="text-xs" />
+                  <span class="text-xs text-gray-500">
+                    Hiệu lực từ {{ formatDate(activePosAppendix.effective_date) }}
+                  </span>
+                </div>
+              </div>
+              <div v-else>
+                <div class="text-gray-600 text-sm mb-1">Chức danh hiện tại:</div>
+                <div class="text-gray-500 italic">Trùng với hợp đồng</div>
+              </div>
+            </div>
           </div>
 
           <!-- Attachments Section -->
@@ -246,6 +294,70 @@ const activeTabIndex = computed(() => {
   if (tab === 'timeline') return 2
   if (tab === 'approval-history') return 3
   return 0
+})
+
+// Find active department appendix (latest ACTIVE DEPARTMENT appendix currently effective)
+const activeDeptAppendix = computed(() => {
+  if (!appendixes?.length) return null
+
+  const today = new Date()
+  today.setHours(0, 0, 0, 0)
+
+  const activeDeptAppendixes = appendixes
+    .filter(app => {
+      if (app.appendix_type !== 'DEPARTMENT') return false
+      if (app.status !== 'ACTIVE') return false
+
+      const effectiveDate = new Date(app.effective_date)
+      effectiveDate.setHours(0, 0, 0, 0)
+
+      // Must be effective already
+      if (effectiveDate > today) return false
+
+      // Check end_date if exists
+      if (app.end_date) {
+        const endDate = new Date(app.end_date)
+        endDate.setHours(0, 0, 0, 0)
+        if (endDate < today) return false
+      }
+
+      return true
+    })
+    .sort((a, b) => new Date(b.effective_date) - new Date(a.effective_date))
+
+  return activeDeptAppendixes[0] || null
+})
+
+// Find active position appendix (latest ACTIVE POSITION appendix currently effective)
+const activePosAppendix = computed(() => {
+  if (!appendixes?.length) return null
+
+  const today = new Date()
+  today.setHours(0, 0, 0, 0)
+
+  const activePosAppendixes = appendixes
+    .filter(app => {
+      if (app.appendix_type !== 'POSITION') return false
+      if (app.status !== 'ACTIVE') return false
+
+      const effectiveDate = new Date(app.effective_date)
+      effectiveDate.setHours(0, 0, 0, 0)
+
+      // Must be effective already
+      if (effectiveDate > today) return false
+
+      // Check end_date if exists
+      if (app.end_date) {
+        const endDate = new Date(app.end_date)
+        endDate.setHours(0, 0, 0, 0)
+        if (endDate < today) return false
+      }
+
+      return true
+    })
+    .sort((a, b) => new Date(b.effective_date) - new Date(a.effective_date))
+
+  return activePosAppendixes[0] || null
 })
 
 function goBack() {

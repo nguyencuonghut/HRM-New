@@ -231,7 +231,7 @@ class ContractController extends Controller
 
         // Lấy danh sách phụ lục theo HĐ
         $appendixes = $contract->appendixes()
-            ->with('attachments')
+            ->with(['attachments', 'department:id,name,code', 'position:id,title,department_id'])
             ->orderByDesc('effective_date')
             ->orderByDesc('created_at')
             ->get();

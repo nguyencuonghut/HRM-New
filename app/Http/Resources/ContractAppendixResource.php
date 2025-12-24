@@ -32,6 +32,19 @@ class ContractAppendixResource extends JsonResource
             'other_allowances' => $this->other_allowances ?: [],
             'department_id' => $this->department_id,
             'position_id' => $this->position_id,
+            'department' => $this->whenLoaded('department', function () {
+                return [
+                    'id' => $this->department->id,
+                    'name' => $this->department->name,
+                    'code' => $this->department->code,
+                ];
+            }),
+            'position' => $this->whenLoaded('position', function () {
+                return [
+                    'id' => $this->position->id,
+                    'title' => $this->position->title,
+                ];
+            }),
             'working_time' => $this->working_time,
             'work_location' => $this->work_location,
             'note' => $this->note,
