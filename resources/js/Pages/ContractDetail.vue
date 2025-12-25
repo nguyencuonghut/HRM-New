@@ -7,7 +7,7 @@
     <div class="mb-4 flex items-center justify-between">
       <div>
         <h2 class="text-xl font-semibold">
-          Hợp đồng: {{ contract.contract_number }} - {{ contract.employee?.full_name }}
+          Hợp đồng: {{ contract.contract_number }} - {{ contract.employee?.full_name }} ({{ contract.employee?.employee_code }})
         </h2>
         <div class="flex items-center gap-3 mt-2">
           <div class="flex items-center gap-2">
