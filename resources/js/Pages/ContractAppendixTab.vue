@@ -92,9 +92,18 @@
           <span v-else class="text-gray-400">—</span>
         </template>
       </Column>
-      <Column header="Thao tác" headerStyle="min-width:14rem;">
+      <Column header="Thao tác" headerStyle="min-width:16rem;">
         <template #body="sp">
           <div class="flex gap-2">
+            <!-- View Detail -->
+            <Button
+              icon="pi pi-eye"
+              outlined
+              rounded
+              @click="viewAppendix(sp.data)"
+              v-tooltip="'Xem chi tiết'"
+            />
+
             <!-- Edit: Only for DRAFT/REJECTED -->
             <Button
               v-if="['DRAFT', 'REJECTED'].includes(sp.data.status)"
@@ -589,6 +598,285 @@
       />
     </template>
   </Dialog>
+
+  <!-- Drawer xem chi tiết phụ lục -->
+  <Drawer v-model:visible="viewDialog" position="right" :style="{ width: '600px' }" header="Chi tiết phụ lục">
+    <div v-if="viewing" class="space-y-6">
+      <!-- Header Info -->
+      <div class="pb-4 border-b">
+        <div class="flex items-start justify-between mb-3">
+          <div class="flex-1">
+            <h3 class="text-xl font-semibold text-gray-800 mb-2">{{ viewing.appendix_no }}</h3>
+            <div class="flex items-center gap-2 mb-2">
+              <Tag :value="viewing.appendix_type_label" severity="info" />
+              <Tag :value="viewing.status_label" :severity="statusSeverity(viewing.status)" />
+            </div>
+          </div>
+        </div>
+        <div class="grid grid-cols-2 gap-3 text-sm">
+          <div>
+            <span class="text-gray-600">Hiệu lực từ:</span>
+            <span class="ml-2 font-medium">{{ formatDate(viewing.effective_date) }}</span>
+          </div>
+          <div v-if="viewing.end_date">
+            <span class="text-gray-600">Đến:</span>
+            <span class="ml-2 font-medium">{{ formatDate(viewing.end_date) }}</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Quick Actions -->
+      <div class="flex flex-wrap gap-2">
+        <Button
+          v-if="viewing.generated_pdf_url"
+          label="Xem PDF"
+          icon="pi pi-file-pdf"
+          size="small"
+          severity="secondary"
+          outlined
+          @click="openPdfInNewTab(viewing.generated_pdf_url)"
+        />
+        <Button
+          label="Sinh PDF"
+          icon="pi pi-file"
+          size="small"
+          outlined
+          @click="generateAppendix(viewing)"
+        />
+        <Button
+          v-if="viewing.status === 'DRAFT'"
+          label="Gửi phê duyệt"
+          icon="pi pi-send"
+          size="small"
+          severity="info"
+          outlined
+          @click="submitForApproval(viewing)"
+        />
+        <Button
+          v-if="['DRAFT', 'REJECTED'].includes(viewing.status)"
+          label="Chỉnh sửa"
+          icon="pi pi-pencil"
+          size="small"
+          severity="success"
+          outlined
+          @click="edit(viewing); viewDialog = false"
+        />
+      </div>
+
+      <!-- Content by Type -->
+      <Accordion :value="['0', '1', '2']" multiple>
+        <!-- Thông tin thay đổi -->
+        <AccordionPanel value="0">
+          <AccordionHeader>
+            <div class="flex items-center gap-2">
+              <i class="pi pi-list text-primary"></i>
+              <span class="font-semibold">Nội dung thay đổi</span>
+            </div>
+          </AccordionHeader>
+          <AccordionContent>
+            <!-- DEPARTMENT Change -->
+            <div v-if="viewing.appendix_type === 'DEPARTMENT'" class="space-y-3">
+              <div class="bg-gray-50 p-3 rounded">
+                <div class="text-sm text-gray-600 mb-1">Đơn vị mới:</div>
+                <div class="font-medium text-lg">{{ viewing.department?.name || '—' }}</div>
+              </div>
+              <div v-if="viewing.summary" class="text-sm">
+                <div class="text-gray-600 mb-1">Tóm tắt:</div>
+                <div class="whitespace-pre-wrap">{{ viewing.summary }}</div>
+              </div>
+            </div>
+
+            <!-- POSITION Change -->
+            <div v-if="viewing.appendix_type === 'POSITION'" class="space-y-3">
+              <div class="bg-gray-50 p-3 rounded">
+                <div class="text-sm text-gray-600 mb-1">Chức danh mới:</div>
+                <div class="font-medium text-lg">{{ viewing.position?.title || '—' }}</div>
+              </div>
+              <div v-if="viewing.base_salary" class="grid grid-cols-2 gap-3 text-sm">
+                <div>
+                  <span class="text-gray-600">Lương cơ bản:</span>
+                  <div class="font-medium">{{ formatCurrency(viewing.base_salary) }}</div>
+                </div>
+                <div v-if="viewing.position_allowance">
+                  <span class="text-gray-600">PC vị trí:</span>
+                  <div class="font-medium">{{ formatCurrency(viewing.position_allowance) }}</div>
+                </div>
+              </div>
+              <div v-if="viewing.summary" class="text-sm">
+                <div class="text-gray-600 mb-1">Tóm tắt:</div>
+                <div class="whitespace-pre-wrap">{{ viewing.summary }}</div>
+              </div>
+            </div>
+
+            <!-- SALARY Change -->
+            <div v-if="viewing.appendix_type === 'SALARY'" class="space-y-3">
+              <div class="bg-gray-50 p-3 rounded space-y-2">
+                <div v-if="viewing.base_salary" class="flex justify-between">
+                  <span class="text-gray-600">Lương cơ bản:</span>
+                  <span class="font-semibold">{{ formatCurrency(viewing.base_salary) }}</span>
+                </div>
+                <div v-if="viewing.insurance_salary" class="flex justify-between">
+                  <span class="text-gray-600">Lương BHXH:</span>
+                  <span class="font-semibold">{{ formatCurrency(viewing.insurance_salary) }}</span>
+                </div>
+                <div v-if="viewing.position_allowance" class="flex justify-between">
+                  <span class="text-gray-600">PC vị trí:</span>
+                  <span class="font-semibold">{{ formatCurrency(viewing.position_allowance) }}</span>
+                </div>
+              </div>
+              <div v-if="viewing.other_allowances && viewing.other_allowances.length > 0">
+                <div class="text-sm text-gray-600 mb-2">Phụ cấp khác:</div>
+                <div class="space-y-1">
+                  <div v-for="(al, idx) in viewing.other_allowances" :key="idx" class="flex justify-between text-sm bg-gray-50 p-2 rounded">
+                    <span>{{ al.name }}</span>
+                    <span class="font-medium">{{ formatCurrency(al.amount) }}</span>
+                  </div>
+                </div>
+              </div>
+              <div v-if="viewing.summary" class="text-sm">
+                <div class="text-gray-600 mb-1">Tóm tắt:</div>
+                <div class="whitespace-pre-wrap">{{ viewing.summary }}</div>
+              </div>
+            </div>
+
+            <!-- ALLOWANCE Change -->
+            <div v-if="viewing.appendix_type === 'ALLOWANCE'" class="space-y-3">
+              <div class="bg-gray-50 p-3 rounded space-y-2">
+                <div v-if="viewing.position_allowance" class="flex justify-between">
+                  <span class="text-gray-600">PC vị trí:</span>
+                  <span class="font-semibold">{{ formatCurrency(viewing.position_allowance) }}</span>
+                </div>
+              </div>
+              <div v-if="viewing.other_allowances && viewing.other_allowances.length > 0">
+                <div class="text-sm text-gray-600 mb-2">Phụ cấp khác:</div>
+                <div class="space-y-1">
+                  <div v-for="(al, idx) in viewing.other_allowances" :key="idx" class="flex justify-between text-sm bg-gray-50 p-2 rounded">
+                    <span>{{ al.name }}</span>
+                    <span class="font-medium">{{ formatCurrency(al.amount) }}</span>
+                  </div>
+                </div>
+              </div>
+              <div v-if="viewing.summary" class="text-sm">
+                <div class="text-gray-600 mb-1">Tóm tắt:</div>
+                <div class="whitespace-pre-wrap">{{ viewing.summary }}</div>
+              </div>
+            </div>
+
+            <!-- WORKING_TERMS Change -->
+            <div v-if="viewing.appendix_type === 'WORKING_TERMS'" class="space-y-3">
+              <div class="bg-gray-50 p-3 rounded space-y-2">
+                <div v-if="viewing.working_time">
+                  <span class="text-gray-600 text-sm">Thời gian làm việc:</span>
+                  <div class="font-medium">{{ viewing.working_time }}</div>
+                </div>
+                <div v-if="viewing.work_location">
+                  <span class="text-gray-600 text-sm">Địa điểm:</span>
+                  <div class="font-medium">{{ viewing.work_location }}</div>
+                </div>
+              </div>
+              <div v-if="viewing.summary" class="text-sm">
+                <div class="text-gray-600 mb-1">Tóm tắt:</div>
+                <div class="whitespace-pre-wrap">{{ viewing.summary }}</div>
+              </div>
+            </div>
+
+            <!-- EXTENSION -->
+            <div v-if="viewing.appendix_type === 'EXTENSION'" class="space-y-3">
+              <div class="bg-gray-50 p-3 rounded">
+                <div class="text-sm text-gray-600 mb-1">Gia hạn đến:</div>
+                <div class="font-medium text-lg">{{ formatDate(viewing.end_date) }}</div>
+              </div>
+              <div v-if="viewing.summary" class="text-sm">
+                <div class="text-gray-600 mb-1">Tóm tắt:</div>
+                <div class="whitespace-pre-wrap">{{ viewing.summary }}</div>
+              </div>
+            </div>
+
+            <!-- OTHER -->
+            <div v-if="viewing.appendix_type === 'OTHER'" class="space-y-3">
+              <div v-if="viewing.summary" class="text-sm">
+                <div class="text-gray-600 mb-1">Nội dung:</div>
+                <div class="whitespace-pre-wrap bg-gray-50 p-3 rounded">{{ viewing.summary }}</div>
+              </div>
+            </div>
+
+            <!-- Note -->
+            <div v-if="viewing.note" class="mt-4 pt-4 border-t">
+              <div class="text-sm text-gray-600 mb-1">Ghi chú:</div>
+              <div class="text-sm whitespace-pre-wrap bg-yellow-50 p-3 rounded border border-yellow-200">{{ viewing.note }}</div>
+            </div>
+          </AccordionContent>
+        </AccordionPanel>
+
+        <!-- Tệp đính kèm -->
+        <AccordionPanel value="1">
+          <AccordionHeader>
+            <div class="flex items-center gap-2">
+              <i class="pi pi-paperclip text-primary"></i>
+              <span class="font-semibold">Tệp đính kèm</span>
+              <Badge v-if="viewing.attachments?.length" :value="viewing.attachments.length" severity="info" />
+            </div>
+          </AccordionHeader>
+          <AccordionContent>
+            <div v-if="!viewing.attachments || viewing.attachments.length === 0" class="text-gray-500 text-sm text-center py-4">
+              Không có tệp đính kèm
+            </div>
+            <div v-else class="space-y-2">
+              <a
+                v-for="att in viewing.attachments"
+                :key="att.id"
+                :href="att.download_url"
+                target="_blank"
+                rel="noopener noreferrer"
+                class="flex items-center gap-3 p-3 bg-white border rounded hover:bg-blue-50 hover:border-blue-300 transition-all group"
+              >
+                <i class="pi pi-file text-xl text-gray-400"></i>
+                <div class="flex-1 min-w-0">
+                  <div class="font-medium text-sm truncate group-hover:text-primary">{{ att.file_name }}</div>
+                  <div class="text-xs text-gray-500">{{ formatDate(att.created_at) }}</div>
+                </div>
+                <i class="pi pi-download text-gray-400 group-hover:text-primary"></i>
+              </a>
+            </div>
+          </AccordionContent>
+        </AccordionPanel>
+
+        <!-- Audit/Workflow -->
+        <AccordionPanel value="2">
+          <AccordionHeader>
+            <div class="flex items-center gap-2">
+              <i class="pi pi-history text-primary"></i>
+              <span class="font-semibold">Thông tin phê duyệt</span>
+            </div>
+          </AccordionHeader>
+          <AccordionContent>
+            <div class="space-y-3 text-sm">
+              <div class="flex justify-between">
+                <span class="text-gray-600">Nguồn tạo:</span>
+                <span class="font-medium">{{ viewing.source === 'WORKFLOW' ? 'Workflow' : 'Backfill' }}</span>
+              </div>
+              <div class="flex justify-between">
+                <span class="text-gray-600">Ngày tạo:</span>
+                <span class="font-medium">{{ formatDate(viewing.created_at) }}</span>
+              </div>
+              <div v-if="viewing.approved_at" class="flex justify-between">
+                <span class="text-gray-600">Ngày phê duyệt:</span>
+                <span class="font-medium">{{ formatDate(viewing.approved_at) }}</span>
+              </div>
+              <div v-if="viewing.rejected_at" class="flex justify-between">
+                <span class="text-gray-600">Ngày từ chối:</span>
+                <span class="font-medium">{{ formatDate(viewing.rejected_at) }}</span>
+              </div>
+              <div v-if="viewing.approval_note" class="pt-3 border-t">
+                <div class="text-gray-600 mb-2">Ý kiến phê duyệt:</div>
+                <div class="bg-gray-50 p-3 rounded whitespace-pre-wrap">{{ viewing.approval_note }}</div>
+              </div>
+            </div>
+          </AccordionContent>
+        </AccordionPanel>
+      </Accordion>
+    </div>
+  </Drawer>
 </template>
 
 <script setup>
@@ -597,6 +885,12 @@ import { router } from '@inertiajs/vue3'
 import DatePicker from 'primevue/datepicker'
 import Select from 'primevue/select'
 import Textarea from 'primevue/textarea'
+import Drawer from 'primevue/drawer'
+import Accordion from 'primevue/accordion'
+import AccordionPanel from 'primevue/accordionpanel'
+import AccordionHeader from 'primevue/accordionheader'
+import AccordionContent from 'primevue/accordioncontent'
+import Badge from 'primevue/badge'
 import { ContractAppendixService } from '@/services/ContractAppendixService'
 import { useFormValidation } from '@/composables/useFormValidation'
 import { toYMD, formatDate } from '@/utils/dateHelper'
@@ -632,6 +926,9 @@ const selectedTemplateId = ref(null)
 const availableTemplates = ref([])
 const loadingTemplates = ref(false)
 const defaultTemplate = ref(null)
+
+const viewDialog = ref(false)
+const viewing = ref(null)
 
 const attachmentUploader = ref()
 
@@ -740,12 +1037,28 @@ const statusSeverity = (s) =>
     CANCELLED: 'contrast'
   }[s] || 'info')
 
+const formatCurrency = (amount) => {
+  if (!amount) return '—'
+  return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(amount)
+}
+
 const exportCSV = () => dt.value?.exportCSV()
 
 function openNew() {
   reset()
   submitted.value = false
   dialog.value = true
+}
+
+function viewAppendix(appendix) {
+  viewing.value = appendix
+  viewDialog.value = true
+}
+
+function openPdfInNewTab(url) {
+  if (url) {
+    window.open(url, '_blank')
+  }
 }
 
 function edit(row) {
