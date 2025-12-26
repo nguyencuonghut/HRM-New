@@ -33,6 +33,29 @@ class LeaveType extends Model
         'order_index' => 'integer',
     ];
 
+    protected $appends = ['code_label'];
+
+    /**
+     * Get the Vietnamese label for the leave type code
+     */
+    public function getCodeLabelAttribute(): string
+    {
+        return match($this->code) {
+            'ANNUAL' => 'Phép năm',
+            'SICK' => 'Ốm đau',
+            'PERSONAL_PAID' => 'Việc riêng',
+            'UNPAID' => 'Không lương',
+            'MATERNITY' => 'Thai sản',
+            'STUDY' => 'Học tập',
+            'BUSINESS' => 'Công tác',
+            'BEREAVEMENT' => 'Tang lễ',
+            'MARRIAGE' => 'Kết hôn',
+            'COMPENSATORY' => 'Bù',
+            'OTHERS' => 'Khác',
+            default => $this->code,
+        };
+    }
+
     /**
      * Activity Log
      */

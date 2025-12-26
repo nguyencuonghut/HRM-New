@@ -98,7 +98,7 @@ onMounted(() => {
                         <span class="text-base">{{ balance.leave_type.name }}</span>
                         <Tag
                             :style="{ backgroundColor: balance.leave_type.color, color: '#ffffff' }"
-                            :value="balance.leave_type.code"
+                            :value="balance.leave_type.code_label"
                             class="text-xs"
                         />
                     </div>

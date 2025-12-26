@@ -161,6 +161,7 @@ class LeaveBalanceController extends Controller
                         'id' => $balance->leaveType->id,
                         'name' => $balance->leaveType->name,
                         'code' => $balance->leaveType->code,
+                        'code_label' => $balance->leaveType->code_label,
                         'color' => $balance->leaveType->color,
                         'days_per_year' => $balance->leaveType->days_per_year,
                     ],
