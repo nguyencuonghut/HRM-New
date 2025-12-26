@@ -96,6 +96,144 @@
           </div>
         </div>
       </div>
+
+      <!-- ========== CARD: Lương BHXH Theo Thang-Bậc-Hệ Số ========== -->
+      <div v-if="insuranceData && insuranceData.has_profile" class="bg-gradient-to-br from-blue-50 to-indigo-50 rounded shadow-lg p-6 border-2 border-blue-200 mb-6">
+        <div class="flex items-center justify-between mb-4">
+          <h4 class="font-bold text-lg text-blue-900 flex items-center gap-2">
+            <i class="pi pi-shield text-blue-600"></i>
+            Lương BHXH Theo Thang-Bậc-Hệ Số
+          </h4>
+          <span class="px-3 py-1 bg-blue-600 text-white text-xs font-bold rounded-full">{{ insuranceData.region_name }}</span>
+        </div>
+
+        <!-- Thông tin chính -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+          <!-- Cột trái: Thông tin bậc -->
+          <div class="bg-white rounded-lg p-4 shadow">
+            <div class="text-xs text-gray-500 font-bold mb-3 uppercase">Thông tin bậc lương</div>
+
+            <div class="mb-3 flex justify-between items-center">
+              <span class="text-gray-600 text-sm">Vị trí:</span>
+              <span class="font-semibold text-gray-900">{{ insuranceData.position || '-' }}</span>
+            </div>
+
+            <div class="mb-3 flex justify-between items-center">
+              <span class="text-gray-600 text-sm">Bậc hiện tại:</span>
+              <span class="px-3 py-1 bg-indigo-100 text-indigo-800 font-bold rounded-lg text-lg">
+                Bậc {{ insuranceData.grade }}/7
+              </span>
+            </div>
+
+            <div class="mb-3 flex justify-between items-center">
+              <span class="text-gray-600 text-sm">Hệ số:</span>
+              <span class="font-bold text-blue-700 text-lg">{{ insuranceData.coefficient }}</span>
+            </div>
+
+            <div class="mb-3 flex justify-between items-center">
+              <span class="text-gray-600 text-sm">Áp dụng từ:</span>
+              <span class="text-gray-900 font-medium">{{ insuranceData.applied_from }}</span>
+            </div>
+          </div>
+
+          <!-- Cột phải: Tính toán lương -->
+          <div class="bg-white rounded-lg p-4 shadow">
+            <div class="text-xs text-gray-500 font-bold mb-3 uppercase">Tính toán lương BHXH</div>
+
+            <div class="mb-3 pb-3 border-b border-gray-200">
+              <div class="flex justify-between items-center mb-1">
+                <span class="text-gray-600 text-sm">Lương tối thiểu vùng:</span>
+                <span class="font-semibold text-gray-900">{{ insuranceData.minimum_wage_formatted }}</span>
+              </div>
+              <div class="flex justify-between items-center">
+                <span class="text-gray-600 text-sm">Hệ số bậc {{ insuranceData.grade }}:</span>
+                <span class="font-semibold text-blue-700">× {{ insuranceData.coefficient }}</span>
+              </div>
+            </div>
+
+            <div class="flex justify-between items-center mb-2">
+              <span class="text-gray-700 font-semibold">Lương BHXH:</span>
+              <span class="text-2xl font-bold text-green-600">{{ insuranceData.amount_formatted }}</span>
+            </div>
+
+            <div class="text-xs text-gray-500 text-right">
+              {{ insuranceData.formula }}
+            </div>
+          </div>
+        </div>
+
+        <!-- Đề xuất tăng bậc (nếu có) -->
+        <div v-if="insuranceData.suggestion && insuranceData.suggestion.eligible"
+             class="bg-yellow-50 border-l-4 border-yellow-400 p-4 rounded mb-4">
+          <div class="flex items-start gap-3">
+            <i class="pi pi-info-circle text-yellow-600 text-xl mt-0.5"></i>
+            <div class="flex-1">
+              <div class="font-bold text-yellow-800 mb-1">
+                Đề xuất tăng bậc
+              </div>
+              <div class="text-sm text-yellow-700 mb-2">
+                Nhân viên đã có <strong>{{ insuranceData.suggestion.tenure_years }} năm</strong> thâm niên tại vị trí hiện tại.
+                Đủ điều kiện tăng từ <strong>Bậc {{ insuranceData.suggestion.current_grade }}</strong>
+                lên <strong>Bậc {{ insuranceData.suggestion.suggested_grade }}</strong>.
+              </div>
+              <button @click="handleCreateGradeRaiseAppendix"
+                      class="px-4 py-2 bg-yellow-500 hover:bg-yellow-600 text-white text-sm font-semibold rounded shadow transition">
+                <i class="pi pi-file-plus mr-2"></i>
+                Tạo phụ lục tăng bậc
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Lịch sử thay đổi bậc (collapsible) -->
+        <div v-if="insuranceHistory && insuranceHistory.length > 1" class="mt-4">
+          <button @click="showHistory = !showHistory"
+                  class="flex items-center gap-2 text-blue-700 hover:text-blue-900 font-semibold text-sm">
+            <i :class="showHistory ? 'pi pi-chevron-down' : 'pi pi-chevron-right'"></i>
+            Lịch sử thay đổi bậc ({{ insuranceHistory.length }} lần)
+          </button>
+
+          <div v-if="showHistory" class="mt-3 bg-white rounded-lg p-4 shadow">
+            <table class="min-w-full text-sm">
+              <thead>
+                <tr class="border-b">
+                  <th class="text-left py-2 px-2 text-gray-600 font-semibold">Thời gian</th>
+                  <th class="text-left py-2 px-2 text-gray-600 font-semibold">Vị trí</th>
+                  <th class="text-center py-2 px-2 text-gray-600 font-semibold">Bậc</th>
+                  <th class="text-left py-2 px-2 text-gray-600 font-semibold">Lý do</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr v-for="record in insuranceHistory" :key="record.id" class="border-b hover:bg-gray-50">
+                  <td class="py-2 px-2 text-gray-800">{{ record.period }}</td>
+                  <td class="py-2 px-2 text-gray-800">{{ record.position || '-' }}</td>
+                  <td class="py-2 px-2 text-center">
+                    <span class="px-2 py-1 bg-blue-100 text-blue-800 font-bold rounded">{{ record.grade }}</span>
+                  </td>
+                  <td class="py-2 px-2 text-gray-600 text-xs">{{ record.reason_display }}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Thông báo: Chưa có hồ sơ BHXH -->
+      <div v-else-if="insuranceData && !insuranceData.has_profile"
+           class="bg-orange-50 border-l-4 border-orange-400 p-4 rounded mb-6 flex items-center gap-3">
+        <i class="pi pi-exclamation-triangle text-orange-600 text-2xl"></i>
+        <div class="flex-1">
+          <div class="font-bold text-orange-800 mb-1">Chưa khởi tạo hồ sơ BHXH</div>
+          <div class="text-sm text-orange-700">
+            Nhân viên chưa có hồ sơ bậc lương BHXH. Vui lòng khởi tạo để áp dụng hệ thống thang-bậc-hệ số.
+          </div>
+        </div>
+        <button @click="handleInitializeInsurance"
+                class="px-4 py-2 bg-orange-500 hover:bg-orange-600 text-white text-sm font-semibold rounded shadow transition">
+          <i class="pi pi-plus mr-2"></i>
+          Khởi tạo
+        </button>
+      </div>
     </template>
     <template v-else>
       <div class="bg-yellow-50 border-l-4 border-yellow-400 p-4 rounded mb-4 flex items-center justify-between">
@@ -110,12 +248,16 @@
 </template>
 
 <script setup>
-import { computed } from 'vue';
+import { computed, ref } from 'vue';
 import { usePage } from '@inertiajs/vue3';
 
 
 const page = usePage();
 const currentPayroll = computed(() => page.props.current_payroll);
+const insuranceData = computed(() => page.props.insurance_data);
+const insuranceHistory = computed(() => page.props.insurance_history);
+
+const showHistory = ref(false);
 
 // Xác định trạng thái hiệu lực (active = ngày hiệu lực <= hôm nay)
 const isActive = computed(() => {
@@ -158,10 +300,19 @@ function formatCurrency(value) {
 
 // Chuyển tab cha sang 'contracts' khi click
 function goToContractTab() {
-  // PrimeVue Tabs v4: truyền sự kiện lên cha (EmployeeProfile)
-  // Gọi custom event nếu PayrollTab được nhúng trong TabPanel
-  // Sử dụng window eventBus hoặc emit nếu có setup, ở đây dùng dispatchEvent đơn giản:
   window.dispatchEvent(new CustomEvent('payroll-goto-contract-tab'));
+}
+
+// Handler: Tạo phụ lục tăng bậc (TODO: implement)
+function handleCreateGradeRaiseAppendix() {
+  alert('Chức năng "Tạo phụ lục tăng bậc" đang được phát triển...');
+  // TODO: Mở modal hoặc navigate đến form tạo appendix với prefill data
+}
+
+// Handler: Khởi tạo hồ sơ BHXH (TODO: implement)
+function handleInitializeInsurance() {
+  alert('Chức năng "Khởi tạo hồ sơ BHXH" đang được phát triển...');
+  // TODO: Mở modal hoặc API call để khởi tạo insurance profile
 }
 </script>
 

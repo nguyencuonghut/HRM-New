@@ -18,4 +18,7 @@ class Position extends Model
 
     // Quan hệ: có nhiều employee assignments
     public function employeeAssignments() { return $this->hasMany(EmployeeAssignment::class); }
+
+    // Quan hệ: thang bậc lương BHXH
+    public function salaryGrades() { return $this->hasMany(PositionSalaryGrade::class); }
 }

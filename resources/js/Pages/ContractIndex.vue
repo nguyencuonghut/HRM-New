@@ -215,7 +215,37 @@
         </div>
         <div>
           <label class="block font-bold mb-2 required-field">Lương đóng BH</label>
-          <InputText v-model.number="form.insurance_salary" type="number" class="w-full" placeholder="VND/tháng" :invalid="submitted && !form.insurance_salary" />
+          <InputText v-model.number="form.insurance_salary" type="number" class="w-full" placeholder="VND/tháng" :invalid="submitted && !form.insurance_salary" :disabled="loadingSuggestion" />
+
+          <!-- Loading state -->
+          <div v-if="loadingSuggestion" class="mt-2 p-2 bg-gray-50 border border-gray-200 rounded-md">
+            <div class="flex items-center gap-2 text-gray-600 text-sm">
+              <i class="pi pi-spin pi-spinner"></i>
+              <span>Đang tính gợi ý lương BHXH...</span>
+            </div>
+          </div>
+
+          <!-- Insurance suggestion hint -->
+          <div v-else-if="insuranceSuggestionNote" class="mt-2 p-3 bg-blue-50 border border-blue-200 rounded-md">
+            <div class="flex items-start gap-2">
+              <i class="pi pi-info-circle text-blue-600 mt-0.5"></i>
+              <div class="flex-1">
+                <div class="text-sm font-semibold text-blue-900 mb-1">Gợi ý từ Thang BHXH</div>
+                <div class="text-xs text-blue-800">{{ insuranceSuggestionNote }}</div>
+                <div v-if="insuranceSalarySuggestion && form.insurance_salary !== insuranceSalarySuggestion" class="mt-2">
+                  <Button
+                    size="small"
+                    severity="secondary"
+                    icon="pi pi-arrow-right"
+                    label="Áp dụng gợi ý"
+                    @click="applySuggestion"
+                    class="text-xs"
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+
           <small class="text-red-500" v-if="submitted && !form.insurance_salary">Lương đóng BH là bắt buộc.</small>
           <small class="text-red-500" v-if="hasError('insurance_salary')">{{ errors.insurance_salary }}</small>
         </div>
@@ -491,7 +521,7 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, watch } from 'vue'
 import { Head, router } from '@inertiajs/vue3'
 import DatePicker from 'primevue/datepicker'
 import Select from 'primevue/select'
@@ -583,6 +613,11 @@ const form = ref({
 
 const attachmentUploader = ref(null)
 
+// Insurance salary suggestion state
+const insuranceSalarySuggestion = ref(null)
+const insuranceSuggestionNote = ref('')
+const loadingSuggestion = ref(false)
+
 // Options - Backend sẽ cung cấp qua props
 const contractTypeOptions = computed(() => definePropsData.contractTypeOptions || [])
 const statusOptions = computed(() => definePropsData.statusOptions || [])
@@ -613,6 +648,60 @@ const statusSeverity = (s) => ({
 
 const empItemTmpl = (opt) => `${opt.full_name} (${opt.employee_code || '—'})`
 
+// Fetch insurance salary suggestion from API
+async function fetchInsuranceSuggestion() {
+  insuranceSalarySuggestion.value = null
+  insuranceSuggestionNote.value = ''
+
+  if (!form.value.position_id) {
+    return
+  }
+
+  loadingSuggestion.value = true
+
+  try {
+    const params = new URLSearchParams()
+    if (form.value.employee_id) {
+      params.append('employee_id', form.value.employee_id)
+    }
+    if (form.value.start_date) {
+      params.append('date', toYMD(form.value.start_date))
+    }
+
+    const response = await fetch(`/positions/${form.value.position_id}/insurance-suggestion?${params}`)
+    const data = await response.json()
+
+    if (data.suggested_insurance_salary) {
+      insuranceSalarySuggestion.value = data.suggested_insurance_salary
+      insuranceSuggestionNote.value = data.explain
+
+      // Auto-fill only if insurance_salary is empty (creating new contract)
+      if (!form.value.insurance_salary) {
+        form.value.insurance_salary = data.suggested_insurance_salary
+      }
+    } else {
+      insuranceSuggestionNote.value = data.explain || 'Chưa có dữ liệu gợi ý'
+    }
+  } catch (error) {
+    console.error('Error fetching insurance suggestion:', error)
+    insuranceSuggestionNote.value = 'Không thể tải gợi ý lương BHXH'
+  } finally {
+    loadingSuggestion.value = false
+  }
+}
+
+// Watch for position/employee changes to fetch suggestion
+watch(() => [form.value.position_id, form.value.employee_id], () => {
+  fetchInsuranceSuggestion()
+}, { immediate: false })
+
+// Function to apply suggestion manually
+function applySuggestion() {
+  if (insuranceSalarySuggestion.value) {
+    form.value.insurance_salary = insuranceSalarySuggestion.value
+  }
+}
+
 // CRUD
 function openNew() {
   form.value = {
@@ -635,6 +724,8 @@ function openNew() {
     source_id: '',
     note: ''
   }
+  insuranceSalarySuggestion.value = null
+  insuranceSuggestionNote.value = ''
   submitted.value = false
   dialog.value = true
 }
@@ -662,6 +753,8 @@ function edit(row) {
     newAttachments: [],
     deleteAttachments: []
   }
+  // Fetch suggestion but don't auto-fill when editing
+  fetchInsuranceSuggestion()
   submitted.value = false
   dialog.value = true
 }

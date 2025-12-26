@@ -262,6 +262,7 @@ Route::group(['middleware' => 'auth'], function () {
     });
 
     // Position Routes
+    Route::get('positions/{position}/insurance-suggestion', [\App\Http\Controllers\PositionController::class, 'insuranceSuggestion'])->name('positions.insurance-suggestion');
     Route::delete('positions/bulk-delete', [\App\Http\Controllers\PositionController::class, 'bulkDelete'])->name('positions.bulk-delete');
     Route::resource('positions', \App\Http\Controllers\PositionController::class);
 

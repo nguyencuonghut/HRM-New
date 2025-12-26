@@ -53,9 +53,29 @@
                         <Tag v-if="slotProps.data.department_parent" :value="slotProps.data.department_parent" severity="primary" />
                     </template>
                 </Column>
-                <Column field="position_salary" header="Lương vị trí" sortable style="min-width: 12rem">
+                <Column field="insurance_grades" header="Thang BHXH" style="min-width: 16rem">
                     <template #body="slotProps">
-                        <span>{{ formatCurrency(slotProps.data.position_salary) }}</span>
+                        <div v-if="slotProps.data.insurance_grades && slotProps.data.insurance_grades.length > 0">
+                            <div class="flex items-center gap-2 mb-1">
+                                <i class="pi pi-chart-line text-blue-600"></i>
+                                <span class="font-mono text-sm">
+                                    {{ formatGradeRange(slotProps.data.insurance_grades) }}
+                                </span>
+                            </div>
+                            <div class="flex gap-2 mt-1">
+                                <Tag severity="secondary" class="text-xs">
+                                    +1 bậc / 3 năm
+                                </Tag>
+                                <Tag v-if="slotProps.data.insurance_grade_effective_from" severity="primary" class="text-xs">
+                                    Từ {{ slotProps.data.insurance_grade_effective_from }}
+                                </Tag>
+                            </div>
+                            <!-- Tooltip with full breakdown -->
+                            <div class="text-xs text-gray-600 mt-2 font-mono">
+                                {{ formatFullGrades(slotProps.data.insurance_grades) }}
+                            </div>
+                        </div>
+                        <Tag v-else severity="warn" value="Chưa cấu hình" />
                     </template>
                 </Column>
                 <Column field="created_at" header="Ngày tạo" sortable style="min-width: 12rem">
@@ -115,21 +135,7 @@
                     <small class="text-red-500" v-if="errors.level">{{ errors.level }}</small>
                 </div>
 
-                <div class="grid grid-cols-2 gap-4">
-                    <div>
-                        <label for="insurance_base_salary" class="block font-bold mb-3">Lương cơ bản BH</label>
-                        <InputNumber
-                            id="insurance_base_salary"
-                            v-model="form.insurance_base_salary"
-                            mode="currency"
-                            currency="VND"
-                            locale="vi-VN"
-                            :class="{ 'p-invalid': errors.insurance_base_salary }"
-                            class="w-full"
-                        />
-                        <small class="text-red-500" v-if="errors.insurance_base_salary">{{ errors.insurance_base_salary }}</small>
-                    </div>
-
+                <div class="grid grid-cols-3 gap-4">
                     <div>
                         <label for="position_salary" class="block font-bold mb-3">Lương chức vụ</label>
                         <InputNumber
@@ -145,7 +151,7 @@
                     </div>
                 </div>
 
-                <div class="grid grid-cols-2 gap-4">
+                <div class="grid grid-cols-3 gap-4">
                     <div>
                         <label for="competency_salary" class="block font-bold mb-3">Lương năng lực</label>
                         <InputNumber
@@ -261,7 +267,6 @@ const form = useForm({
     department_id: null,
     title: '',
     level: '',
-    insurance_base_salary: null,
     position_salary: null,
     competency_salary: null,
     allowance: null
@@ -287,6 +292,17 @@ const formatCurrency = (value) => {
     }).format(value);
 };
 
+const formatGradeRange = (grades) => {
+    if (!grades || grades.length === 0) return '-';
+    const coefficients = grades.map(g => g.coefficient);
+    return `${coefficients[0]} → ${coefficients[coefficients.length - 1]} (${grades.length} bậc)`;
+};
+
+const formatFullGrades = (grades) => {
+    if (!grades || grades.length === 0) return '';
+    return grades.map(g => `B${g.grade}: ${g.coefficient}`).join(' • ');
+};
+
 const openNew = () => {
     form.reset();
     form.clearErrors();
@@ -307,7 +323,6 @@ const editPosition = (position) => {
     form.department_id = position.department_id;
     form.title = position.title;
     form.level = position.level;
-    form.insurance_base_salary = position.insurance_base_salary;
     form.position_salary = position.position_salary;
     form.competency_salary = position.competency_salary;
     form.allowance = position.allowance;
@@ -322,7 +337,6 @@ const savePosition = () => {
         department_id: form.department_id,
         title: form.title,
         level: form.level,
-        insurance_base_salary: form.insurance_base_salary,
         position_salary: form.position_salary,
         competency_salary: form.competency_salary,
         allowance: form.allowance

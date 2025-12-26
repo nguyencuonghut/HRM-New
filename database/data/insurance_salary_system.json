@@ -1,0 +1,808 @@
+{
+  "minimum_wages": [
+    {
+      "region": 1,
+      "amount": 4960000,
+      "effective_from": "2024-07-01",
+      "effective_to": null,
+      "is_active": true,
+      "note": "Nghị định 24/2023/NĐ-CP - Vùng I (thành phố lớn như Hà Nội, TP.HCM)"
+    },
+    {
+      "region": 2,
+      "amount": 4410000,
+      "effective_from": "2024-07-01",
+      "effective_to": null,
+      "is_active": true,
+      "note": "Nghị định 24/2023/NĐ-CP - Vùng II"
+    },
+    {
+      "region": 3,
+      "amount": 3860000,
+      "effective_from": "2024-07-01",
+      "effective_to": null,
+      "is_active": true,
+      "note": "Nghị định 24/2023/NĐ-CP - Vùng III"
+    },
+    {
+      "region": 4,
+      "amount": 3450000,
+      "effective_from": "2024-07-01",
+      "effective_to": null,
+      "is_active": true,
+      "note": "Nghị định 24/2023/NĐ-CP - Vùng IV (vùng sâu, vùng xa)"
+    }
+  ],
+  "salary_grade_categories": [
+    {
+        "title": "Chủ tịch HĐQT",
+        "coefficient": [2.68, 3.08, 3.54, 4.08, 4.98, 6.07, 7.41],
+        "effective_from": "2024-07-01"
+    },
+    {
+        "title": "Nhân viên kinh doanh",
+        "coefficient": [1.10, 1.16, 1.11, 1.31, 1.41, 1.53, 1.67],
+        "effective_from": "2024-07-01"
+    },
+    {
+        "title": "Nhân viên kỹ thuật trại",
+        "coefficient": [1.10, 1.16, 1.11, 1.31, 1.41, 1.53, 1.67],
+        "effective_from": "2024-07-01"
+    },
+    {
+        "title": "Trưởng vùng kinh doanh",
+        "coefficient": [1.50, 1.61, 1.72, 1.84, 1.97, 2.10, 2.27],
+        "effective_from": "2024-07-01"
+    },
+    {
+        "title": "Giám sát bán hàng",
+        "coefficient": [1.50, 1.61, 1.72, 1.84, 1.97, 2.10, 2.27],
+        "effective_from": "2024-07-01"
+    },
+    {
+        "title": "Giám đốc vùng",
+        "coefficient": [1.70, 1.82, 1.95, 2.10, 2.29, 2.50, 2.72],
+        "effective_from": "2024-07-01"
+    },
+    {
+        "title": "Trưởng nhóm kỹ thuật thị trường gia cầm",
+        "coefficient": [1.50, 1.61, 1.72, 1.84, 1.97, 2.10, 2.27],
+        "effective_from": "2024-07-01"
+    },
+    {
+        "title": "Quyền trưởng vùng kinh doanh",
+        "coefficient": [1.50, 1.61, 1.72, 1.84, 1.97, 2.10, 2.27],
+        "effective_from": "2024-07-01"
+    },
+    {
+        "title": "Nhân viên kỹ thuật thị trường gia cầm",
+        "coefficient": [1.10, 1.16, 1.11, 1.31, 1.41, 1.53, 1.67],
+        "effective_from": "2024-07-01"
+    },
+    {
+        "title": "PGĐ Kinh doanh",
+        "coefficient": [1.70, 1.82, 1.95, 2.10, 2.29, 2.50, 2.72],
+        "effective_from": "2024-07-01"
+    },
+    {
+        "title": "Nhân viên lái xe",
+        "coefficient": [1.14, 1.20, 1.27, 1.34, 1.44, 1.54, 1.69],
+        "effective_from": "2024-07-01"
+    },
+    {
+        "title": "Nhân viên kỹ thuật thị trường thủy sản",
+        "coefficient": [1.10, 1.16, 1.11, 1.31, 1.41, 1.53, 1.67],
+        "effective_from": "2024-07-01"
+    },
+    {
+        "title": "Nhân viên kỹ thuật thị trường",
+        "coefficient": [1.10, 1.16, 1.11, 1.31, 1.41, 1.53, 1.67],
+        "effective_from": "2024-07-01"
+    },
+    {
+        "title": "Nhân viên chăm sóc và phát triển khách hàng KAC",
+        "coefficient": [1.10, 1.16, 1.11, 1.31, 1.41, 1.53, 1.67],
+        "effective_from": "2024-07-01"
+    },
+    {
+        "title": "Trưởng nhóm kỹ thuật thị trường gia súc vùng 1.3.6.7",
+        "coefficient": [1.50, 1.61, 1.72, 1.84, 1.97, 2.10, 2.27],
+        "effective_from": "2024-07-01"
+    },
+    {
+        "title": "Chuyên viên kỹ thuật thị trường thủy sản",
+        "coefficient": [1.10, 1.16, 1.11, 1.31, 1.41, 1.53, 1.67],
+        "effective_from": "2024-07-01"
+    },
+    {
+        "title": "Trưởng nhóm Admin Kinh Doanh",
+        "coefficient": [1.50, 1.61, 1.72, 1.84, 1.97, 2.10, 2.27],
+        "effective_from": "2024-07-01"
+    },
+    {
+        "title": "Nhân viên Sales admin",
+        "coefficient": [1.10, 1.16, 1.11, 1.31, 1.41, 1.53, 1.67],
+        "effective_from": "2024-07-01"
+    },
+    {
+        "title": "Chuyên viên hỗ trợ",
+        "coefficient": [1.10, 1.16, 1.11, 1.31, 1.41, 1.53, 1.67],
+        "effective_from": "2024-07-01"
+    },
+    {
+        "title": "Nhân viên kĩ thuật thị trường heo",
+        "coefficient": [1.10, 1.16, 1.11, 1.31, 1.41, 1.53, 1.67],
+        "effective_from": "2024-07-01"
+    },
+    {
+        "title": "Phó giám đốc kinh doanh thuốc thú y- phụ trách mảng KAC",
+        "coefficient": [1.70, 1.82, 1.95, 2.10, 2.29, 2.50, 2.72],
+        "effective_from": "2024-07-01"
+    },
+    {
+        "title": "Nhân viên lái xe",
+        "coefficient": [1.14, 1.20, 1.27, 1.34, 1.44, 1.54, 1.69],
+        "effective_from": "2024-07-01"
+    },
+    {
+        "title": "Nhân viên kinh doanh thuốc thú y",
+        "coefficient": [1.10, 1.16, 1.11, 1.31, 1.41, 1.53, 1.67],
+        "effective_from": "2024-07-01"
+    },
+    {
+        "title": "Giám đốc sản xuất",
+        "coefficient": [1.84, 2.02, 2.23, 2.45, 2.69, 2.96, 3.26],
+        "effective_from": "2024-07-01"
+    },
+    {
+        "title": "Nhân viên thống kê sản xuất",
+        "coefficient": [1.10, 1.16, 1.11, 1.31, 1.41, 1.53, 1.67],
+        "effective_from": "2024-07-01"
+    },
+    {
+        "title": "Trưởng ca sản xuất",
+        "coefficient": [1.50, 1.61, 1.72, 1.84, 1.97, 2.10, 2.27],
+        "effective_from": "2024-07-01"
+    },
+    {
+        "title": "Nhân viên vận hành mixer",
+        "coefficient": [1.14, 1.25, 1.38, 1.52, 1.67, 1.84, 2.02],
+        "effective_from": "2024-07-01"
+    },
+    {
+        "title": "Quyền trưởng bộ phận sản xuất Thủy sản",
+        "coefficient": [1.84, 2.02, 2.23, 2.45, 2.69, 2.96, 3.26],
+        "effective_from": "2024-07-01"
+    },
+    {
+        "title": "Quyền giám sát sản xuất GSGC",
+        "coefficient": [1.50, 1.61, 1.72, 1.84, 1.97, 2.10, 2.27],
+        "effective_from": "2024-07-01"
+    },
+    {
+        "title": "Vận hành Ép viên máy cũ",
+        "coefficient": [1.14, 1.25, 1.38, 1.52, 1.67, 1.84, 2.02],
+        "effective_from": "2024-07-01"
+    },
+    {
+        "title": "Nhân viên vận hành máy ép đùn",
+        "coefficient": [1.14, 1.25, 1.38, 1.52, 1.67, 1.84, 2.02],
+        "effective_from": "2024-07-01"
+    },
+    {
+        "title": "Vận hành máy ép đùn",
+        "coefficient": [1.14, 1.25, 1.38, 1.52, 1.67, 1.84, 2.02],
+        "effective_from": "2024-07-01"
+    },
+    {
+        "title": "Công nhân đổ vi lượng",
+        "coefficient": [1.08, 1.14, 1.20, 1.27, 1.35, 1.43, 1.52],
+        "effective_from": "2024-07-01"
+    },
+    {
+        "title": "Công nhân đổ thuốc",
+        "coefficient": [1.08, 1.14, 1.20, 1.27, 1.35, 1.43, 1.52],
+        "effective_from": "2024-07-01"
+    },
+    {
+        "title": "Nhân viên thủ kho thành phẩm",
+        "coefficient": [1.10, 1.16, 1.11, 1.31, 1.41, 1.53, 1.67],
+        "effective_from": "2024-07-01"
+    },
+    {
+        "title": "Nhân viên vận hành mixer",
+        "coefficient": [1.14, 1.25, 1.38, 1.52, 1.67, 1.84, 2.02],
+        "effective_from": "2024-07-01"
+    },
+    {
+        "title": "Nhân viên vận hành máy ép viên",
+        "coefficient": [1.14, 1.25, 1.38, 1.52, 1.67, 1.84, 2.02],
+        "effective_from": "2024-07-01"
+    },
+    {
+        "title": "Nhân viên đổ thuốc",
+        "coefficient": [1.14, 1.25, 1.38, 1.52, 1.67, 1.84, 2.02],
+        "effective_from": "2024-07-01"
+    },
+    {
+        "title": "Nhân viên vận hành Lò hơi",
+        "coefficient": [1.14, 1.25, 1.38, 1.52, 1.67, 1.84, 2.02],
+        "effective_from": "2024-07-01"
+    },
+    {
+        "title": "Nhân viên soi bồn + đổ vi lượng",
+        "coefficient": [1.14, 1.25, 1.38, 1.52, 1.67, 1.84, 2.02],
+        "effective_from": "2024-07-01"
+    },
+    {
+        "title": "Nhân viên vận hành trung tâm",
+        "coefficient": [1.14, 1.25, 1.38, 1.52, 1.67, 1.84, 2.02],
+        "effective_from": "2024-07-01"
+    },
+    {
+        "title": "Nhân viên vận hành máy ép đùn",
+        "coefficient": [1.14, 1.25, 1.38, 1.52, 1.67, 1.84, 2.02],
+        "effective_from": "2024-07-01"
+    },
+    {
+        "title": "Thủ kho ra cám",
+        "coefficient": [1.10, 1.16, 1.11, 1.31, 1.41, 1.53, 1.67],
+        "effective_from": "2024-07-01"
+    },
+    {
+        "title": "Giám đốc bảo trì",
+        "coefficient": [1.84, 2.02, 2.23, 2.45, 2.69, 2.96, 3.26],
+        "effective_from": "2024-07-01"
+    },
+    {
+        "title": "Tổ trưởng bảo trì hành chính",
+        "coefficient": [1.14, 1.25, 1.38, 1.52, 1.67, 1.84, 2.02],
+        "effective_from": "2024-07-01"
+    },
+    {
+        "title": "Tổ trưởng bảo trì",
+        "coefficient": [1.14, 1.25, 1.38, 1.52, 1.67, 1.84, 2.02],
+        "effective_from": "2024-07-01"
+    },
+    {
+        "title": "Chuyên viên bảo trì cơ",
+        "coefficient": [1.14, 1.25, 1.38, 1.52, 1.67, 1.84, 2.02],
+        "effective_from": "2024-07-01"
+    },
+    {
+        "title": "Nhân viên bảo trì",
+        "coefficient": [1.14, 1.25, 1.38, 1.52, 1.67, 1.84, 2.02],
+        "effective_from": "2024-07-01"
+    },
+    {
+        "title": "Nhân viên Thủ kho bảo trì",
+        "coefficient": [1.10, 1.16, 1.11, 1.31, 1.41, 1.53, 1.67],
+        "effective_from": "2024-07-01"
+    },
+    {
+        "title": "Nhân viên bảo trì Điện- Tự Động Hóa",
+        "coefficient": [1.14, 1.25, 1.38, 1.52, 1.67, 1.84, 2.02],
+        "effective_from": "2024-07-01"
+    },
+    {
+        "title": "Nhân viên bảo trì điện",
+        "coefficient": [1.14, 1.25, 1.38, 1.52, 1.67, 1.84, 2.02],
+        "effective_from": "2024-07-01"
+    },
+    {
+        "title": "Nhân viên bảo trì cơ",
+        "coefficient": [1.14, 1.25, 1.38, 1.52, 1.67, 1.84, 2.02],
+        "effective_from": "2024-07-01"
+    },
+    {
+        "title": "Nhân viên bảo trì điện lạnh",
+        "coefficient": [1.14, 1.25, 1.38, 1.52, 1.67, 1.84, 2.02],
+        "effective_from": "2024-07-01"
+    },
+    {
+        "title": "Trưởng ban tài chính",
+        "coefficient": [1.84, 2.02, 2.23, 2.45, 2.69, 2.96, 3.26],
+        "effective_from": "2024-07-01"
+    },
+    {
+        "title": "Phó ban tài chính",
+        "coefficient": [1.70, 1.82, 1.95, 2.10, 2.29, 2.50, 2.72],
+        "effective_from": "2024-07-01"
+    },
+    {
+        "title": "Kiểm soát viên kế toán",
+        "coefficient": [1.10, 1.16, 1.11, 1.31, 1.41, 1.53, 1.67],
+        "effective_from": "2024-07-01"
+    },
+    {
+        "title": "Phó phòng Kế Toán",
+        "coefficient": [1.70, 1.82, 1.95, 2.10, 2.29, 2.50, 2.72],
+        "effective_from": "2024-07-01"
+    },
+    {
+        "title": "Nhân viên kế toán",
+        "coefficient": [1.10, 1.16, 1.11, 1.31, 1.41, 1.53, 1.67],
+        "effective_from": "2024-07-01"
+    },
+    {
+        "title": "Kế toán bán hàng",
+        "coefficient": [1.10, 1.16, 1.11, 1.31, 1.41, 1.53, 1.67],
+        "effective_from": "2024-07-01"
+    },
+    {
+        "title": "Kế toán kho",
+        "coefficient": [1.10, 1.16, 1.11, 1.31, 1.41, 1.53, 1.67],
+        "effective_from": "2024-07-01"
+    },
+    {
+        "title": "Kế toán trưởng",
+        "coefficient": [1.84, 2.02, 2.23, 2.45, 2.69, 2.96, 3.26],
+        "effective_from": "2024-07-01"
+    },
+    {
+        "title": "Nhân viên cân",
+        "coefficient": [1.10, 1.16, 1.11, 1.31, 1.41, 1.53, 1.67],
+        "effective_from": "2024-07-01"
+    },
+    {
+        "title": "Kế toán tổng hợp",
+        "coefficient": [1.10, 1.16, 1.11, 1.31, 1.41, 1.53, 1.67],
+        "effective_from": "2024-07-01"
+    },
+    {
+        "title": "Nhân viên kế toán thanh toán ngoại",
+        "coefficient": [1.10, 1.16, 1.11, 1.31, 1.41, 1.53, 1.67],
+        "effective_from": "2024-07-01"
+    },
+    {
+        "title": "Admin thu mua",
+        "coefficient": [1.10, 1.16, 1.11, 1.31, 1.41, 1.53, 1.67],
+        "effective_from": "2024-07-01"
+    },
+    {
+        "title": "Trưởng phòng thu mua",
+        "coefficient": [1.84, 2.02, 2.23, 2.45, 2.69, 2.96, 3.26],
+        "effective_from": "2024-07-01"
+    },
+    {
+        "title": "Nhân viên giao nhận",
+        "coefficient": [1.10, 1.16, 1.11, 1.31, 1.41, 1.53, 1.67],
+        "effective_from": "2024-07-01"
+    },
+    {
+        "title": "Nhân viên XNK",
+        "coefficient": [1.10, 1.16, 1.11, 1.31, 1.41, 1.53, 1.67],
+        "effective_from": "2024-07-01"
+    },
+    {
+        "title": "Nhân viên thu mua",
+        "coefficient": [1.10, 1.16, 1.11, 1.31, 1.41, 1.53, 1.67],
+        "effective_from": "2024-07-01"
+    },
+    {
+        "title": "TBP admin thu mua",
+        "coefficient": [1.50, 1.61, 1.72, 1.84, 1.97, 2.10, 2.27],
+        "effective_from": "2024-07-01"
+    },
+    {
+        "title": "Giám đốc hành chính",
+        "coefficient": [1.84, 2.02, 2.23, 2.45, 2.69, 2.96, 3.26],
+        "effective_from": "2024-07-01"
+    },
+    {
+        "title": "Nhân viên Hành chính",
+        "coefficient": [1.10, 1.16, 1.11, 1.31, 1.41, 1.53, 1.67],
+        "effective_from": "2024-07-01"
+    },
+    {
+        "title": "Trưởng nhóm nhân sự kinh doanh",
+        "coefficient": [1.50, 1.61, 1.72, 1.84, 1.97, 2.10, 2.27],
+        "effective_from": "2024-07-01"
+    },
+    {
+        "title": "Nhân viên tạp vụ",
+        "coefficient": [1.00, 1.05, 1.10, 1.16, 1.22, 1.29, 1.37],
+        "effective_from": "2024-07-01"
+    },
+    {
+        "title": "Nhân viên nấu ăn",
+        "coefficient": [1.08, 1.14, 1.20, 1.27, 1.35, 1.43, 1.52],
+        "effective_from": "2024-07-01"
+    },
+    {
+        "title": "Nhân viên trồng rau",
+        "coefficient": [1.00, 1.05, 1.10, 1.16, 1.22, 1.29, 1.37],
+        "effective_from": "2024-07-01"
+    },
+    {
+        "title": "Nhân viên lái xe",
+        "coefficient": [1.14, 1.20, 1.27, 1.34, 1.44, 1.54, 1.69],
+        "effective_from": "2024-07-01"
+    },
+    {
+        "title": "Nhân viên nhân sự",
+        "coefficient": [1.10, 1.16, 1.11, 1.31, 1.41, 1.53, 1.67],
+        "effective_from": "2024-07-01"
+    },
+    {
+        "title": "Nhân viên lái xe chủ tịch",
+        "coefficient": [1.14, 1.20, 1.27, 1.34, 1.44, 1.54, 1.69],
+        "effective_from": "2024-07-01"
+    },
+    {
+        "title": "Nhân viên đầu bếp",
+        "coefficient": [1.08, 1.14, 1.20, 1.27, 1.35, 1.43, 1.52],
+        "effective_from": "2024-07-01"
+    },
+    {
+        "title": "Chuyên viên HSE",
+        "coefficient": [1.10, 1.16, 1.11, 1.31, 1.41, 1.53, 1.67],
+        "effective_from": "2024-07-01"
+    },
+    {
+        "title": "Phó ban pháp chế",
+        "coefficient": [1.70, 1.82, 1.95, 2.10, 2.29, 2.50, 2.72],
+        "effective_from": "2024-07-01"
+    },
+    {
+        "title": "Nhân viên pháp chế",
+        "coefficient": [1.10, 1.16, 1.11, 1.31, 1.41, 1.53, 1.67],
+        "effective_from": "2024-07-01"
+    },
+    {
+        "title": "Trưởng bộ phận dự án",
+        "coefficient": [1.84, 2.02, 2.23, 2.45, 2.69, 2.96, 3.26],
+        "effective_from": "2024-07-01"
+    },
+    {
+        "title": "Phó ban quản lý DA",
+        "coefficient": [1.70, 1.82, 1.95, 2.10, 2.29, 2.50, 2.72],
+        "effective_from": "2024-07-01"
+    },
+    {
+        "title": "Nhân viên phát triển trang trại",
+        "coefficient": [1.10, 1.16, 1.11, 1.31, 1.41, 1.53, 1.67],
+        "effective_from": "2024-07-01"
+    },
+    {
+        "title": "Chuyên viên dự án",
+        "coefficient": [1.10, 1.16, 1.11, 1.31, 1.41, 1.53, 1.67],
+        "effective_from": "2024-07-01"
+    },
+    {
+        "title": "Quyền phó ban an ninh an toàn",
+        "coefficient": [1.70, 1.82, 1.95, 2.10, 2.29, 2.50, 2.72],
+        "effective_from": "2024-07-01"
+    },
+    {
+        "title": "Nhân viên bảo vệ",
+        "coefficient": [1.08, 1.14, 1.20, 1.27, 1.35, 1.43, 1.52],
+        "effective_from": "2024-07-01"
+    },
+    {
+        "title": "Trưởng ca bảo vệ",
+        "coefficient": [1.50, 1.61, 1.72, 1.84, 1.97, 2.10, 2.27],
+        "effective_from": "2024-07-01"
+    },
+    {
+        "title": "Tổ trưởng bảo vệ",
+        "coefficient": [1.08, 1.14, 1.20, 1.27, 1.35, 1.43, 1.52],
+        "effective_from": "2024-07-01"
+    },
+    {
+        "title": "Phó phòng kỹ thuật dinh dưỡng",
+        "coefficient": [1.70, 1.82, 1.95, 2.10, 2.29, 2.50, 2.72],
+        "effective_from": "2024-07-01"
+    },
+    {
+        "title": "Quyền trưởng phòng kỹ thuật dinh dưỡng",
+        "coefficient": [1.84, 2.02, 2.23, 2.45, 2.69, 2.96, 3.26],
+        "effective_from": "2024-07-01"
+    },
+    {
+        "title": "Chuyên viên kỹ thuật dinh dưỡng",
+        "coefficient": [1.14, 1.20, 1.27, 1.36, 1.47, 1.58, 1.71],
+        "effective_from": "2024-07-01"
+    },
+    {
+        "title": "Nhân viên kỹ thuật thủy sản",
+        "coefficient": [1.10, 1.16, 1.11, 1.31, 1.41, 1.53, 1.67],
+        "effective_from": "2024-07-01"
+    },
+    {
+        "title": "Nhân viên kỹ thuật dinh dưỡng",
+        "coefficient": [1.14, 1.20, 1.27, 1.36, 1.47, 1.58, 1.71],
+        "effective_from": "2024-07-01"
+    },
+    {
+        "title": "Nhân viên trộn mix",
+        "coefficient": [1.08, 1.14, 1.20, 1.27, 1.35, 1.43, 1.52],
+        "effective_from": "2024-07-01"
+    },
+    {
+        "title": "Tổ trưởng trộn mix",
+        "coefficient": [1.08, 1.14, 1.20, 1.27, 1.35, 1.43, 1.52],
+        "effective_from": "2024-07-01"
+    },
+    {
+        "title": "Giám đốc khối QLCL",
+        "coefficient": [1.84, 2.02, 2.23, 2.45, 2.69, 2.96, 3.26],
+        "effective_from": "2024-07-01"
+    },
+    {
+        "title": "Nhân viên KCS",
+        "coefficient": [1.14, 1.20, 1.27, 1.36, 1.47, 1.58, 1.71],
+        "effective_from": "2024-07-01"
+    },
+    {
+        "title": "Quyền TBP Lab",
+        "coefficient": [1.50, 1.61, 1.72, 1.84, 1.97, 2.10, 2.27],
+        "effective_from": "2024-07-01"
+    },
+    {
+        "title": "Nhân viên phân tích",
+        "coefficient": [1.14, 1.20, 1.27, 1.36, 1.47, 1.58, 1.71],
+        "effective_from": "2024-07-01"
+    },
+    {
+        "title": "Công nhân nghiền mẫu",
+        "coefficient": [1.08, 1.14, 1.20, 1.27, 1.35, 1.43, 1.52],
+        "effective_from": "2024-07-01"
+    },
+    {
+        "title": "Trưởng nhóm KCS nguyên liệu",
+        "coefficient": [1.14, 1.20, 1.27, 1.36, 1.47, 1.58, 1.71],
+        "effective_from": "2024-07-01"
+    },
+    {
+        "title": "Trưởng BP Kho",
+        "coefficient": [1.84, 2.02, 2.23, 2.45, 2.69, 2.96, 3.26],
+        "effective_from": "2024-07-01"
+    },
+    {
+        "title": "Trưởng Kho thành phẩm",
+        "coefficient": [1.10, 1.16, 1.11, 1.31, 1.41, 1.53, 1.67],
+        "effective_from": "2024-07-01"
+    },
+    {
+        "title": "Thủ kho trung chuyển",
+        "coefficient": [1.10, 1.16, 1.11, 1.31, 1.41, 1.53, 1.67],
+        "effective_from": "2024-07-01"
+    },
+    {
+        "title": "Nhân viên thủ kho đi ca",
+        "coefficient": [1.10, 1.16, 1.11, 1.31, 1.41, 1.53, 1.67],
+        "effective_from": "2024-07-01"
+    },
+    {
+        "title": "Thủ kho TTY",
+        "coefficient": [1.10, 1.16, 1.11, 1.31, 1.41, 1.53, 1.67],
+        "effective_from": "2024-07-01"
+    },
+    {
+        "title": "Thủ kho NL Hành chính",
+        "coefficient": [1.10, 1.16, 1.11, 1.31, 1.41, 1.53, 1.67],
+        "effective_from": "2024-07-01"
+    },
+    {
+        "title": "Lái xe nâng",
+        "coefficient": [1.14, 1.20, 1.27, 1.34, 1.44, 1.54, 1.69],
+        "effective_from": "2024-07-01"
+    },
+    {
+        "title": "Thủ kho kiêm lái xe nâng GHZ",
+        "coefficient": [1.10, 1.16, 1.11, 1.31, 1.41, 1.53, 1.67],
+        "effective_from": "2024-07-01"
+    },
+    {
+        "title": "Lái xe xúc lật",
+        "coefficient": [1.14, 1.20, 1.27, 1.34, 1.44, 1.54, 1.69],
+        "effective_from": "2024-07-01"
+    },
+    {
+        "title": "Nhân viên thủ kho nguyên liệu",
+        "coefficient": [1.10, 1.16, 1.11, 1.31, 1.41, 1.53, 1.67],
+        "effective_from": "2024-07-01"
+    },
+    {
+        "title": "Xe nâng Lật xuất Xá",
+        "coefficient": [1.14, 1.20, 1.27, 1.34, 1.44, 1.54, 1.69],
+        "effective_from": "2024-07-01"
+    },
+    {
+        "title": "Thủ kho trung chuyển",
+        "coefficient": [1.10, 1.16, 1.11, 1.31, 1.41, 1.53, 1.67],
+        "effective_from": "2024-07-01"
+    },
+    {
+        "title": "Nhân viên vận hành silo, xá",
+        "coefficient": [1.14, 1.25, 1.38, 1.52, 1.67, 1.84, 2.02],
+        "effective_from": "2024-07-01"
+    },
+    {
+        "title": "Giám đốc khối kiểm soát",
+        "coefficient": [1.84, 2.02, 2.23, 2.45, 2.69, 2.96, 3.26],
+        "effective_from": "2024-07-01"
+    },
+    {
+        "title": "Phụ trách CNTT và bảo mật hệ thống",
+        "coefficient": [1.10, 1.16, 1.11, 1.31, 1.41, 1.53, 1.67],
+        "effective_from": "2024-07-01"
+    },
+    {
+        "title": "Trưởng nhóm kiểm soát nội bộ",
+        "coefficient": [1.10, 1.16, 1.11, 1.31, 1.41, 1.53, 1.67],
+        "effective_from": "2024-07-01"
+    },
+    {
+        "title": "Nhân viên IT",
+        "coefficient": [1.10, 1.16, 1.11, 1.31, 1.41, 1.53, 1.67],
+        "effective_from": "2024-07-01"
+    },
+    {
+        "title": "Nhân viên kiểm soát nội bộ",
+        "coefficient": [1.10, 1.16, 1.11, 1.31, 1.41, 1.53, 1.67],
+        "effective_from": "2024-07-01"
+    },
+    {
+        "title": "Trưởng Phòng SX hệ thống trại",
+        "coefficient": [1.84, 2.02, 2.23, 2.45, 2.69, 2.96, 3.26],
+        "effective_from": "2024-07-01"
+    },
+    {
+        "title": "Trưởng nhóm nhân sự hệ thống trại",
+        "coefficient": [1.50, 1.61, 1.72, 1.84, 1.97, 2.10, 2.27],
+        "effective_from": "2024-07-01"
+    },
+    {
+        "title": "Tổ trưởng bảo trì hệ thống trại",
+        "coefficient": [1.50, 1.61, 1.72, 1.84, 1.97, 2.10, 2.27],
+        "effective_from": "2024-07-01"
+    },
+    {
+        "title": "Trưởng nhóm ADM các trại kiêm kế toán hệ thống trại",
+        "coefficient": [1.50, 1.61, 1.72, 1.84, 1.97, 2.10, 2.27],
+        "effective_from": "2024-07-01"
+    },
+    {
+        "title": "Nhân viên giám sát bán hàng",
+        "coefficient": [1.50, 1.61, 1.72, 1.84, 1.97, 2.10, 2.27],
+        "effective_from": "2024-07-01"
+    },
+    {
+        "title": "Nhân viên lái xe",
+        "coefficient": [1.14, 1.20, 1.27, 1.34, 1.44, 1.54, 1.69],
+        "effective_from": "2024-07-01"
+    },
+    {
+        "title": "Nhân viên kỹ thuật trại",
+        "coefficient": [1.10, 1.16, 1.11, 1.31, 1.41, 1.53, 1.67],
+        "effective_from": "2024-07-01"
+    },
+    {
+        "title": "CNKT trại",
+        "coefficient": [1.08, 1.14, 1.20, 1.27, 1.35, 1.43, 1.52],
+        "effective_from": "2024-07-01"
+    },
+    {
+        "title": "Nhân viên hành chính tổng hợp",
+        "coefficient": [1.10, 1.16, 1.11, 1.31, 1.41, 1.53, 1.67],
+        "effective_from": "2024-07-01"
+    },
+    {
+        "title": "Nhân viên bảo trì trại",
+        "coefficient": [1.10, 1.16, 1.11, 1.31, 1.41, 1.53, 1.67],
+        "effective_from": "2024-07-01"
+    },
+    {
+        "title": "Nhân viên hành chính trại",
+        "coefficient": [1.10, 1.16, 1.11, 1.31, 1.41, 1.53, 1.67],
+        "effective_from": "2024-07-01"
+    },
+    {
+        "title": "Quản lý hệ thống heo thịt",
+        "coefficient": [1.50, 1.61, 1.72, 1.84, 1.97, 2.10, 2.27],
+        "effective_from": "2024-07-01"
+    },
+    {
+        "title": "Trưởng phòng heo nái",
+        "coefficient": [1.50, 1.61, 1.72, 1.84, 1.97, 2.10, 2.27],
+        "effective_from": "2024-07-01"
+    },
+    {
+        "title": "Nhân viên kĩ thuật gia cầm",
+        "coefficient": [1.10, 1.16, 1.11, 1.31, 1.41, 1.53, 1.67],
+        "effective_from": "2024-07-01"
+    },
+    {
+        "title": "Trưởng phòng heo thịt",
+        "coefficient": [1.50, 1.61, 1.72, 1.84, 1.97, 2.10, 2.27],
+        "effective_from": "2024-07-01"
+    },
+    {
+        "title": "Bác sĩ thú y",
+        "coefficient": [1.10, 1.16, 1.11, 1.31, 1.41, 1.53, 1.67],
+        "effective_from": "2024-07-01"
+    },
+    {
+        "title": "Nhân viên kỹ thuật gia công gà",
+        "coefficient": [1.10, 1.16, 1.11, 1.31, 1.41, 1.53, 1.67],
+        "effective_from": "2024-07-01"
+    },
+    {
+        "title": "Nhân viên Kiểm soát hoạt động",
+        "coefficient": [1.10, 1.16, 1.11, 1.31, 1.41, 1.53, 1.67],
+        "effective_from": "2024-07-01"
+    },
+    {
+        "title": "Nhân viên thương mại thuộc nhóm mua, bán - hệ thống trại chăn nuôi",
+        "coefficient": [1.10, 1.16, 1.11, 1.31, 1.41, 1.53, 1.67],
+        "effective_from": "2024-07-01"
+    },
+    {
+        "title": "Nhân viên vận hành máy",
+        "coefficient": [1.14, 1.25, 1.38, 1.52, 1.67, 1.84, 2.02],
+        "effective_from": "2024-07-01"
+    },
+    {
+        "title": "Quản lý trại",
+        "coefficient": [1.50, 1.61, 1.72, 1.84, 1.97, 2.10, 2.27],
+        "effective_from": "2024-07-01"
+    },
+    {
+        "title": "Nhân viên pháp chế",
+        "coefficient": [1.10, 1.16, 1.11, 1.31, 1.41, 1.53, 1.67],
+        "effective_from": "2024-07-01"
+    },
+    {
+        "title": "Trưởng phòng Kỹ thuật hệ thống gia cầm",
+        "coefficient": [1.50, 1.61, 1.72, 1.84, 1.97, 2.10, 2.27],
+        "effective_from": "2024-07-01"
+    },
+    {
+        "title": "GĐ Kỹ thuật hệ thống heo nái",
+        "coefficient": [1.84, 2.02, 2.23, 2.45, 2.69, 2.96, 3.26],
+        "effective_from": "2024-07-01"
+    },
+    {
+        "title": "Nhân viên Hành chính",
+        "coefficient": [1.10, 1.16, 1.11, 1.31, 1.41, 1.53, 1.67],
+        "effective_from": "2024-07-01"
+    },
+    {
+        "title": "Nhân viên IT trại",
+        "coefficient": [1.10, 1.16, 1.11, 1.31, 1.41, 1.53, 1.67],
+        "effective_from": "2024-07-01"
+    },
+    {
+        "title": "Cộng tác viên",
+        "coefficient": [1.10, 1.16, 1.11, 1.31, 1.41, 1.53, 1.67],
+        "effective_from": "2024-07-01"
+    },
+    {
+        "title": "Nhân viên bán hàng",
+        "coefficient": [1.10, 1.16, 1.11, 1.31, 1.41, 1.53, 1.67],
+        "effective_from": "2024-07-01"
+    },
+    {
+        "title": "Chuyên viên hỗ trợ",
+        "coefficient": [1.10, 1.16, 1.11, 1.31, 1.41, 1.53, 1.67],
+        "effective_from": "2024-07-01"
+    },
+    {
+        "title": "Bốc xếp",
+        "coefficient": [1.08, 1.14, 1.20, 1.27, 1.35, 1.43, 1.52],
+        "effective_from": "2024-07-01"
+    },
+    {
+        "title": "Ra cám",
+        "coefficient": [1.08, 1.14, 1.20, 1.27, 1.35, 1.43, 1.52],
+        "effective_from": "2024-07-01"
+    },
+    {
+        "title": "Nhân viên quét dọn",
+        "coefficient": [1.00, 1.05, 1.10, 1.16, 1.22, 1.29, 1.37],
+        "effective_from": "2024-07-01"
+    }
+  ]
+}

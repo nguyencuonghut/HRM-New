@@ -94,6 +94,17 @@ class Employee extends Model
     // Quan hệ: khen thưởng & kỷ luật
     public function rewardsDisciplines(){ return $this->hasMany(EmployeeRewardDiscipline::class); }
 
+    // Quan hệ: hồ sơ BHXH
+    public function insuranceProfiles()
+    {
+        return $this->hasMany(EmployeeInsuranceProfile::class)->orderBy('applied_from', 'desc');
+    }
+
+    public function currentInsuranceProfile()
+    {
+        return $this->hasOne(EmployeeInsuranceProfile::class)->whereNull('applied_to')->latest('applied_from');
+    }
+
     // ==================== TENURE / SENIORITY METHODS ====================
 
     /**

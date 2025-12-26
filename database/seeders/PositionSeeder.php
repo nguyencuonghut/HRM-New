@@ -155,7 +155,10 @@ class PositionSeeder extends Seeder
                 'title' => $title,
                 'level' => null,
 
-                'insurance_base_salary' => 6500000,
+                // DEPRECATED: insurance_base_salary - Chỉ làm default gợi ý
+                // Lương BHXH thực tế tính từ: minimum_wage × coefficient (position_salary_grades)
+                'insurance_base_salary' => null,
+
                 'position_salary' => 6500000,
                 'competency_salary' => 6500000,
                 'allowance' => 0,

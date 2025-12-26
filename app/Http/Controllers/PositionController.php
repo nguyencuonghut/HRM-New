@@ -24,7 +24,13 @@ class PositionController extends Controller
         $this->authorize('viewAny', Position::class);
 
         $positions = PositionResource::collection(
-            Position::with('department')->orderBy('department_id')->latest()->get()
+            Position::with([
+                'department',
+                'salaryGrades' => function ($query) {
+                    $query->where('is_active', true)
+                          ->orderBy('grade', 'asc');
+                }
+            ])->orderBy('department_id')->latest()->get()
         )->resolve();
 
         $departments = DepartmentResource::collection(
@@ -161,6 +167,100 @@ class PositionController extends Controller
         return redirect()->route('positions.index')->with([
             'message' => 'Xóa các chức vụ đã chọn thành công!',
             'type' => 'success'
+        ]);
+    }
+
+    /**
+     * Get insurance salary suggestion for a position
+     *
+     * @param Position $position
+     * @param Request $request
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function insuranceSuggestion(Position $position, Request $request)
+    {
+        $employeeId = $request->query('employee_id');
+        $date = $request->query('date', now());
+
+        // Default region (you can enhance this to detect from employee's work location)
+        $defaultRegion = 2; //TODO: Lấy vùng lương tối thiểu từ đâu đó
+
+        // Get employee's current insurance profile to determine grade
+        $employeeProfile = null;
+        $grade = 1; // Default to grade 1
+        $gradeSource = 'bậc 1 (mặc định)';
+
+        if ($employeeId) {
+            $employeeProfile = \App\Models\EmployeeInsuranceProfile::where('employee_id', $employeeId)
+                ->where('position_id', $position->id)
+                ->whereNull('applied_to')
+                ->first();
+
+            if ($employeeProfile) {
+                $grade = $employeeProfile->grade;
+                $gradeSource = "bậc {$grade} (hiện tại)";
+            }
+        }
+
+        // Get coefficient for the grade
+        $gradeData = \App\Models\PositionSalaryGrade::where('position_id', $position->id)
+            ->where('grade', $grade)
+            ->where('is_active', true)
+            ->whereDate('effective_from', '<=', $date)
+            ->where(function ($q) use ($date) {
+                $q->whereNull('effective_to')
+                  ->orWhereDate('effective_to', '>=', $date);
+            })
+            ->first();
+
+        if (!$gradeData) {
+            return response()->json([
+                'suggested_insurance_salary' => null,
+                'minimum_wage' => null,
+                'region' => null,
+                'grade' => null,
+                'coefficient' => null,
+                'explain' => 'Chưa có dữ liệu gợi ý cho vị trí này'
+            ]);
+        }
+
+        $coefficient = (float) $gradeData->coefficient;
+
+        // Get minimum wage for region
+        $minWageData = \App\Models\MinimumWage::where('region', $defaultRegion)
+            ->where('is_active', true)
+            ->whereDate('effective_from', '<=', $date)
+            ->where(function ($q) use ($date) {
+                $q->whereNull('effective_to')
+                  ->orWhereDate('effective_to', '>=', $date);
+            })
+            ->first();
+
+        if (!$minWageData) {
+            return response()->json([
+                'suggested_insurance_salary' => null,
+                'minimum_wage' => null,
+                'region' => null,
+                'grade' => $grade,
+                'coefficient' => $coefficient,
+                'explain' => 'Không tìm thấy lương tối thiểu vùng'
+            ]);
+        }
+
+        $minWage = $minWageData->amount;
+        $suggestedSalary = (int) round($minWage * $coefficient);
+
+        // Format region as Roman numeral
+        $regionMap = [1 => 'I', 2 => 'II', 3 => 'III', 4 => 'IV'];
+        $regionDisplay = $regionMap[$defaultRegion] ?? $defaultRegion;
+
+        return response()->json([
+            'suggested_insurance_salary' => $suggestedSalary,
+            'minimum_wage' => $minWage,
+            'region' => $regionDisplay,
+            'grade' => $grade,
+            'coefficient' => $coefficient,
+            'explain' => number_format($minWage, 0, ',', '.') . ' × ' . $coefficient . ' (Bậc ' . $grade . ' - ' . $position->title . ')'
         ]);
     }
 }

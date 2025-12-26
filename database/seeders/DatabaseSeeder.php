@@ -21,8 +21,8 @@ class DatabaseSeeder extends Seeder
             WardSeeder::class,
             DepartmentSeeder::class,
             PositionSeeder::class,
-            EmployeeSeeder::class,
-            EmployeeAssignmentSeeder::class,
+            //EmployeeSeeder::class,
+            //EmployeeAssignmentSeeder::class,
             RoleScopeSeeder::class,
             EducationLevelSeeder::class,
             SchoolSeeder::class,
@@ -32,12 +32,13 @@ class DatabaseSeeder extends Seeder
             ContractTemplatePlaceholderMappingSeeder::class,
             ContractAppendixTemplateSeeder::class,
             ContractAppendixTemplatePlaceholderMappingSeeder::class,
-            ContractApprovalSeeder::class, // Setup HR Head cho phê duyệt hợp đồng
+            //ContractApprovalSeeder::class, // Setup HR Head cho phê duyệt hợp đồng
             LeaveTypeSeeder::class, // Leave types with colors and configurations
             //ContractSeeder::class, // Test contracts for leave balance system
             //ContractAppendixSeeder::class, // Test appendices for contract modifications
             //InsuranceTestDataSeeder::class, // Test data for insurance workflow
             //MigrateExistingEmployeesToEmploymentSeeder::class, // Migrate existing insurance data
+            InsuranceSalarySystemSeeder::class, // Hệ thống lương BHXH
         ]);
     }
 }

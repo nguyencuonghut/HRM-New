@@ -5,19 +5,23 @@ namespace App\Observers;
 use App\Models\Contract;
 use App\Services\EmploymentResolver;
 use App\Services\EmployeeStatusService;
+use App\Services\EmployeeInsuranceProfileService;
 use Illuminate\Support\Facades\Log;
 
 class ContractObserver
 {
     protected EmploymentResolver $resolver;
     protected EmployeeStatusService $statusService;
+    protected EmployeeInsuranceProfileService $insuranceProfileService;
 
     public function __construct(
         EmploymentResolver $resolver,
-        EmployeeStatusService $statusService
+        EmployeeStatusService $statusService,
+        EmployeeInsuranceProfileService $insuranceProfileService
     ) {
         $this->resolver = $resolver;
         $this->statusService = $statusService;
+        $this->insuranceProfileService = $insuranceProfileService;
     }
 
     /**
@@ -54,6 +58,12 @@ class ContractObserver
             // Handle employment end when contract status becomes EXPIRED or CANCELLED
             if (in_array($contract->status, ['EXPIRED', 'CANCELLED']) && $contract->isDirty('status')) {
                 $this->handleEmploymentEndOnContractEnd($contract);
+            }
+
+            // Handle insurance profile creation when contract becomes ACTIVE
+            // This handles both LEGACY contracts (created with ACTIVE) and status changes to ACTIVE
+            if ($contract->status === 'ACTIVE' && ($contract->wasRecentlyCreated || $contract->isDirty('status'))) {
+                $this->handleInsuranceProfileOnContractActive($contract);
             }
 
             // Handle employee status sync when contract status changes
@@ -173,11 +183,14 @@ class ContractObserver
      */
     protected function handleEmploymentEndOnContractEnd(Contract $contract): void
     {
-        \Log::info("ContractObserver: Handling employment end on contract end", [
+        Log::info("ContractObserver: Handling employment end on contract end", [
             'contract_id' => $contract->id,
             'status' => $contract->status,
         ]);
         try {
+            // Close insurance profile when contract ends
+            $this->insuranceProfileService->closeProfileOnContractEnd($contract);
+
             // Check if employee has other active contracts
             $hasOtherActiveContracts = Contract::where('employee_id', $contract->employee_id)
                 ->where('id', '!=', $contract->id)
@@ -210,6 +223,39 @@ class ContractObserver
             }
         } catch (\Exception $e) {
             Log::error("ContractObserver: Failed to end employment on contract end", [
+                'contract_id' => $contract->id,
+                'error' => $e->getMessage(),
+            ]);
+        }
+    }
+
+    /**
+     * Handle insurance profile creation when contract becomes ACTIVE
+     */
+    protected function handleInsuranceProfileOnContractActive(Contract $contract): void
+    {
+        try {
+            Log::info("ContractObserver: Handling insurance profile creation on contract active", [
+                'contract_id' => $contract->id,
+                'employee_id' => $contract->employee_id,
+                'status' => $contract->status,
+            ]);
+
+            // Create insurance profile
+            $profile = $this->insuranceProfileService->createProfileFromContract($contract);
+
+            if ($profile) {
+                Log::info("ContractObserver: Insurance profile created successfully", [
+                    'contract_id' => $contract->id,
+                    'profile_id' => $profile->id,
+                ]);
+            } else {
+                Log::warning("ContractObserver: Insurance profile not created (may already exist or missing data)", [
+                    'contract_id' => $contract->id,
+                ]);
+            }
+        } catch (\Exception $e) {
+            Log::error("ContractObserver: Failed to create insurance profile", [
                 'contract_id' => $contract->id,
                 'error' => $e->getMessage(),
             ]);

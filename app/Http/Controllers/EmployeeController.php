@@ -20,6 +20,8 @@ use App\Http\Resources\EmployeeSkillResource;
 use App\Http\Resources\EmployeeAssignmentResource;
 use App\Http\Resources\SkillResource;
 use App\Http\Resources\SkillCategoryResource;
+use App\Services\InsuranceSalaryCalculatorService;
+use App\Services\InsuranceSalaryService;
 use Illuminate\Http\Request;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Inertia\Inertia;
@@ -85,6 +87,55 @@ class EmployeeController extends Controller
             }
         }
 
+        // ========== BHXH DATA ==========
+        $insuranceData = null;
+        $insuranceHistory = [];
+        $insuranceCalculator = app(InsuranceSalaryCalculatorService::class);
+        $insuranceService = app(InsuranceSalaryService::class);
+
+        // Lấy hồ sơ BHXH hiện tại
+        $currentInsuranceProfile = $employee->currentInsuranceProfile;
+
+        if ($currentInsuranceProfile) {
+            // Giả sử vùng 2 (có thể lấy từ employee hoặc company setting)
+            $region = 2;// TODO: Lấy vùng lương tối thiểu từ đâu đó
+
+            // Tính lương BHXH
+            $calculation = $insuranceCalculator->calculateForEmployee(
+                $employee->id,
+                $region
+            );
+
+            if ($calculation) {
+                $insuranceData = [
+                    'has_profile' => true,
+                    'region' => $region,
+                    'region_name' => $calculation['breakdown']['region_name'],
+                    'position' => $calculation['breakdown']['position_title'] ?? null,
+                    'grade' => $calculation['breakdown']['grade'],
+                    'coefficient' => $calculation['coefficient'],
+                    'minimum_wage' => $calculation['minimum_wage'],
+                    'minimum_wage_formatted' => $calculation['breakdown']['minimum_wage_formatted'],
+                    'amount' => $calculation['amount'],
+                    'amount_formatted' => $calculation['breakdown']['amount_formatted'],
+                    'formula' => $calculation['breakdown']['formula'],
+                    'applied_from' => $calculation['breakdown']['applied_from'],
+                    'applied_to' => $calculation['breakdown']['applied_to'] ?? null,
+                ];
+
+                // Đề xuất tăng bậc
+                $suggestion = $insuranceService->suggestGradeRaise($employee);
+                if ($suggestion) {
+                    $insuranceData['suggestion'] = $suggestion;
+                }
+            }
+
+            // Lấy lịch sử
+            $insuranceHistory = $insuranceService->getInsuranceHistory($employee)->toArray();
+        } else {
+            $insuranceData = ['has_profile' => false];
+        }
+
         return Inertia::render('EmployeeProfile', [
             'employee'          => (new EmployeeResource($employee))->resolve(),
             'education_levels'  => EducationLevel::orderBy('order_index')->get(['id','name']),
@@ -133,6 +184,9 @@ class EmployeeController extends Controller
             )->resolve(),
             // Lương hiện tại
             'current_payroll' => $currentPayroll,
+            // BHXH theo thang-bậc-hệ số
+            'insurance_data' => $insuranceData,
+            'insurance_history' => $insuranceHistory,
             // Khen thưởng & Kỷ luật
             'rewards_disciplines_data' => EmployeeRewardDisciplineController::getProfileData($employee),
         ]);
