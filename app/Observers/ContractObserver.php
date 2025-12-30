@@ -6,6 +6,7 @@ use App\Models\Contract;
 use App\Services\EmploymentResolver;
 use App\Services\EmployeeStatusService;
 use App\Services\EmployeeInsuranceProfileService;
+use App\Services\LeaveBalanceService;
 use Illuminate\Support\Facades\Log;
 
 class ContractObserver
@@ -13,15 +14,18 @@ class ContractObserver
     protected EmploymentResolver $resolver;
     protected EmployeeStatusService $statusService;
     protected EmployeeInsuranceProfileService $insuranceProfileService;
+    protected LeaveBalanceService $leaveBalanceService;
 
     public function __construct(
         EmploymentResolver $resolver,
         EmployeeStatusService $statusService,
-        EmployeeInsuranceProfileService $insuranceProfileService
+        EmployeeInsuranceProfileService $insuranceProfileService,
+        LeaveBalanceService $leaveBalanceService
     ) {
         $this->resolver = $resolver;
         $this->statusService = $statusService;
         $this->insuranceProfileService = $insuranceProfileService;
+        $this->leaveBalanceService = $leaveBalanceService;
     }
 
     /**
@@ -64,6 +68,18 @@ class ContractObserver
             // This handles both LEGACY contracts (created with ACTIVE) and status changes to ACTIVE
             if ($contract->status === 'ACTIVE' && ($contract->wasRecentlyCreated || $contract->isDirty('status'))) {
                 $this->handleInsuranceProfileOnContractActive($contract);
+                $this->handleLeaveBalanceRecalculation($contract);
+            }
+
+            // Handle leave balance recalculation when important contract fields change
+            // (contract_type, start_date) while contract is ACTIVE
+            if ($contract->status === 'ACTIVE' && !$contract->wasRecentlyCreated) {
+                $importantFieldsChanged = $contract->isDirty('contract_type')
+                    || $contract->isDirty('start_date');
+
+                if ($importantFieldsChanged) {
+                    $this->handleLeaveBalanceRecalculation($contract);
+                }
             }
 
             // Handle employee status sync when contract status changes
@@ -258,6 +274,45 @@ class ContractObserver
             Log::error("ContractObserver: Failed to create insurance profile", [
                 'contract_id' => $contract->id,
                 'error' => $e->getMessage(),
+            ]);
+        }
+    }
+
+    /**
+     * Handle leave balance recalculation when contract becomes ACTIVE
+     * or when important contract fields change
+     */
+    protected function handleLeaveBalanceRecalculation(Contract $contract): void
+    {
+        try {
+            $employee = $contract->employee;
+            if (!$employee) {
+                Log::warning("ContractObserver: Cannot recalc leave balance - employee not found", [
+                    'contract_id' => $contract->id,
+                ]);
+                return;
+            }
+
+            Log::info("ContractObserver: Recalculating leave balance on contract change", [
+                'contract_id' => $contract->id,
+                'employee_id' => $employee->id,
+                'contract_type' => $contract->contract_type,
+                'start_date' => $contract->start_date,
+            ]);
+
+            // Recalculate for current year
+            $this->leaveBalanceService->recalcForEmployeeYear($employee, now()->year);
+
+            Log::info("ContractObserver: Leave balance recalculation completed", [
+                'contract_id' => $contract->id,
+                'employee_id' => $employee->id,
+            ]);
+        } catch (\Exception $e) {
+            // Log error but don't block contract save
+            Log::error("ContractObserver: Failed to recalculate leave balance", [
+                'contract_id' => $contract->id,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
             ]);
         }
     }
