@@ -243,6 +243,26 @@ class Employee extends Model
     // Quan hệ: hợp đồng
     public function contracts(){ return $this->hasMany(Contract::class); }
 
+    // Get latest contract (any status, for display purposes)
+    public function latestContract()
+    {
+        return $this->hasOne(Contract::class)->latest('start_date');
+    }
+
+    // Get active contract (for display purposes)
+    public function activeContract()
+    {
+        $today = now()->toDateString();
+        return $this->hasOne(Contract::class)
+            ->where('status', 'ACTIVE')
+            ->whereDate('start_date', '<=', $today)
+            ->where(function ($q) use ($today) {
+                $q->whereNull('end_date')
+                  ->orWhereDate('end_date', '>=', $today);
+            })
+            ->latest('start_date');
+    }
+
     // Quan hệ: nghỉ phép
     public function leaveRequests(){ return $this->hasMany(LeaveRequest::class); }
     public function leaveBalances(){ return $this->hasMany(LeaveBalance::class); }

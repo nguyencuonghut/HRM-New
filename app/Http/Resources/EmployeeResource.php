@@ -97,41 +97,46 @@ class EmployeeResource extends JsonResource
 
     /**
      * Derive contract status for UI display
+     *
+     * If employee has contract: show contract status label
+     * Otherwise: show 'Chưa có HĐ'
      */
     protected function getContractStatus(bool $hasAnyContract, bool $hasActiveContract, bool $hasPendingContract): array
     {
-        if ($hasActiveContract) {
+        // If has contract, show the contract's actual status label
+        if ($this->relationLoaded('latestContract') && $this->latestContract) {
+            $contractStatusEnum = \App\Enums\ContractStatus::tryFrom($this->latestContract->status);
+            $statusLabel = $contractStatusEnum ? $contractStatusEnum->label() : $this->latestContract->status;
+
+            // Determine severity and icon based on status
+            $severity = match($this->latestContract->status) {
+                'ACTIVE' => 'success',
+                'PENDING_APPROVAL' => 'warn',
+                'DRAFT' => 'secondary',
+                'SUSPENDED' => 'warn',
+                'TERMINATED', 'EXPIRED', 'CANCELLED' => 'danger',
+                'REJECTED' => 'danger',
+                default => 'secondary'
+            };
+
+            $icon = match($this->latestContract->status) {
+                'ACTIVE' => 'pi pi-check-circle',
+                'PENDING_APPROVAL' => 'pi pi-clock',
+                'DRAFT' => 'pi pi-file',
+                'SUSPENDED' => 'pi pi-pause-circle',
+                'TERMINATED', 'EXPIRED', 'CANCELLED' => 'pi pi-times-circle',
+                'REJECTED' => 'pi pi-ban',
+                default => 'pi pi-file'
+            };
+
             return [
-                'label' => 'Có HĐ hiệu lực',
-                'severity' => 'success',
-                'icon' => 'pi pi-check-circle'
+                'label' => $statusLabel,
+                'severity' => $severity,
+                'icon' => $icon
             ];
         }
 
-        if ($hasPendingContract) {
-            return [
-                'label' => 'HĐ chưa hiệu lực',
-                'severity' => 'warn',
-                'icon' => 'pi pi-clock'
-            ];
-        }
-
-        if ($hasAnyContract) {
-            return [
-                'label' => 'HĐ đã hết hạn',
-                'severity' => 'contrast',
-                'icon' => 'pi pi-calendar-times'
-            ];
-        }
-
-        if ($this->status === 'ACTIVE') {
-            return [
-                'label' => 'Thiếu hợp đồng',
-                'severity' => 'danger',
-                'icon' => 'pi pi-times-circle'
-            ];
-        }
-
+        // No contract
         return [
             'label' => 'Chưa có HĐ',
             'severity' => 'secondary',

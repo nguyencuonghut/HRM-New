@@ -216,7 +216,9 @@ class EmployeeController extends Controller
                 'created_at'
             ])
             ->with([
-                'currentEmployment:id,employee_id,start_date,end_date'
+                'currentEmployment:id,employee_id,start_date,end_date',
+                // Load latest contract to display its status
+                'latestContract:id,employee_id,status,contract_number'
             ])
             // Count relationships for completion score (fast, no data loading)
             ->withCount([
