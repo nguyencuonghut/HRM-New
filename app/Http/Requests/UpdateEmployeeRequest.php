@@ -37,7 +37,6 @@ class UpdateEmployeeRequest extends FormRequest
             'personal_email'          => ['nullable','email','max:255'],
             'company_email'           => ['nullable','email','max:255'],
             'hire_date'               => ['nullable','date'],
-            'status'                  => ['required','in:ACTIVE,INACTIVE,ON_LEAVE,TERMINATED'],
             'si_number'               => ['nullable','string','max:100'],
         ];
     }

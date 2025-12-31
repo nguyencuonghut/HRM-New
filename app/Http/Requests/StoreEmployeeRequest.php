@@ -33,7 +33,6 @@ class StoreEmployeeRequest extends FormRequest
             'personal_email'          => ['nullable','email','max:255'],
             'company_email'           => ['nullable','email','max:255'],
             'hire_date'               => ['nullable','date'],
-            'status'                  => ['required','in:ACTIVE,INACTIVE,ON_LEAVE,TERMINATED'],
             'si_number'               => ['nullable','string','max:100'],
         ];
     }
@@ -44,7 +43,6 @@ class StoreEmployeeRequest extends FormRequest
             'employee_code.required' => 'Mã nhân viên là bắt buộc.',
             'employee_code.unique'   => 'Mã nhân viên đã tồn tại.',
             'full_name.required'     => 'Họ tên là bắt buộc.',
-            'status.required'        => 'Trạng thái là bắt buộc.',
         ];
     }
 }

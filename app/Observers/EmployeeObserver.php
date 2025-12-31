@@ -16,24 +16,22 @@ class EmployeeObserver
 
     /**
      * Handle the Employee "creating" event.
-     * Ensure new employees have correct initial status
+     * ALWAYS set new employees to INACTIVE status.
+     * Status will be automatically updated by EmployeeStatusService when:
+     * - A contract becomes ACTIVE → status becomes ACTIVE or ON_LEAVE
+     * - A contract is TERMINATED → status becomes TERMINATED
+     * - Leave requests are approved/ended → status may change to ON_LEAVE
      */
     public function creating(Employee $employee): void
     {
-        // If status is not explicitly set, default to INACTIVE
-        // Employee should only be ACTIVE when they have an active contract
-        if (!$employee->status) {
-            $employee->status = 'INACTIVE';
-        }
+        // Always default to INACTIVE for new employees
+        // Status should ONLY be changed via EmployeeStatusService based on contracts/leaves
+        $employee->status = 'INACTIVE';
 
-        // If someone tries to create an employee with ACTIVE status,
-        // log a warning as this should be set via contract creation
-        if ($employee->status === 'ACTIVE') {
-            Log::warning('Employee being created with ACTIVE status - should be set via contract', [
-                'employee_code' => $employee->employee_code,
-                'full_name' => $employee->full_name,
-            ]);
-        }
+        Log::info('New employee created with default INACTIVE status', [
+            'employee_code' => $employee->employee_code,
+            'full_name' => $employee->full_name,
+        ]);
     }
 
     /**

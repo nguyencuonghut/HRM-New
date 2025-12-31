@@ -225,9 +225,8 @@
                 </div>
 
                 <div>
-                    <label class="block font-bold mb-2 required-field">Trạng thái</label>
-                    <Select v-model="form.status" :options="statusOptions" optionLabel="label" optionValue="value" fluid />
-                    <small v-if="submitted && !form.status" class="p-error block mt-1">Trạng thái là bắt buộc</small>
+                    <label class="block font-bold mb-2">Mã số BHXH</label>
+                    <InputText v-model="form.si_number" fluid />
                 </div>
 
                 <div class="md:col-span-2">
@@ -270,11 +269,6 @@
                 <div>
                     <label class="block font-bold mb-2">SĐT khẩn cấp</label>
                     <InputText v-model="form.emergency_contact_phone" fluid />
-                </div>
-
-                <div>
-                    <label class="block font-bold mb-2">Mã số BHXH</label>
-                    <InputText v-model="form.si_number" fluid />
                 </div>
             </div>
 
@@ -450,7 +444,7 @@ function handleSearchClick() {
 
 function openNew() {
   submitted.value = false
-  form.value = { ...form.value, id:null, employee_code:'', full_name:'', status:'ACTIVE' }
+  form.value = { ...form.value, id:null, employee_code:'', full_name:'' }
   dialog.value = true
 }
 function edit(row) {
@@ -468,7 +462,7 @@ function hideDialog() { dialog.value = false }
 
 function save() {
   submitted.value = true
-  if (!form.value.employee_code || !form.value.full_name || !form.value.status) return
+  if (!form.value.employee_code || !form.value.full_name) return
   saving.value = true
 
   // Trim all string values before sending to backend
@@ -476,6 +470,10 @@ function save() {
 
   // Format dates to Laravel format (Y-m-d) using helper to avoid timezone issues
   const payload = { ...trimmedForm }
+  // Always set status to INACTIVE for new employees - will be auto-updated by system
+  if (!isEditing.value) {
+    payload.status = 'INACTIVE'
+  }
   payload.dob = toYMD(payload.dob)
   payload.cccd_issued_on = toYMD(payload.cccd_issued_on)
   payload.hire_date = toYMD(payload.hire_date)
