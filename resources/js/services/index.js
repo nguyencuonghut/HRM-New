@@ -18,6 +18,8 @@ import { EmployeeSkillService } from './EmployeeSkillService';
 import { RewardDisciplineService } from './RewardDisciplineService';
 import { LeaveRequestService } from './LeaveRequestService';
 import { LeaveApprovalService } from './LeaveApprovalService';
+import { SkillCategoryService } from './SkillCategoryService';
+import { SkillService } from './SkillService';
 
 export {
     AuthService,
@@ -40,4 +42,6 @@ export {
     RewardDisciplineService,
     LeaveRequestService,
     LeaveApprovalService,
+    SkillCategoryService,
+    SkillService,
 };

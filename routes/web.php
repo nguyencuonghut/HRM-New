@@ -98,6 +98,14 @@ Route::group(['middleware' => 'auth'], function () {
     // Department resource routes
     Route::resource('departments', DepartmentController::class)->except(['show']);
 
+    // Skill Categories
+    Route::resource('skill-categories', \App\Http\Controllers\SkillCategoryController::class)->except(['show']);
+    Route::post('skill-categories/bulk-delete', [\App\Http\Controllers\SkillCategoryController::class, 'bulkDelete'])->name('skill-categories.bulk-delete');
+
+    // Skills
+    Route::resource('skills', \App\Http\Controllers\SkillController::class)->except(['show']);
+    Route::post('skills/bulk-delete', [\App\Http\Controllers\SkillController::class, 'bulkDelete'])->name('skills.bulk-delete');
+
     // Department Org Chart Routes
     Route::get('/departments/org', [DepartmentOrgController::class, 'index'])->name('departments.org');       // Trang Inertia
     Route::get('/departments/tree', [DepartmentOrgController::class, 'roots'])->name('departments.tree');     // JSON (web)
@@ -153,18 +161,19 @@ Route::group(['middleware' => 'auth'], function () {
     Route::put('employees/{employee}/rewards-disciplines/{rewardDiscipline}', [\App\Http\Controllers\EmployeeRewardDisciplineController::class, 'update'])->name('employees.rewards-disciplines.update');
     Route::delete('employees/{employee}/rewards-disciplines/{rewardDiscipline}', [\App\Http\Controllers\EmployeeRewardDisciplineController::class, 'destroy'])->name('employees.rewards-disciplines.destroy');
 
-    // Nhóm kỹ năng (Skill Categories)
-    Route::get('skill-categories', [SkillCategoryController::class, 'index'])->name('skill-categories.index');
-    Route::post('skill-categories', [SkillCategoryController::class, 'store'])->name('skill-categories.store');
-    Route::put('skill-categories/{skill_category}', [SkillCategoryController::class, 'update'])->name('skill-categories.update');
-    Route::delete('skill-categories/{skill_category}', [SkillCategoryController::class, 'destroy'])->name('skill-categories.destroy');
-    Route::post('skill-categories/bulk-delete', [SkillCategoryController::class, 'bulkDestroy'])->name('skill-categories.bulk-delete');
+    // Nhóm kỹ năng (Skill Categories) - DEPRECATED, use resource routes above
+    // Route::get('skill-categories', [SkillCategoryController::class, 'index'])->name('skill-categories.index');
+    // Route::post('skill-categories', [SkillCategoryController::class, 'store'])->name('skill-categories.store');
+    // Route::put('skill-categories/{skill_category}', [SkillCategoryController::class, 'update'])->name('skill-categories.update');
+    // Route::delete('skill-categories/{skill_category}', [SkillCategoryController::class, 'destroy'])->name('skill-categories.destroy');
+    // Route::post('skill-categories/bulk-delete', [SkillCategoryController::class, 'bulkDestroy'])->name('skill-categories.bulk-delete');
 
-    // Danh mục kỹ năng (quản trị)
-    Route::get('skills', [EmployeeSkillController::class, 'skillIndex'])->name('skills.index');
-    Route::post('skills', [EmployeeSkillController::class, 'skillStore'])->name('skills.store');
-    Route::put('skills/{skill}', [EmployeeSkillController::class, 'skillUpdate'])->name('skills.update');
-    Route::delete('skills/{skill}', [EmployeeSkillController::class, 'skillDestroy'])->name('skills.destroy');
+    // Danh mục kỹ năng (quản trị) - DEPRECATED, use resource routes above
+    // These routes are for JSON API used by EmployeeSkillController, not for main skill management
+    // Route::get('skills', [EmployeeSkillController::class, 'skillIndex'])->name('skills.index');
+    // Route::post('skills', [EmployeeSkillController::class, 'skillStore'])->name('skills.store');
+    // Route::put('skills/{skill}', [EmployeeSkillController::class, 'skillUpdate'])->name('skills.update');
+    // Route::delete('skills/{skill}', [EmployeeSkillController::class, 'skillDestroy'])->name('skills.destroy');
 
     // Employee Assignment (trang quản lý tổng thể)
     Route::resource('employee-assignments', EmployeeAssignmentController::class)->except(['show']);

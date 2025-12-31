@@ -93,6 +93,18 @@ class RolesAndPermissionsSeeder extends Seeder
             'edit schools',
             'delete schools',
 
+            // Skill
+            'view skills',
+            'create skills',
+            'edit skills',
+            'delete skills',
+
+            // Skill Category
+            'view skill categories',
+            'create skill categories',
+            'edit skill categories',
+            'delete skill categories',
+
             //Contract
             'view contracts',
             'create contracts',

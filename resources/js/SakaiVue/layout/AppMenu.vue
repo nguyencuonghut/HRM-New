@@ -168,6 +168,24 @@ const model = computed(() => {
         });
     }
 
+    // Skill Categories - check permission
+    if (can('view skill categories')) {
+        systemMenuItems.push({
+            label: 'Danh mục kỹ năng',
+            icon: 'pi pi-fw pi-tags',
+            to: '/skill-categories'
+        });
+    }
+
+    // Skills - check permission
+    if (can('view skills')) {
+        systemMenuItems.push({
+            label: 'Kỹ năng',
+            icon: 'pi pi-fw pi-star',
+            to: '/skills'
+        });
+    }
+
     // Contract Templates - check permission
     if (can('view contract templates')) {
         systemMenuItems.push({
