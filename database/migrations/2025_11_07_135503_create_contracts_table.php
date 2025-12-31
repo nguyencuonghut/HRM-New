@@ -31,9 +31,9 @@ return new class extends Migration {
             $t->date('probation_end_date')->nullable(); // Kết thúc thử việc (nếu có)
 
             // Thù lao (snapshot)
-            $t->unsignedBigInteger('base_salary')->default(0);         // Lương cơ bản (VND)
-            $t->unsignedBigInteger('insurance_salary')->default(0);    // Lương đóng BH
-            $t->unsignedBigInteger('position_allowance')->default(0);  // Phụ cấp vị trí
+            $t->unsignedBigInteger('base_salary')->nullable();         // Lương cơ bản (VND) - nullable vì có thể chỉ nhập insurance_salary
+            $t->unsignedBigInteger('insurance_salary')->default(0);    // Lương đóng BH - bắt buộc
+            $t->unsignedBigInteger('position_allowance')->nullable();  // Phụ cấp vị trí - nullable
             $t->json('other_allowances')->nullable();                  // Phụ cấp khác [{name, amount}]
 
             // Bảo hiểm & công

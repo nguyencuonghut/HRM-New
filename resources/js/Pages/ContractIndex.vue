@@ -208,9 +208,8 @@
         </div>
 
         <div>
-          <label class="block font-bold mb-2 required-field">Lương cơ bản</label>
-          <InputText v-model.number="form.base_salary" type="number" class="w-full" placeholder="VND/tháng" :invalid="submitted && !form.base_salary" />
-          <small class="text-red-500" v-if="submitted && !form.base_salary">Lương cơ bản là bắt buộc.</small>
+          <label class="block font-bold mb-2">Lương cơ bản</label>
+          <InputText v-model.number="form.base_salary" type="number" class="w-full" placeholder="VND/tháng (không bắt buộc)" />
           <small class="text-red-500" v-if="hasError('base_salary')">{{ errors.base_salary }}</small>
         </div>
         <div>
@@ -251,9 +250,8 @@
         </div>
 
         <div>
-          <label class="block font-bold mb-2 required-field">Phụ cấp vị trí</label>
-          <InputText v-model.number="form.position_allowance" type="number" class="w-full" placeholder="VND/tháng" :invalid="submitted && !form.position_allowance" />
-          <small class="text-red-500" v-if="submitted && !form.position_allowance">Phụ cấp vị trí là bắt buộc.</small>
+          <label class="block font-bold mb-2">Phụ cấp vị trí</label>
+          <InputText v-model.number="form.position_allowance" type="number" class="w-full" placeholder="VND/tháng (không bắt buộc)" />
           <small class="text-red-500" v-if="hasError('position_allowance')">{{ errors.position_allowance }}</small>
         </div>
         <div>
@@ -768,11 +766,10 @@ function hideDialog() {
 function save() {
   submitted.value = true
 
-  // Validation
+  // Validation - chỉ check các trường bắt buộc (base_salary và position_allowance không bắt buộc)
   if (!form.value.employee_id || !form.value.contract_number || !form.value.department_id ||
       !form.value.position_id || !form.value.contract_type || !form.value.start_date ||
-      !form.value.base_salary || !form.value.insurance_salary || !form.value.position_allowance ||
-      !form.value.source) {
+      !form.value.insurance_salary || !form.value.source) {
     return
   }
 

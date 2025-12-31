@@ -135,7 +135,7 @@ class DynamicPlaceholderResolverService
 
         // Simple formula evaluation
         return match ($formula) {
-            'total_salary' => $contract->base_salary + $contract->position_allowance,
+            'total_salary' => ($contract->base_salary ?? 0) + ($contract->position_allowance ?? 0),
             'contract_duration_months' => self::calculateContractDuration($contract),
             'probation_duration_days' => self::calculateProbationDuration($contract),
             'employee_full_address' => $employee ? self::buildFullAddress($employee, 'permanent') : null,

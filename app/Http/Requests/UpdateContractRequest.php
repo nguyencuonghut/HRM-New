@@ -21,7 +21,7 @@ class UpdateContractRequest extends FormRequest
             'start_date'        => ['required','date'],
             'end_date'          => ['nullable','date','after_or_equal:start_date'],
             'probation_end_date'=> ['nullable','date','after_or_equal:start_date'],
-            'base_salary'       => ['required','integer','min:0'],
+            'base_salary'       => ['nullable','integer','min:0'],
             'insurance_salary'  => ['required','integer','min:0'],
             'position_allowance'=> ['nullable','integer','min:0'],
             'other_allowances'  => ['nullable','array'],

@@ -261,7 +261,8 @@ class ContractTerminationService
         $monthsWorked = $startDate->diffInMonths($endDate) % 12;
 
         // Công thức: 1/2 tháng lương cho mỗi năm
-        $monthlySalary = $contract->base_salary + $contract->position_allowance;
+        // Sử dụng ?? 0 để xử lý trường hợp nullable
+        $monthlySalary = ($contract->base_salary ?? 0) + ($contract->position_allowance ?? 0);
         $severancePay = ($yearsWorked * 0.5 + $monthsWorked / 24) * $monthlySalary;
 
         return [
