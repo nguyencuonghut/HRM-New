@@ -83,6 +83,28 @@ const model = computed(() => {
         });
     }
 
+    // Add Performance Management - KPI & Annual Review
+    if (can('view employees') || can('manage performance')) {
+        const performanceMenuItems = [
+            {
+                label: 'KPI tháng',
+                icon: 'pi pi-fw pi-chart-bar',
+                to: '/employee-kpi-months'
+            },
+            {
+                label: 'Đánh giá cuối năm',
+                icon: 'pi pi-fw pi-star-fill',
+                to: '/employee-annual-reviews'
+            }
+        ];
+
+        homeItems.push({
+            label: 'Hiệu suất',
+            icon: 'pi pi-fw pi-chart-line',
+            items: performanceMenuItems
+        });
+    }
+
     const items = [
         {
             label: t('nav.home'),

@@ -20,6 +20,8 @@ import { LeaveRequestService } from './LeaveRequestService';
 import { LeaveApprovalService } from './LeaveApprovalService';
 import { SkillCategoryService } from './SkillCategoryService';
 import { SkillService } from './SkillService';
+import { EmployeeKpiMonthService } from './EmployeeKpiMonthService';
+import { EmployeeAnnualReviewService } from './EmployeeAnnualReviewService';
 
 export {
     AuthService,
@@ -44,4 +46,6 @@ export {
     LeaveApprovalService,
     SkillCategoryService,
     SkillService,
+    EmployeeKpiMonthService,
+    EmployeeAnnualReviewService,
 };

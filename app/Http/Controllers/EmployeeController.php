@@ -20,6 +20,8 @@ use App\Http\Resources\EmployeeSkillResource;
 use App\Http\Resources\EmployeeAssignmentResource;
 use App\Http\Resources\SkillResource;
 use App\Http\Resources\SkillCategoryResource;
+use App\Http\Resources\EmployeeKpiMonthResource;
+use App\Http\Resources\EmployeeAnnualReviewResource;
 use App\Services\InsuranceSalaryCalculatorService;
 use App\Services\InsuranceSalaryService;
 use Illuminate\Http\Request;
@@ -189,6 +191,21 @@ class EmployeeController extends Controller
             'insurance_history' => $insuranceHistory,
             // Khen thưởng & Kỷ luật
             'rewards_disciplines_data' => EmployeeRewardDisciplineController::getProfileData($employee),
+            // KPI tháng
+            'kpis' => EmployeeKpiMonthResource::collection(
+                $employee->kpiMonths()
+                    ->with('inputBy:id,name')
+                    ->orderBy('year', 'desc')
+                    ->orderBy('month', 'desc')
+                    ->get()
+            )->resolve(),
+            // Đánh giá cuối năm
+            'annual_reviews' => EmployeeAnnualReviewResource::collection(
+                $employee->annualReviews()
+                    ->with('inputBy:id,name')
+                    ->orderBy('year', 'desc')
+                    ->get()
+            )->resolve(),
         ]);
     }
 

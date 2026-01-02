@@ -157,7 +157,21 @@
               :head-deputy-employees="props.rewards_disciplines_data.headDeputyEmployees"
             />
           </div>
+          <!-- KPI THÁNG -->
+          <div v-show="activeTab === 'kpi'" class="content-section">
+            <KpiTab
+              :employee-id="props.employee.id"
+              :kpis="props.kpis"
+            />
+          </div>
 
+          <!-- ĐÁNH GIÁ CUỐI NĂM -->
+          <div v-show="activeTab === 'annual-review'" class="content-section">
+            <AnnualReviewTab
+              :employee-id="props.employee.id"
+              :reviews="props.annual_reviews"
+            />
+          </div>
           <!-- NHẬT KÝ HOẠT ĐỘNG -->
           <div v-show="activeTab === 'timeline'" class="content-section">
             <TimelineTab :employee-id="props.employee.id" />
@@ -183,6 +197,8 @@ import PayrollTab from '@/Pages/Employees/Components/PayrollTab.vue'
 import RewardsDisciplinesTab from '@/Pages/Employees/Components/RewardsDisciplinesTab.vue'
 import EmploymentHistoryTab from '@/Pages/Employees/Components/EmploymentHistoryTab.vue'
 import TimelineTab from '@/Pages/Employees/Components/TimelineTab.vue'
+import KpiTab from '@/Pages/Employees/Components/KpiTab.vue'
+import AnnualReviewTab from '@/Pages/Employees/Components/AnnualReviewTab.vue'
 import Card from 'primevue/card'
 
 const props = defineProps({
@@ -200,6 +216,8 @@ const props = defineProps({
   assignments: { type: Array, default: () => [] },      // phân công của NV
   contracts: { type: Array, default: () => [] },        // hợp đồng của NV
   rewards_disciplines_data: { type: Object, default: () => ({ records: [], stats: {}, categoryOptions: {} }) }, // khen thưởng & kỷ luật
+  kpis: { type: Array, default: () => [] },             // KPI tháng của NV
+  annual_reviews: { type: Array, default: () => [] },   // Đánh giá cuối năm của NV
 })
 
 // --- PayrollTab chuyển tab contracts ---

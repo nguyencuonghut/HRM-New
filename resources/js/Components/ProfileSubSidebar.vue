@@ -85,6 +85,13 @@ const navigationGroups = [
     ]
   },
   {
+    label: 'HIỆU SUẤT',
+    items: [
+      { value: 'kpi', label: 'KPI tháng', icon: 'pi pi-chart-bar' },
+      { value: 'annual-review', label: 'Đánh giá cuối năm', icon: 'pi pi-star-fill' }
+    ]
+  },
+  {
     label: 'BÁO CÁO & LỊCH SỬ',
     items: [
       { value: 'employment-history', label: 'Lịch sử làm việc', icon: 'pi pi-history' },

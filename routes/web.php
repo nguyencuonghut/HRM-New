@@ -106,6 +106,15 @@ Route::group(['middleware' => 'auth'], function () {
     Route::resource('skills', \App\Http\Controllers\SkillController::class)->except(['show']);
     Route::post('skills/bulk-delete', [\App\Http\Controllers\SkillController::class, 'bulkDelete'])->name('skills.bulk-delete');
 
+    // Employee KPI Months - Hiệu suất KPI tháng
+    Route::delete('employee-kpi-months/bulk-delete', [\App\Http\Controllers\EmployeeKpiMonthController::class, 'bulkDelete'])->name('employee-kpi-months.bulk-delete');
+    Route::resource('employee-kpi-months', \App\Http\Controllers\EmployeeKpiMonthController::class)->except(['show']);
+
+    // Employee Annual Reviews - Đánh giá cuối năm
+    Route::delete('employee-annual-reviews/bulk-delete', [\App\Http\Controllers\EmployeeAnnualReviewController::class, 'bulkDelete'])->name('employee-annual-reviews.bulk-delete');
+    Route::get('employee-annual-reviews/calculate-kpi/{employeeId}/{year}', [\App\Http\Controllers\EmployeeAnnualReviewController::class, 'calculateKpiAverage'])->name('employee-annual-reviews.calculate-kpi');
+    Route::resource('employee-annual-reviews', \App\Http\Controllers\EmployeeAnnualReviewController::class)->except(['show']);
+
     // Department Org Chart Routes
     Route::get('/departments/org', [DepartmentOrgController::class, 'index'])->name('departments.org');       // Trang Inertia
     Route::get('/departments/tree', [DepartmentOrgController::class, 'roots'])->name('departments.tree');     // JSON (web)

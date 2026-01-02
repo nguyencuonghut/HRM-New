@@ -77,6 +77,12 @@ class Employee extends Model
             ->withTimestamps();
     }
 
+    // Quan hệ: KPI tháng
+    public function kpiMonths(){ return $this->hasMany(EmployeeKpiMonth::class); }
+
+    // Quan hệ: Đánh giá cuối năm
+    public function annualReviews(){ return $this->hasMany(EmployeeAnnualReview::class); }
+
     // Quan hệ: employee_skills (records)
     public function employeeSkills(){ return $this->hasMany(EmployeeSkill::class); }
 
