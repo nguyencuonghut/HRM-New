@@ -67,12 +67,16 @@ function itemClick(event, item) {
 function isActiveRoute(menuPath) {
     const currentUrl = $page.url;
 
+    // Extract pathname without query parameters
+    const currentPath = currentUrl.split('?')[0];
+    const menuPathClean = menuPath.split('?')[0];
+
     // Exact match
-    if (currentUrl === menuPath) return true;
+    if (currentPath === menuPathClean) return true;
 
     // Check if current URL starts with menu path (for nested routes)
     // E.g., /employees/123/profile should make /employees active
-    if (currentUrl.startsWith(menuPath + '/')) return true;
+    if (currentPath.startsWith(menuPathClean + '/')) return true;
 
     return false;
 }
