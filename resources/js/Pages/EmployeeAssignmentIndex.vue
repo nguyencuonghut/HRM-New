@@ -375,9 +375,17 @@ function exportCSV() { dt.value?.exportCSV() }
 
 // Quick filter (server GET để đồng bộ)
 function applyDepartmentFilter() {
-  EmployeeAssignmentService.index({ department_id: departmentFilter.value || undefined })
+  EmployeeAssignmentService.index({
+    department_id: departmentFilter.value || undefined,
+    role_type: roleFilter.value || undefined,
+    status: statusFilter.value || undefined
+  })
 }
 function applyQuickFilter() {
-  // hiện tại DataTable filter text đã đủ; nếu muốn filter server-side cho role/status thì thêm query param tương tự
+  EmployeeAssignmentService.index({
+    department_id: departmentFilter.value || undefined,
+    role_type: roleFilter.value || undefined,
+    status: statusFilter.value || undefined
+  })
 }
 </script>

@@ -25,6 +25,8 @@ class EmployeeAssignmentController extends Controller
 
         // Bộ lọc đơn giản từ query (tuỳ chọn)
         $departmentId = $request->get('department_id');
+        $roleType = $request->get('role_type');
+        $status = $request->get('status');
 
         $query = EmployeeAssignment::query()
             ->with([
@@ -34,6 +36,8 @@ class EmployeeAssignmentController extends Controller
             ])
             ->join('employees', 'employee_assignments.employee_id', '=', 'employees.id')
             ->when($departmentId, fn($q) => $q->where('employee_assignments.department_id', $departmentId))
+            ->when($roleType, fn($q) => $q->where('employee_assignments.role_type', $roleType))
+            ->when($status, fn($q) => $q->where('employee_assignments.status', $status))
             ->orderBy('employees.full_name')
             ->select('employee_assignments.*');
 
