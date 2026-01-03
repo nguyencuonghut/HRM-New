@@ -39,6 +39,7 @@ class DatabaseSeeder extends Seeder
             InsuranceTestDataSeeder::class, // Test data for insurance workflow
             MigrateExistingEmployeesToEmploymentSeeder::class, // Migrate existing insurance data
             InsuranceSalarySystemSeeder::class, // Hệ thống lương BHXH
+            BenefitTypeSeeder::class, // Danh mục loại phúc lợi
         ]);
     }
 }

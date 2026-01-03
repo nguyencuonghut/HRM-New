@@ -92,6 +92,12 @@ const navigationGroups = [
     ]
   },
   {
+    label: 'PHÚC LỢI',
+    items: [
+      { value: 'benefits', label: 'Phúc lợi', icon: 'pi pi-gift' }
+    ]
+  },
+  {
     label: 'BÁO CÁO & LỊCH SỬ',
     items: [
       { value: 'employment-history', label: 'Lịch sử làm việc', icon: 'pi pi-history' },

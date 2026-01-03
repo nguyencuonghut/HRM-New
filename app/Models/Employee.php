@@ -83,6 +83,9 @@ class Employee extends Model
     // Quan hệ: Đánh giá cuối năm
     public function annualReviews(){ return $this->hasMany(EmployeeAnnualReview::class); }
 
+    // Quan hệ: Phúc lợi
+    public function benefitPayouts(){ return $this->hasMany(\App\Models\EmployeeBenefitPayout::class); }
+
     // Quan hệ: employee_skills (records)
     public function employeeSkills(){ return $this->hasMany(EmployeeSkill::class); }
 

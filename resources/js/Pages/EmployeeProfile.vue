@@ -172,6 +172,16 @@
               :reviews="props.annual_reviews"
             />
           </div>
+
+          <!-- PHÚC LỢI -->
+          <div v-show="activeTab === 'benefits'" class="content-section">
+            <BenefitPayoutTab
+              :employee="props.employee"
+              :benefit-payouts="props.benefit_payouts"
+              :benefit-types="props.benefit_types"
+              :payment-methods="props.payment_methods"
+            />
+          </div>
           <!-- NHẬT KÝ HOẠT ĐỘNG -->
           <div v-show="activeTab === 'timeline'" class="content-section">
             <TimelineTab :employee-id="props.employee.id" />
@@ -199,6 +209,7 @@ import EmploymentHistoryTab from '@/Pages/Employees/Components/EmploymentHistory
 import TimelineTab from '@/Pages/Employees/Components/TimelineTab.vue'
 import KpiTab from '@/Pages/Employees/Components/KpiTab.vue'
 import AnnualReviewTab from '@/Pages/Employees/Components/AnnualReviewTab.vue'
+import BenefitPayoutTab from '@/Pages/Employees/Components/BenefitPayoutTab.vue'
 import Card from 'primevue/card'
 
 const props = defineProps({
@@ -218,6 +229,9 @@ const props = defineProps({
   rewards_disciplines_data: { type: Object, default: () => ({ records: [], stats: {}, categoryOptions: {} }) }, // khen thưởng & kỷ luật
   kpis: { type: Array, default: () => [] },             // KPI tháng của NV
   annual_reviews: { type: Array, default: () => [] },   // Đánh giá cuối năm của NV
+  benefit_payouts: { type: Array, default: () => [] },  // Phúc lợi của NV
+  benefit_types: { type: Array, default: () => [] },    // Danh sách loại phúc lợi
+  payment_methods: { type: Array, default: () => [] },  // Phương thức thanh toán
 })
 
 // --- PayrollTab chuyển tab contracts ---

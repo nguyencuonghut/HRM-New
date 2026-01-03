@@ -105,6 +105,15 @@ const model = computed(() => {
         });
     }
 
+    // Add Benefit Management - Employee Benefit Payouts only
+    if (can('view employees') || can('manage benefits')) {
+        homeItems.push({
+            label: 'Phúc lợi',
+            icon: 'pi pi-fw pi-gift',
+            to: '/employee-benefit-payouts'
+        });
+    }
+
     const items = [
         {
             label: t('nav.home'),
@@ -223,6 +232,15 @@ const model = computed(() => {
             label: 'Mẫu phụ lục',
             icon: 'pi pi-fw pi-file-edit',
             to: '/contract-appendix-templates'
+        });
+    }
+
+    // Benefit Types - check permission
+    if (can('view employees') || can('manage benefits')) {
+        systemMenuItems.push({
+            label: 'Loại phúc lợi',
+            icon: 'pi pi-fw pi-tag',
+            to: '/benefit-types'
         });
     }
 

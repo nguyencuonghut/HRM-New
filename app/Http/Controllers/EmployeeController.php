@@ -200,6 +200,26 @@ class EmployeeController extends Controller
                     ->get()
             )->resolve(),
             // Đánh giá cuối năm
+            'annual_reviews' => \App\Http\Resources\EmployeeAnnualReviewResource::collection(
+                $employee->annualReviews()
+                    ->with('inputBy:id,name')
+                    ->orderBy('year', 'desc')
+                    ->get()
+            )->resolve(),
+            // Phúc lợi
+            'benefit_payouts' => \App\Http\Resources\EmployeeBenefitPayoutResource::collection(
+                $employee->benefitPayouts()
+                    ->with(['benefitType:id,code,name', 'paidByUser:id,name'])
+                    ->orderBy('paid_date', 'desc')
+                    ->get()
+            )->resolve(),
+            'benefit_types' => \App\Models\BenefitType::where('is_active', true)->orderBy('name')->get(['id','code','name']),
+            'payment_methods' => [
+                ['label' => 'Tiền mặt', 'value' => 'CASH'],
+                ['label' => 'Chuyển khoản', 'value' => 'BANK_TRANSFER']
+            ],
+            )->resolve(),
+            // Đánh giá cuối năm
             'annual_reviews' => EmployeeAnnualReviewResource::collection(
                 $employee->annualReviews()
                     ->with('inputBy:id,name')

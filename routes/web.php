@@ -115,6 +115,14 @@ Route::group(['middleware' => 'auth'], function () {
     Route::get('employee-annual-reviews/calculate-kpi/{employeeId}/{year}', [\App\Http\Controllers\EmployeeAnnualReviewController::class, 'calculateKpiAverage'])->name('employee-annual-reviews.calculate-kpi');
     Route::resource('employee-annual-reviews', \App\Http\Controllers\EmployeeAnnualReviewController::class)->except(['show']);
 
+    // Benefit Types - Danh mục loại phúc lợi
+    Route::delete('benefit-types/bulk-delete', [\App\Http\Controllers\BenefitTypeController::class, 'bulkDelete'])->name('benefit-types.bulk-delete');
+    Route::resource('benefit-types', \App\Http\Controllers\BenefitTypeController::class)->except(['show']);
+
+    // Employee Benefit Payouts - Chi phúc lợi
+    Route::delete('employee-benefit-payouts/bulk-delete', [\App\Http\Controllers\EmployeeBenefitPayoutController::class, 'bulkDelete'])->name('employee-benefit-payouts.bulk-delete');
+    Route::resource('employee-benefit-payouts', \App\Http\Controllers\EmployeeBenefitPayoutController::class)->except(['show']);
+
     // Department Org Chart Routes
     Route::get('/departments/org', [DepartmentOrgController::class, 'index'])->name('departments.org');       // Trang Inertia
     Route::get('/departments/tree', [DepartmentOrgController::class, 'roots'])->name('departments.tree');     // JSON (web)
