@@ -218,14 +218,6 @@ class EmployeeController extends Controller
                 ['label' => 'Tiền mặt', 'value' => 'CASH'],
                 ['label' => 'Chuyển khoản', 'value' => 'BANK_TRANSFER']
             ],
-            )->resolve(),
-            // Đánh giá cuối năm
-            'annual_reviews' => EmployeeAnnualReviewResource::collection(
-                $employee->annualReviews()
-                    ->with('inputBy:id,name')
-                    ->orderBy('year', 'desc')
-                    ->get()
-            )->resolve(),
         ]);
     }
 
