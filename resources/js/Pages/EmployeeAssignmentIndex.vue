@@ -140,7 +140,7 @@
 
         <div>
           <label class="block font-bold mb-3">Chức danh</label>
-          <Select v-model="form.position_id" :options="positionsForSelect" optionLabel="title" filter optionValue="id" fluid showClear />
+          <Select v-model="form.position_id" :options="positionsForSelect" optionLabel="displayLabel" filter optionValue="id" fluid showClear />
           <small v-if="hasError('position_id')" class="p-error block mt-1">{{ getError('position_id') }}</small>
         </div>
 
@@ -259,7 +259,12 @@ const statusFilter = ref(null)
 
 const employeesForSelect = computed(() => props.employees || [])
 const departmentsForSelect = computed(() => props.departments || [])
-const positionsForSelect = computed(() => props.positions || [])
+const positionsForSelect = computed(() => {
+  return (props.positions || []).map(pos => ({
+    ...pos,
+    displayLabel: pos.department?.name ? `${pos.title} (${pos.department.name})` : pos.title
+  }))
+})
 const roleTypesForSelect = computed(() => props.enums?.role_types || [])
 const statusesForSelect = computed(() => props.enums?.statuses || [])
 

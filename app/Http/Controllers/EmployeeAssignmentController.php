@@ -46,7 +46,7 @@ class EmployeeAssignmentController extends Controller
         // Dữ liệu Select cho form
         $employees   = Employee::orderBy('full_name')->get(['id','full_name','employee_code']);
         $departments = Department::orderBy('order_index')->orderBy('name')->get(['id','name','type']);
-        $positions   = Position::orderBy('title')->get(['id','title']);
+        $positions   = Position::with('department:id,name')->orderBy('title')->get(['id','title','department_id']);
 
         return Inertia::render('EmployeeAssignmentIndex', [
             'assignments' => $assignments,

@@ -18,4 +18,11 @@ enum ContractStatus: string {
             self::CANCELLED => 'Hủy',
         };
     }
+
+    public static function toArray(): array {
+        return array_map(
+            fn($case) => ['label' => $case->label(), 'value' => $case->value],
+            self::cases()
+        );
+    }
 }

@@ -27,7 +27,7 @@ class TerminateInsuranceParticipation implements ShouldHandleEventsAfterCommit
             foreach ($participations as $participation) {
                 $participation->update([
                     'status' => 'TERMINATED',
-                    'participation_end_date' => $contract->termination_date ?? now(),
+                    'participation_end_date' => $contract->terminated_at ?? now(),
                 ]);
 
                 Log::info("Terminated insurance participation {$participation->id} for employee {$contract->employee_id}");
@@ -41,7 +41,7 @@ class TerminateInsuranceParticipation implements ShouldHandleEventsAfterCommit
                     ->causedBy($event->terminatedBy ?? auth()->user())
                     ->withProperties([
                         'contract_id' => $contract->id,
-                        'termination_date' => $contract->termination_date,
+                        'termination_date' => $contract->terminated_at,
                         'participations_count' => $participations->count(),
                     ])
                     ->log('Kết thúc tham gia bảo hiểm do nghỉ việc');

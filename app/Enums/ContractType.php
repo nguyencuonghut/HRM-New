@@ -21,4 +21,11 @@ enum ContractType: string {
             self::PARTTIME   => 'Bán thời gian',
         };
     }
+
+    public static function toArray(): array {
+        return array_map(
+            fn($case) => ['label' => $case->label(), 'value' => $case->value],
+            self::cases()
+        );
+    }
 }

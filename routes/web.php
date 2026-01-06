@@ -359,4 +359,28 @@ Route::group(['middleware' => 'auth'], function () {
     Route::post('insurance-records/{record}/approve', [\App\Http\Controllers\InsuranceReportController::class, 'approve'])->name('insurance-records.approve');
     Route::post('insurance-records/{record}/reject', [\App\Http\Controllers\InsuranceReportController::class, 'reject'])->name('insurance-records.reject');
     Route::post('insurance-records/{record}/adjust', [\App\Http\Controllers\InsuranceReportController::class, 'adjust'])->name('insurance-records.adjust');
+
+    // Report Routes
+    Route::prefix('reports')->name('reports.')->group(function () {
+        // Reports Hub
+        Route::get('/', [\App\Http\Controllers\ReportController::class, 'hub'])->name('hub');
+
+        // Executive & People Reports
+        Route::get('/headcount', [\App\Http\Controllers\ReportController::class, 'headcount'])->name('headcount');
+        Route::get('/employee-list', [\App\Http\Controllers\ReportController::class, 'employeeList'])->name('employee-list');
+        Route::get('/data-completeness', [\App\Http\Controllers\ReportController::class, 'dataCompleteness'])->name('data-completeness');
+        Route::get('/employee-movement', [\App\Http\Controllers\ReportController::class, 'employeeMovement'])->name('employee-movement');
+
+        // Contract Reports
+        Route::get('/contracts-status', [\App\Http\Controllers\ReportController::class, 'contractsStatus'])->name('contracts-status');
+        Route::get('/contracts-expiring', [\App\Http\Controllers\ReportController::class, 'contractsExpiring'])->name('contracts-expiring');
+        Route::get('/contract-approval-sla', [\App\Http\Controllers\ReportController::class, 'contractApprovalSla'])->name('contract-approval-sla');
+
+        // Leave Reports
+        Route::get('/leave-monthly', [\App\Http\Controllers\ReportController::class, 'leaveMonthly'])->name('leave-monthly');
+        Route::get('/leave-balances', [\App\Http\Controllers\ReportController::class, 'leaveBalances'])->name('leave-balances');
+
+        // Export
+        Route::get('/{reportCode}/export', [\App\Http\Controllers\ReportController::class, 'export'])->name('export');
+    });
 });

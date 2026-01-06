@@ -114,6 +114,15 @@ const model = computed(() => {
         });
     }
 
+    // Add Reports Hub - accessible to authorized users
+    if (can('view employees') || can('view reports')) {
+        homeItems.push({
+            label: 'Báo cáo',
+            icon: 'pi pi-fw pi-chart-bar',
+            to: '/reports'
+        });
+    }
+
     const items = [
         {
             label: t('nav.home'),
