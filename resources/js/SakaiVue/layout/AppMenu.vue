@@ -35,6 +35,15 @@ const model = computed(() => {
         });
     }
 
+    // Add Reports Hub - accessible to authorized users (moved to top for better UX)
+    if (can('view employees') || can('view reports')) {
+        homeItems.push({
+            label: 'Báo cáo',
+            icon: 'pi pi-fw pi-chart-pie',
+            to: '/reports'
+        });
+    }
+
     // Add Contract to home section if user has permission
     if (can('view contracts')) {
         homeItems.push({
@@ -111,15 +120,6 @@ const model = computed(() => {
             label: 'Phúc lợi',
             icon: 'pi pi-fw pi-gift',
             to: '/employee-benefit-payouts'
-        });
-    }
-
-    // Add Reports Hub - accessible to authorized users
-    if (can('view employees') || can('view reports')) {
-        homeItems.push({
-            label: 'Báo cáo',
-            icon: 'pi pi-fw pi-chart-bar',
-            to: '/reports'
         });
     }
 

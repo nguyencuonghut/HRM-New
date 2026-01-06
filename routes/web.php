@@ -25,6 +25,7 @@ use App\Http\Controllers\ContractAppendixController;
 use App\Http\Controllers\ContractGenerateController;
 use App\Http\Controllers\ContractTemplateController;
 use App\Http\Controllers\ContractTemplateEditorController;
+use App\Http\Controllers\HomeController;
 
 /*** Login Routes ***/
 Route::group(['middleware' => 'guest'], function () {
@@ -45,9 +46,7 @@ Route::group(['middleware' => 'auth'], function () {
 
 
 Route::group(['middleware' => 'auth'], function () {
-    Route::get('/', function () {
-        return Inertia::render('Home');
-    });
+    Route::get('/', [HomeController::class, 'index'])->name('home');
 
     // User Management Routes - Authorization handled by UserPolicy
     // Bulk delete route must be defined before resource routes
