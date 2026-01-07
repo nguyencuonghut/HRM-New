@@ -8,12 +8,14 @@
             <Toolbar class="mb-6">
                 <template #start>
                     <Button
+                        v-if="can('create skill categories')"
                         label="Thêm mới"
                         icon="pi pi-plus"
                         class="mr-2"
                         @click="openNew"
                     />
                     <Button
+                        v-if="can('delete skill categories')"
                         label="Xoá"
                         icon="pi pi-trash"
                         severity="danger"
@@ -95,11 +97,11 @@
                     </template>
                 </Column>
 
-                <Column header="Hành động" :exportable="false" style="min-width: 12rem">
+                <Column v-if="canAny('edit skill categories', 'delete skill categories')" header="Hành động" :exportable="false" style="min-width: 12rem">
                     <template #body="slotProps">
                         <div class="flex gap-2">
-                            <Button icon="pi pi-pencil" variant="outlined" rounded @click="editCategory(slotProps.data)" />
-                            <Button icon="pi pi-trash" variant="outlined" rounded severity="danger" @click="confirmDeleteCategory(slotProps.data)" />
+                            <Button v-if="can('edit skill categories')" icon="pi pi-pencil" variant="outlined" rounded @click="editCategory(slotProps.data)" />
+                            <Button v-if="can('delete skill categories')" icon="pi pi-trash" variant="outlined" rounded severity="danger" @click="confirmDeleteCategory(slotProps.data)" />
                         </div>
                     </template>
                 </Column>
@@ -197,6 +199,7 @@ import Textarea from 'primevue/textarea'
 
 import { SkillCategoryService } from '@/services'
 import { useFormValidation } from '@/composables/useFormValidation'
+import { usePermissions } from '@/Composables/usePermissions'
 
 // Props
 const props = defineProps({
@@ -205,6 +208,7 @@ const props = defineProps({
 
 // Composables
 const { errors, hasError, getError } = useFormValidation()
+const { can, canAny } = usePermissions()
 
 // Reactive
 const dt = ref()

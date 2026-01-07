@@ -8,12 +8,14 @@
             <Toolbar class="mb-6">
                 <template #start>
                     <Button
+                        v-if="can('create skills')"
                         label="Thêm mới"
                         icon="pi pi-plus"
                         class="mr-2"
                         @click="openNew"
                     />
                     <Button
+                        v-if="can('delete skills')"
                         label="Xoá"
                         icon="pi pi-trash"
                         severity="danger"
@@ -87,11 +89,11 @@
                     </template>
                 </Column>
 
-                <Column header="Hành động" :exportable="false" style="min-width: 12rem">
+                <Column v-if="canAny('edit skills', 'delete skills')" header="Hành động" :exportable="false" style="min-width: 12rem">
                     <template #body="slotProps">
                         <div class="flex gap-2">
-                            <Button icon="pi pi-pencil" variant="outlined" rounded @click="editSkill(slotProps.data)" />
-                            <Button icon="pi pi-trash" variant="outlined" rounded severity="danger" @click="confirmDeleteSkill(slotProps.data)" />
+                            <Button v-if="can('edit skills')" icon="pi pi-pencil" variant="outlined" rounded @click="editSkill(slotProps.data)" />
+                            <Button v-if="can('delete skills')" icon="pi pi-trash" variant="outlined" rounded severity="danger" @click="confirmDeleteSkill(slotProps.data)" />
                         </div>
                     </template>
                 </Column>
@@ -199,6 +201,7 @@ import Select from 'primevue/select'
 
 import { SkillService } from '@/services'
 import { useFormValidation } from '@/composables/useFormValidation'
+import { usePermissions } from '@/Composables/usePermissions'
 
 // Props
 const props = defineProps({
@@ -208,6 +211,7 @@ const props = defineProps({
 
 // Composables
 const { errors, hasError, getError } = useFormValidation()
+const { can, canAny } = usePermissions()
 
 // Reactive
 const dt = ref()

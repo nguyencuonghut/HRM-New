@@ -7,11 +7,11 @@
     <div class="card">
       <Toolbar class="mb-6">
         <template #start>
-          <Button label="Thêm mới" icon="pi pi-plus" class="mr-2" @click="openNew" />
-          <Button label="Xóa" icon="pi pi-trash" severity="danger" variant="outlined" @click="confirmDeleteSelected" :disabled="!selected || !selected.length" />
+          <Button v-if="can('create contracts')" label="Thêm mới" icon="pi pi-plus" class="mr-2" @click="openNew" />
+          <Button v-if="can('delete contracts')" label="Xóa" icon="pi pi-trash" severity="danger" variant="outlined" @click="confirmDeleteSelected" :disabled="!selected || !selected.length" />
         </template>
         <template #end>
-          <Button label="Xuất dữ liệu" icon="pi pi-upload" severity="secondary" @click="exportCSV" />
+          <Button v-if="can('view contracts')" label="Xuất dữ liệu" icon="pi pi-upload" severity="secondary" @click="exportCSV" />
         </template>
       </Toolbar>
 
@@ -38,7 +38,7 @@
           </div>
         </template>
 
-        <Column selectionMode="multiple" headerStyle="width: 3rem"></Column>
+        <Column v-if="can('delete contracts')" selectionMode="multiple" headerStyle="width: 3rem"></Column>
         <Column field="contract_number" header="Số HĐ" sortable headerStyle="min-width:10rem;">
             <template #body="sp">
                 <a
@@ -113,29 +113,29 @@
             <span v-else class="text-gray-400">—</span>
           </template>
         </Column>
-        <Column header="Thao tác" headerStyle="min-width:24rem;">
+        <Column v-if="canAny('edit contracts', 'delete contracts', 'submit contracts', 'approve contracts', 'view contracts')" header="Thao tác" headerStyle="min-width:24rem;">
           <template #body="sp">
             <div class="flex gap-2">
               <!-- Actions for DRAFT status -->
               <template v-if="sp.data.status === 'DRAFT'">
-                <Button icon="pi pi-pencil" outlined severity="success" rounded @click="edit(sp.data)" v-tooltip="'Chỉnh sửa'" />
-                <Button icon="pi pi-trash" outlined severity="danger" rounded @click="confirmDelete(sp.data)" v-tooltip="'Xóa'" />
-                <Button icon="pi pi-send" outlined severity="info" rounded @click="confirmSubmitForApproval(sp.data)" v-tooltip="'Gửi phê duyệt'" />
-                <Button icon="pi pi-file" outlined rounded @click="openGenerate(sp.data)" v-tooltip="'Sinh PDF'" />
+                <Button v-if="can('edit contracts')" icon="pi pi-pencil" outlined severity="success" rounded @click="edit(sp.data)" v-tooltip="'Chỉnh sửa'" />
+                <Button v-if="can('delete contracts')" icon="pi pi-trash" outlined severity="danger" rounded @click="confirmDelete(sp.data)" v-tooltip="'Xóa'" />
+                <Button v-if="can('submit contracts')" icon="pi pi-send" outlined severity="info" rounded @click="confirmSubmitForApproval(sp.data)" v-tooltip="'Gửi phê duyệt'" />
+                <Button v-if="can('edit contracts')" icon="pi pi-file" outlined rounded @click="openGenerate(sp.data)" v-tooltip="'Sinh PDF'" />
               </template>
 
               <!-- Actions for PENDING_APPROVAL status -->
               <template v-else-if="sp.data.status === 'PENDING_APPROVAL'">
-                <Button icon="pi pi-check" outlined severity="success" rounded @click="openApproveDialog(sp.data)" v-tooltip="'Phê duyệt'" />
-                <Button icon="pi pi-times" outlined severity="danger" rounded @click="openRejectDialog(sp.data)" v-tooltip="'Từ chối'" />
-                <Button icon="pi pi-replay" outlined severity="warning" rounded @click="confirmRecall(sp.data)" v-tooltip="'Thu hồi'" />
+                <Button v-if="can('approve contracts')" icon="pi pi-check" outlined severity="success" rounded @click="openApproveDialog(sp.data)" v-tooltip="'Phê duyệt'" />
+                <Button v-if="can('approve contracts')" icon="pi pi-times" outlined severity="danger" rounded @click="openRejectDialog(sp.data)" v-tooltip="'Từ chối'" />
+                <Button v-if="can('submit contracts')" icon="pi pi-replay" outlined severity="warning" rounded @click="confirmRecall(sp.data)" v-tooltip="'Thu hồi'" />
               </template>
 
               <!-- Actions for ACTIVE status -->
               <template v-else-if="sp.data.status === 'ACTIVE'">
-                <Button icon="pi pi-file" outlined rounded @click="openGenerate(sp.data)" v-tooltip="'Sinh PDF'" />
-                <Button icon="pi pi-refresh" outlined severity="info" rounded @click="openRenewalDialog(sp.data)" v-tooltip="'Gia hạn HĐ'" />
-                <Button icon="pi pi-ban" outlined severity="danger" rounded @click="openTerminateDialog(sp.data)" v-tooltip="'Chấm dứt HĐ'" />
+                <Button v-if="can('edit contracts')" icon="pi pi-file" outlined rounded @click="openGenerate(sp.data)" v-tooltip="'Sinh PDF'" />
+                <Button v-if="can('edit contracts')" icon="pi pi-refresh" outlined severity="info" rounded @click="openRenewalDialog(sp.data)" v-tooltip="'Gia hạn HĐ'" />
+                <Button v-if="can('edit contracts')" icon="pi pi-ban" outlined severity="danger" rounded @click="openTerminateDialog(sp.data)" v-tooltip="'Chấm dứt HĐ'" />
               </template>
 
               <!-- Actions for TERMINATED status -->
@@ -144,7 +144,7 @@
               </template>
 
               <!-- Common action -->
-              <Button icon="pi pi-list" outlined rounded @click="goToAppendixes(sp.data)" v-tooltip="'Phụ lục'" />
+              <Button v-if="can('view contracts')" icon="pi pi-list" outlined rounded @click="goToAppendixes(sp.data)" v-tooltip="'Phụ lục'" />
             </div>
           </template>
         </Column>
@@ -527,12 +527,14 @@ import Textarea from 'primevue/textarea'
 import Checkbox from 'primevue/checkbox'
 import { ContractService } from '@/services/ContractService'
 import { useFormValidation } from '@/composables/useFormValidation'
+import { usePermissions } from '@/Composables/usePermissions'
 import { formatDate, toYMD } from '@/utils/dateHelper'
 import AttachmentUploader from '@/Components/AttachmentUploader.vue'
 import TerminateContractModal from '@/Components/TerminateContractModal.vue'
 import ContractRenewalModal from '@/Components/ContractRenewalModal.vue'
 
 const { errors, hasError, getError } = useFormValidation()
+const { can, canAny } = usePermissions()
 
 const definePropsData = defineProps({
   contracts: { type: Array, default: () => [] },

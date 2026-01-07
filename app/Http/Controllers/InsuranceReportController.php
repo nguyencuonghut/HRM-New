@@ -11,10 +11,13 @@ use App\Services\InsuranceExportService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Inertia\Inertia;
 
 class InsuranceReportController extends Controller
 {
+    use AuthorizesRequests;
+
     protected InsuranceReportService $reportService;
 
     public function __construct(InsuranceReportService $reportService)
@@ -27,6 +30,8 @@ class InsuranceReportController extends Controller
      */
     public function index(Request $request)
     {
+        $this->authorize('viewAny', InsuranceMonthlyReport::class);
+
         $query = InsuranceMonthlyReport::query()->with('changeRecords');
 
         // Filter by year
@@ -64,6 +69,8 @@ class InsuranceReportController extends Controller
      */
     public function create()
     {
+        $this->authorize('create', InsuranceMonthlyReport::class);
+
         return Inertia::render('Insurance/Reports/Create', [
             'currentYear' => now()->year,
             'currentMonth' => now()->month,
@@ -75,6 +82,8 @@ class InsuranceReportController extends Controller
      */
     public function store(Request $request)
     {
+        $this->authorize('create', InsuranceMonthlyReport::class);
+
         $validated = $request->validate([
             'year' => 'required|integer|min:2020|max:2100',
             'month' => 'required|integer|min:1|max:12',
@@ -103,6 +112,8 @@ class InsuranceReportController extends Controller
      */
     public function show(InsuranceMonthlyReport $insuranceReport)
     {
+        $this->authorize('view', $insuranceReport);
+
         $insuranceReport->load(['changeRecords.employee', 'changeRecords.approvedBy']);
 
         // Group records by type
@@ -124,6 +135,8 @@ class InsuranceReportController extends Controller
      */
     public function approve(Request $request, InsuranceChangeRecord $record)
     {
+        $this->authorize('update', InsuranceMonthlyReport::class);
+
         $validated = $request->validate([
             'admin_notes' => 'nullable|string|max:1000',
         ]);
@@ -152,6 +165,8 @@ class InsuranceReportController extends Controller
      */
     public function reject(Request $request, InsuranceChangeRecord $record)
     {
+        $this->authorize('update', InsuranceMonthlyReport::class);
+
         $validated = $request->validate([
             'reason' => 'required|string|max:1000',
         ]);
@@ -180,6 +195,8 @@ class InsuranceReportController extends Controller
      */
     public function adjust(Request $request, InsuranceChangeRecord $record)
     {
+        $this->authorize('update', InsuranceMonthlyReport::class);
+
         $validated = $request->validate([
             'adjusted_salary' => 'required|numeric|min:0',
             'adjustment_reason' => 'required|string|max:1000',
@@ -212,6 +229,8 @@ class InsuranceReportController extends Controller
      */
     public function finalize(InsuranceMonthlyReport $insuranceReport)
     {
+        $this->authorize('update', $insuranceReport);
+
         try {
             $this->reportService->finalizeReport($insuranceReport, Auth::user());
 
@@ -232,6 +251,8 @@ class InsuranceReportController extends Controller
      */
     public function export(InsuranceMonthlyReport $insuranceReport)
     {
+        $this->authorize('view', $insuranceReport);
+
         try {
             $filePath = InsuranceExportService::exportToFile($insuranceReport);
 
@@ -249,6 +270,8 @@ class InsuranceReportController extends Controller
      */
     public function destroy(InsuranceMonthlyReport $insuranceReport)
     {
+        $this->authorize('delete', $insuranceReport);
+
         try {
             $this->reportService->deleteReport($insuranceReport);
 

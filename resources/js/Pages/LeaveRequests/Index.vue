@@ -7,10 +7,10 @@
         <div class="card">
             <Toolbar class="mb-6">
                 <template #start>
-                    <Button label="Tạo đơn mới" icon="pi pi-plus" @click="createNew" />
+                    <Button v-if="can('create leave requests')" label="Tạo đơn mới" icon="pi pi-plus" @click="createNew" />
                 </template>
                 <template #end>
-                    <Button label="Phê duyệt" icon="pi pi-check-circle" severity="secondary" @click="goToApprovals" />
+                    <Button v-if="can('approve leave requests')" label="Phê duyệt" icon="pi pi-check-circle" severity="secondary" @click="goToApprovals" />
                 </template>
             </Toolbar>
 
@@ -137,7 +137,7 @@
                         {{ formatDateTime(slotProps.data.submitted_at) }}
                     </template>
                 </Column>
-                <Column header="Thao tác" :exportable="false" style="min-width: 10rem">
+                <Column v-if="canAny('edit leave requests', 'delete leave requests')" header="Thao tác" :exportable="false" style="min-width: 10rem">
                     <template #body="slotProps">
                         <div class="flex gap-2">
                             <Button
@@ -147,14 +147,14 @@
                                 @click="viewDetail(slotProps.data)"
                             />
                             <Button
-                                v-if="slotProps.data.can_edit"
+                                v-if="slotProps.data.can_edit && can('edit leave requests')"
                                 icon="pi pi-pencil"
                                 variant="outlined"
                                 rounded
                                 @click="editRequest(slotProps.data)"
                             />
                             <Button
-                                v-if="slotProps.data.can_delete"
+                                v-if="slotProps.data.can_delete && can('delete leave requests')"
                                 icon="pi pi-trash"
                                 variant="outlined"
                                 rounded
@@ -197,6 +197,7 @@ import { LeaveRequestService } from '@/services/LeaveRequestService';
 import { LeaveApprovalService } from '@/services/LeaveApprovalService';
 import { ToastService } from '@/services/ToastService';
 import { formatDateTime, getStatusOptions } from '@/utils/leaveHelpers';
+import { usePermissions } from '@/Composables/usePermissions';
 
 const props = defineProps({
     leaveRequests: Object,
@@ -207,6 +208,7 @@ const props = defineProps({
 const confirm = useConfirm();
 const toast = useToast();
 ToastService.init(toast);
+const { can, canAny } = usePermissions();
 
 const dt = ref();
 const loading = ref(false);

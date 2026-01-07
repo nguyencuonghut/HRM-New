@@ -1,6 +1,7 @@
 <script setup>
 import { ref, computed, watch } from 'vue'
 import { Head, usePage } from '@inertiajs/vue3'
+import { usePermissions } from '@/Composables/usePermissions'
 import DataTable from 'primevue/datatable'
 import Column from 'primevue/column'
 import Button from 'primevue/button'
@@ -17,6 +18,7 @@ import ConfirmDialog from 'primevue/confirmdialog'
 
 const confirm = useConfirm()
 const page = usePage()
+const { can } = usePermissions()
 
 const props = defineProps({
   benefitTypes: {
@@ -220,7 +222,7 @@ const getStatusSeverity = (isActive) => {
             </template>
           </Column>
 
-          <Column header="Thao tác" style="min-width: 150px">
+          <Column v-if="can('manage benefits')" header="Thao tác" style="min-width: 150px">
             <template #body="{ data }">
               <div class="flex gap-2">
                 <Button icon="pi pi-pencil" severity="info" text rounded @click="openEditDialog(data)" />

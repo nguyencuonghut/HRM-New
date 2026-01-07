@@ -21,7 +21,7 @@ class BenefitTypeController extends Controller
      */
     public function index(Request $request)
     {
-        // $this->authorize('viewAny', BenefitType::class);
+        $this->authorize('viewAny', BenefitType::class);
 
         $search = trim((string) $request->get('search', ''));
         $isActive = $request->get('is_active');
@@ -51,7 +51,7 @@ class BenefitTypeController extends Controller
      */
     public function store(StoreBenefitTypeRequest $request)
     {
-        // $this->authorize('create', BenefitType::class);
+        $this->authorize('create', BenefitType::class);
 
         DB::beginTransaction();
         try {
@@ -71,7 +71,7 @@ class BenefitTypeController extends Controller
      */
     public function update(UpdateBenefitTypeRequest $request, BenefitType $benefitType)
     {
-        // $this->authorize('update', $benefitType);
+        $this->authorize('update', $benefitType);
 
         DB::beginTransaction();
         try {
@@ -91,7 +91,7 @@ class BenefitTypeController extends Controller
      */
     public function destroy(BenefitType $benefitType)
     {
-        // $this->authorize('delete', $benefitType);
+        $this->authorize('delete', $benefitType);
 
         // Kiểm tra xem có khoản chi nào đang dùng loại này không
         if ($benefitType->payouts()->count() > 0) {
@@ -116,7 +116,7 @@ class BenefitTypeController extends Controller
      */
     public function bulkDelete(Request $request)
     {
-        // $this->authorize('delete', BenefitType::class);
+        $this->authorize('delete', BenefitType::class);
 
         $ids = $request->input('ids', []);
         if (empty($ids)) {

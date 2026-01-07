@@ -7,12 +7,12 @@
         <div class="card">
             <Toolbar class="mb-6">
                 <template #start>
-                    <Button v-if="canCreateUsers()" :label="t('users.add')" icon="pi pi-plus" class="mr-2" @click="openNew" />
-                    <Button v-if="canDeleteUsers()" :label="t('users.delete')" icon="pi pi-trash" severity="danger" variant="outlined" @click="confirmDeleteSelected" :disabled="!selectedUsers || !selectedUsers.length" />
+                    <Button v-if="can('create users')" :label="t('users.add')" icon="pi pi-plus" class="mr-2" @click="openNew" />
+                    <Button v-if="can('delete users')" :label="t('users.delete')" icon="pi pi-trash" severity="danger" variant="outlined" @click="confirmDeleteSelected" :disabled="!selectedUsers || !selectedUsers.length" />
                 </template>
 
                 <template #end>
-                    <FileUpload v-if="canCreateUsers()" mode="basic" accept="image/*" :maxFileSize="1000000" :label="t('users.import')" customUpload :chooseLabel="t('users.import')" class="mr-2" auto :chooseButtonProps="{ severity: 'secondary' }" />
+                    <FileUpload v-if="can('create users')" mode="basic" accept="image/*" :maxFileSize="1000000" :label="t('users.import')" customUpload :chooseLabel="t('users.import')" class="mr-2" auto :chooseButtonProps="{ severity: 'secondary' }" />
                     <Button :label="t('users.export')" icon="pi pi-upload" severity="secondary" @click="exportCSV($event)" />
                 </template>
             </Toolbar>
@@ -42,7 +42,7 @@
                     </div>
                 </template>
 
-                <Column selectionMode="multiple" style="width: 3rem" :exportable="false" v-if="canDeleteUsers()"></Column>
+                <Column selectionMode="multiple" style="width: 3rem" :exportable="false" v-if="can('delete users')"></Column>
                 <Column field="name" :header="t('users.name')" sortable style="min-width: 16rem"></Column>
                 <Column field="email" :header="t('users.email')" sortable style="min-width: 10rem"></Column>
                 <Column field="roles" :header="t('users.roles')" style="min-width: 12rem">
@@ -61,15 +61,15 @@
                         {{ formatDate(slotProps.data.created_at) }}
                     </template>
                 </Column>
-                <Column v-if="canEditUsers() || canDeleteUsers()" :header="t('users.actions')" :exportable="false" style="min-width: 16rem">
+                <Column v-if="can('edit users') || can('delete users')" :header="t('users.actions')" :exportable="false" style="min-width: 16rem">
                     <template #body="slotProps">
                         <div v-if="!slotProps.data.is_deleted" class="flex gap-2">
-                            <Button v-if="canEditUsers()" icon="pi pi-pencil" variant="outlined" rounded @click="editUser(slotProps.data)" />
-                            <Button v-if="canDeleteUsers()" icon="pi pi-trash" variant="outlined" rounded severity="danger" @click="confirmDeleteUser(slotProps.data)" />
+                            <Button v-if="can('edit users')" icon="pi pi-pencil" variant="outlined" rounded @click="editUser(slotProps.data)" />
+                            <Button v-if="can('delete users')" icon="pi pi-trash" variant="outlined" rounded severity="danger" @click="confirmDeleteUser(slotProps.data)" />
                         </div>
                         <div v-else class="flex gap-2">
-                            <Button v-if="canEditUsers()" icon="pi pi-refresh" variant="outlined" rounded severity="success" @click="confirmRestoreUser(slotProps.data)" v-tooltip="t('common.restore')" />
-                            <Button v-if="canDeleteUsers()" icon="pi pi-times" variant="outlined" rounded severity="danger" @click="confirmForceDeleteUser(slotProps.data)" v-tooltip="t('common.forceDelete')" />
+                            <Button v-if="can('edit users')" icon="pi pi-refresh" variant="outlined" rounded severity="success" @click="confirmRestoreUser(slotProps.data)" v-tooltip="t('common.restore')" />
+                            <Button v-if="can('delete users')" icon="pi pi-times" variant="outlined" rounded severity="danger" @click="confirmForceDeleteUser(slotProps.data)" v-tooltip="t('common.forceDelete')" />
                         </div>
                     </template>
                 </Column>
@@ -214,7 +214,7 @@ import { Head, usePage } from '@inertiajs/vue3';
 import { UserService } from '@/services';
 import { useI18n } from '@/composables/useI18n';
 import { useFormValidation } from '@/composables/useFormValidation';
-import { usePermission } from '@/composables/usePermission';
+import { usePermissions } from '@/Composables/usePermissions';
 import { trimStringValues } from '@/utils/stringHelpers';
 
 // Define props
@@ -232,7 +232,7 @@ const props = defineProps({
 // Composables
 const { t } = useI18n();
 const { errors, hasError, getError, processing, setProcessing } = useFormValidation();
-const { isSuperAdmin, canViewUsers, canCreateUsers, canEditUsers, canDeleteUsers } = usePermission();
+const { can } = usePermissions();
 
 // Reactive data
 const dt = ref();

@@ -7,11 +7,11 @@
         <div class="card">
             <Toolbar class="mb-6">
                 <template #start>
-                    <Button :label="'Thêm mới'" icon="pi pi-plus" class="mr-2" @click="openNew" />
+                    <Button v-if="can('create employees')" :label="'Thêm mới'" icon="pi pi-plus" class="mr-2" @click="openNew" />
                 </template>
 
                 <template #end>
-                    <Button :label="'Xuất CSV'" icon="pi pi-upload" severity="secondary" @click="exportCSV" />
+                    <Button v-if="can('view employee profiles')" :label="'Xuất CSV'" icon="pi pi-upload" severity="secondary" @click="exportCSV" />
                 </template>
             </Toolbar>
 
@@ -146,12 +146,12 @@
                 </Column>
 
                 <!-- Frozen Right: Thao tác -->
-                <Column header="Thao tác" frozen alignFrozen="right" :exportable="false" style="min-width: 10rem">
+                <Column v-if="canAny('view employee profiles', 'edit employees', 'delete employees')" header="Thao tác" frozen alignFrozen="right" :exportable="false" style="min-width: 10rem">
                     <template #body="slotProps">
                         <div class="flex gap-2">
-                            <Button icon="pi pi-id-card" variant="outlined" rounded size="small" @click="goProfile(slotProps.data)" />
-                            <Button icon="pi pi-pencil" variant="outlined" rounded size="small" @click="edit(slotProps.data)" />
-                            <Button icon="pi pi-trash" variant="outlined" rounded size="small" severity="danger"
+                            <Button v-if="can('view employee profiles')" icon="pi pi-id-card" variant="outlined" rounded size="small" @click="goProfile(slotProps.data)" />
+                            <Button v-if="can('edit employees')" icon="pi pi-pencil" variant="outlined" rounded size="small" @click="edit(slotProps.data)" />
+                            <Button v-if="can('delete employees')" icon="pi pi-trash" variant="outlined" rounded size="small" severity="danger"
                                     @click="confirmDelete(slotProps.data)" />
                         </div>
                     </template>
@@ -303,6 +303,7 @@ import ProgressBar from 'primevue/progressbar'
 import AddressSelector from '@/Components/AddressSelector.vue'
 import { EmployeeService } from '@/services';
 import { useFormValidation } from '@/composables/useFormValidation'
+import { usePermissions } from '@/Composables/usePermissions'
 import { toYMD, formatDate } from '@/utils/dateHelper'
 import { trimStringValues } from '@/utils/stringHelpers'
 
@@ -320,6 +321,7 @@ const props = defineProps({
 })
 
 const { errors, hasError, getError } = useFormValidation()
+const { can, canAny } = usePermissions()
 
 const dt = ref()
 const list = ref([...props.employees.data])

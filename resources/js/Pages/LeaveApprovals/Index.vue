@@ -74,6 +74,7 @@
                                 v-tooltip.top="'Xem chi tiết'"
                             />
                             <Button
+                                v-if="can('approve leave requests')"
                                 icon="pi pi-check"
                                 severity="success"
                                 variant="outlined"
@@ -82,6 +83,7 @@
                                 v-tooltip.top="'Phê duyệt'"
                             />
                             <Button
+                                v-if="can('approve leave requests')"
                                 icon="pi pi-times"
                                 severity="danger"
                                 variant="outlined"
@@ -163,6 +165,7 @@
 <script setup>
 import { ref } from 'vue';
 import { Head } from '@inertiajs/vue3';
+import { usePermissions } from '@/Composables/usePermissions';
 import DataTable from 'primevue/datatable';
 import Column from 'primevue/column';
 import Button from 'primevue/button';
@@ -179,6 +182,8 @@ const props = defineProps({
     pendingRequests: Array,
     pendingCount: Number,
 });
+
+const { can } = usePermissions();
 
 const toast = useToast();
 ToastService.init(toast);

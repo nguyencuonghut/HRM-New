@@ -9,11 +9,14 @@ use App\Http\Requests\StoreEmployeeRewardDisciplineRequest;
 use App\Http\Requests\UpdateEmployeeRewardDisciplineRequest;
 use App\Services\RewardDisciplineService;
 use App\Enums\RewardDisciplineCategory;
+use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
 class EmployeeRewardDisciplineController extends Controller
 {
+    use AuthorizesRequests;
+
     protected RewardDisciplineService $service;
 
     public function __construct(RewardDisciplineService $service)
@@ -47,6 +50,8 @@ class EmployeeRewardDisciplineController extends Controller
      */
     public function index(Employee $employee)
     {
+        $this->authorize('viewProfile', $employee);
+
         $records = EmployeeRewardDiscipline::where('employee_id', $employee->id)
             ->with(['contract', 'issuedBy'])
             ->latest()
@@ -67,6 +72,8 @@ class EmployeeRewardDisciplineController extends Controller
      */
     public function store(StoreEmployeeRewardDisciplineRequest $request, Employee $employee)
     {
+        $this->authorize('editProfile', $employee);
+
         $validated = $request->validated();
         $validated['employee_id'] = $employee->id;
 
@@ -101,6 +108,8 @@ class EmployeeRewardDisciplineController extends Controller
      */
     public function update(UpdateEmployeeRewardDisciplineRequest $request, Employee $employee, EmployeeRewardDiscipline $rewardDiscipline)
     {
+        $this->authorize('editProfile', $employee);
+
         $before = $rewardDiscipline->getOriginal();
         $validated = $request->validated();
         $rewardDiscipline->update($validated);
@@ -131,6 +140,8 @@ class EmployeeRewardDisciplineController extends Controller
      */
     public function destroy(Employee $employee, EmployeeRewardDiscipline $rewardDiscipline)
     {
+        $this->authorize('editProfile', $employee);
+
         // Check ownership
         if ($rewardDiscipline->employee_id !== $employee->id) {
             abort(403, 'Không có quyền');

@@ -5,6 +5,7 @@ namespace App\Http\Middleware;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
 use Illuminate\Support\Facades\Auth;
+use App\Helpers\PermissionHelper;
 
 class HandleInertiaRequests extends Middleware
 {
@@ -51,16 +52,13 @@ class HandleInertiaRequests extends Middleware
                     'id' => Auth::user()->id,
                     'name' => Auth::user()->name,
                     'email' => Auth::user()->email,
-                    'roles' => Auth::user()->roles->map(function ($role) {
-                        return [
-                            'id' => $role->id,
-                            'name' => $role->name,
-                        ];
-                    })->toArray(),
+                    'roles' => Auth::user()->roles->pluck('name')->toArray(),
                     'permissions' => Auth::user()->getAllPermissions()->map(function ($permission) {
                         return [
                             'id' => $permission->id,
                             'name' => $permission->name,
+                            'label' => PermissionHelper::getLabel($permission->name),
+                            'description' => PermissionHelper::getDescription($permission->name),
                         ];
                     })->toArray(),
                 ],

@@ -22,6 +22,8 @@ class SkillController extends Controller
      */
     public function index(Request $request)
     {
+        $this->authorize('viewAny', Skill::class);
+
         $search = trim((string) $request->get('search', ''));
         $categoryId = $request->get('category_id', '');
 
@@ -55,6 +57,8 @@ class SkillController extends Controller
      */
     public function store(StoreSkillRequest $request)
     {
+        $this->authorize('create', Skill::class);
+
         $data = $request->validated();
 
         if (empty($data['code'])) {
@@ -88,6 +92,8 @@ class SkillController extends Controller
      */
     public function update(UpdateSkillRequest $request, Skill $skill)
     {
+        $this->authorize('update', $skill);
+
         $skill->load('category');
         $oldData = [
             'name' => $skill->name,
@@ -131,6 +137,8 @@ class SkillController extends Controller
      */
     public function destroy(Skill $skill)
     {
+        $this->authorize('delete', $skill);
+
         // Check if skill is being used by employees
         if ($skill->employees()->count() > 0) {
             return redirect()->route('skills.index')
@@ -163,6 +171,8 @@ class SkillController extends Controller
      */
     public function bulkDelete(Request $request)
     {
+        $this->authorize('bulkDelete', Skill::class);
+
         $ids = $request->input('ids', []);
 
         if (empty($ids)) {

@@ -1,6 +1,7 @@
 <script setup>
 import { ref, computed } from 'vue';
 import { Head, router } from '@inertiajs/vue3';
+import { usePermissions } from '@/Composables/usePermissions';
 import DataTable from 'primevue/datatable';
 import Column from 'primevue/column';
 import Button from 'primevue/button';
@@ -20,6 +21,8 @@ const props = defineProps({
     filters: Object,
     years: Array,
 });
+
+const { can } = usePermissions();
 
 const viewMode = ref('summary'); // 'summary' or 'detailed'
 const viewOptions = [
@@ -101,6 +104,7 @@ const calculateUsagePercentage = (used, total) => {
             </template>
             <template #end>
                 <Button
+                    v-if="can('adjust leave balances')"
                     label="Khởi tạo số dư"
                     icon="pi pi-refresh"
                     @click="initializeBalances"
@@ -222,7 +226,7 @@ const calculateUsagePercentage = (used, total) => {
                     </div>
                 </template>
             </Column>
-            <Column header="Thao tác" style="min-width: 120px">
+            <Column v-if="can('view leave balances')" header="Thao tác" style="min-width: 120px">
                 <template #body="{ data }">
                     <Button
                         label="Chi tiết"

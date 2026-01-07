@@ -7,6 +7,7 @@
         <div class="flex justify-between items-center mb-6">
             <h2 class="text-2xl font-bold">Báo cáo Bảo hiểm XH</h2>
             <Button
+                v-if="can('create insurance reports')"
                 label="Tạo báo cáo mới"
                 icon="pi pi-plus"
                 @click="InsuranceReportService.create()"
@@ -127,6 +128,7 @@
                         <template #body="{ data }">
                             <div class="flex gap-2">
                                 <Button
+                                    v-if="can('view insurance reports')"
                                     icon="pi pi-eye"
                                     severity="info"
                                     text
@@ -135,7 +137,7 @@
                                     v-tooltip.top="'Xem chi tiết'"
                                 />
                                 <Button
-                                    v-if="data.is_finalized"
+                                    v-if="data.is_finalized && can('export insurance reports')"
                                     icon="pi pi-download"
                                     severity="success"
                                     text
@@ -144,7 +146,7 @@
                                     v-tooltip.top="'Xuất Excel'"
                                 />
                                 <Button
-                                    v-if="!data.is_finalized"
+                                    v-if="!data.is_finalized && can('delete insurance reports')"
                                     icon="pi pi-trash"
                                     severity="danger"
                                     text
@@ -198,6 +200,7 @@
 <script setup>
 import { ref, computed } from 'vue';
 import { Head } from '@inertiajs/vue3';
+import { usePermissions } from '@/Composables/usePermissions';
 import { InsuranceReportService } from '@/services/InsuranceReportService';
 import Card from 'primevue/card';
 import Button from 'primevue/button';
@@ -213,6 +216,8 @@ const props = defineProps({
     reports: Object,
     filters: Object,
 });
+
+const { can } = usePermissions();
 
 const loading = ref(false);
 const deleteDialog = ref(false);

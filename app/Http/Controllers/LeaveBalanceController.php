@@ -7,14 +7,18 @@ use App\Models\LeaveBalance;
 use App\Models\LeaveType;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
+use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 
 class LeaveBalanceController extends Controller
 {
+    use AuthorizesRequests;
+
     /**
      * Display a listing of all employees' leave balances (for HR/Admin)
      */
     public function index(Request $request)
     {
+        $this->authorize('viewAny', LeaveBalance::class);
         $year = $request->input('year', now()->year);
         $leaveTypeId = $request->input('leave_type_id');
         $departmentId = $request->input('department_id');
@@ -148,6 +152,8 @@ class LeaveBalanceController extends Controller
      */
     public function show(Employee $employee, Request $request)
     {
+        $this->authorize('view', LeaveBalance::class);
+
         $year = $request->input('year', now()->year);
 
         $balances = LeaveBalance::with('leaveType')
@@ -207,6 +213,8 @@ class LeaveBalanceController extends Controller
      */
     public function initialize(Request $request)
     {
+        $this->authorize('adjust', LeaveBalance::class);
+
         $year = $request->input('year', now()->year);
 
         $result = \Artisan::call('leave:initialize-balances', ['year' => $year]);
