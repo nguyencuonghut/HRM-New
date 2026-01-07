@@ -217,4 +217,68 @@ class RoleController extends Controller
             'type' => 'success'
         ]);
     }
+
+    /**
+     * Get permissions for a specific role.
+     */
+    public function getPermissions(Role $role)
+    {
+        $this->authorize('view permissions');
+
+        $role->load('permissions');
+
+        return response()->json([
+            'role' => new RoleResource($role),
+            'permissions' => PermissionResource::collection($role->permissions)->resolve(),
+        ]);
+    }
+
+    /**
+     * Sync permissions for a role.
+     */
+    public function syncPermissions(Request $request, Role $role)
+    {
+        $this->authorize('assign permissions');
+
+        $validated = $request->validate([
+            'permissions' => 'required|array',
+            'permissions.*' => 'exists:permissions,id',
+        ]);
+
+        // Get permission names for logging
+        $permissions = Permission::whereIn('id', $validated['permissions'])->pluck('name')->toArray();
+
+        $role->syncPermissions($validated['permissions']);
+
+        activity()
+            ->performedOn($role)
+            ->causedBy(Auth::user())
+            ->withProperties([
+                'role_name' => $role->name,
+                'permissions' => $permissions,
+                'permission_count' => count($permissions)
+            ])
+            ->log("Cập nhật phân quyền cho vai trò: {$role->name}");
+
+        return redirect()->back()->with([
+            'message' => "Permissions updated successfully for role: {$role->name}",
+            'type' => 'success'
+        ]);
+    }
+
+    /**
+     * Get users with a specific role.
+     */
+    public function getUsersWithRole(Role $role)
+    {
+        $this->authorize('view', $role);
+
+        $users = $role->users()->with('roles')->get();
+
+        return response()->json([
+            'role' => new RoleResource($role),
+            'users' => $users,
+            'usersCount' => $users->count(),
+        ]);
+    }
 }

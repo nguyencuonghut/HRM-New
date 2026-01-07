@@ -21,13 +21,13 @@ class UserSeeder extends Seeder
         ]);
         $superAdmin->assignRole('Super Admin');
 
-        // Create admin user
-        $admin = User::factory()->create([
+        // Create HR Admin user
+        $hrAdmin = User::factory()->create([
             'name' => 'Nguyễn Thị Ngọc Lan',
             'email' => 'ns@honghafeed.com.vn',
             'password' => bcrypt('Hongha@123'),
         ]);
-        $admin->assignRole('Admin');
+        $hrAdmin->assignRole('HR Admin');
 
         // Create director user
         $director = User::factory()->create([
@@ -37,19 +37,21 @@ class UserSeeder extends Seeder
         ]);
         $director->assignRole('Director');
 
-        // Create manager user
-        $manager = User::factory()->create([
-            'name' => 'Manager User',
-            'email' => 'manager@example.com',
+        // Create department manager user
+        $deptManager = User::factory()->create([
+            'name' => 'Department Manager User',
+            'email' => 'dept-manager@example.com',
             'password' => bcrypt('password'),
         ]);
-        $manager->assignRole('Manager');
+        $deptManager->assignRole('Department Manager');
 
-        // Create regular users
-        foreach (range(1, 10) as $index) {
-            $user = User::factory()->create();
-            $user->assignRole('User');
-        }
+        // Create payroll admin user
+        $payrollAdmin = User::factory()->create([
+            'name' => 'Payroll Admin User',
+            'email' => 'payroll@example.com',
+            'password' => bcrypt('password'),
+        ]);
+        $payrollAdmin->assignRole('Payroll Admin');
 
         $this->command->info('Users created and roles assigned successfully!');
     }

@@ -16,120 +16,213 @@ class RolesAndPermissionsSeeder extends Seeder
         // Reset cached roles and permissions
         app()[\Spatie\Permission\PermissionRegistrar::class]->forgetCachedPermissions();
 
-        // Create permissions
+        // Create permissions - Grouped by module for better management
         $permissions = [
-            // User Management
+            // ============================================================
+            // SYSTEM ADMINISTRATION
+            // ============================================================
+            'manage system settings',
+            'view system logs',
+            'manage integrations',
+
+            // ============================================================
+            // USER MANAGEMENT
+            // ============================================================
             'view users',
             'create users',
             'edit users',
             'delete users',
+            'import users',
+            'export users',
+            'reset user passwords',
 
-            // Role Management
+            // ============================================================
+            // ROLE MANAGEMENT
+            // ============================================================
             'view roles',
             'create roles',
             'edit roles',
             'delete roles',
 
-            // Permission Management
+            // ============================================================
+            // PERMISSION MANAGEMENT
+            // ============================================================
             'view permissions',
+            'create permissions',
+            'edit permissions',
+            'delete permissions',
             'assign permissions',
 
-            // Backup Management
+            // ============================================================
+            // BACKUP MANAGEMENT
+            // ============================================================
             'view backups',
             'create backups',
             'restore backups',
             'delete backups',
             'configure backups',
 
-            // Activity Log
+            // ============================================================
+            // ACTIVITY LOG
+            // ============================================================
             'view activity logs',
+            'view own activity logs',
             'delete activity logs',
+            'export activity logs',
 
-            // Department Management
+            // ============================================================
+            // DEPARTMENT MANAGEMENT (Organization Structure)
+            // ============================================================
             'view departments',
             'create departments',
             'edit departments',
             'delete departments',
 
-            // Employee
+            // ============================================================
+            // EMPLOYEE MANAGEMENT
+            // ============================================================
             'view employees',
             'create employees',
             'edit employees',
             'delete employees',
+            'import employees',
+            'export employees',
+            'view employee profiles',
+            'edit employee profiles',
+            'terminate employees',
+            'transfer employees',
 
-            // Employee Assignment
+            // ============================================================
+            // EMPLOYEE ASSIGNMENT
+            // ============================================================
             'view employee assignments',
             'create employee assignments',
             'edit employee assignments',
             'delete employee assignments',
 
-            // Position
+            // ============================================================
+            // POSITION MANAGEMENT
+            // ============================================================
             'view positions',
             'create positions',
             'edit positions',
             'delete positions',
 
-            // Province
+            // ============================================================
+            // PROVINCE MANAGEMENT
+            // ============================================================
             'view provinces',
             'create provinces',
             'edit provinces',
             'delete provinces',
 
-            // Ward
+            // ============================================================
+            // WARD MANAGEMENT
+            // ============================================================
             'view wards',
             'create wards',
             'edit wards',
             'delete wards',
 
-            // Education Level
+            // ============================================================
+            // EDUCATION LEVEL MANAGEMENT
+            // ============================================================
             'view education levels',
             'create education levels',
             'edit education levels',
             'delete education levels',
 
-            // School
+            // ============================================================
+            // SCHOOL MANAGEMENT
+            // ============================================================
             'view schools',
             'create schools',
             'edit schools',
             'delete schools',
 
-            // Skill
+            // ============================================================
+            // SKILL MANAGEMENT
+            // ============================================================
             'view skills',
             'create skills',
             'edit skills',
             'delete skills',
 
-            // Skill Category
+            // ============================================================
+            // SKILL CATEGORY MANAGEMENT
+            // ============================================================
             'view skill categories',
             'create skill categories',
             'edit skill categories',
             'delete skill categories',
 
-            //Contract
+            // ============================================================
+            // CONTRACT MANAGEMENT
+            // ============================================================
             'view contracts',
             'create contracts',
             'edit contracts',
             'delete contracts',
-            'submit contracts', // Gửi phê duyệt
-            'approve contracts', // Phê duyệt
-            'recall contracts', // Thu hồi
-            'renew contracts', // Gia hạn hợp đồng
-            'approve appendixes', // Phê duyệt phụ lục
-            'reject appendixes', // Từ chối phụ lục
+            'submit contracts',
+            'approve contracts',
+            'reject contracts',
+            'recall contracts',
+            'renew contracts',
+            'terminate contracts',
 
-            // Contract Template
+            // ============================================================
+            // CONTRACT TEMPLATE MANAGEMENT
+            // ============================================================
             'view contract templates',
             'create contract templates',
             'edit contract templates',
             'delete contract templates',
 
-            // Contract Appendix Template
+            // ============================================================
+            // CONTRACT APPENDIX MANAGEMENT
+            // ============================================================
             'view appendix templates',
             'create appendix templates',
             'edit appendix templates',
             'delete appendix templates',
+            'approve appendixes',
+            'reject appendixes',
 
-            // Insurance Reports
+            // ============================================================
+            // LEAVE MANAGEMENT
+            // ============================================================
+            'view leave requests',
+            'create leave requests',
+            'edit leave requests',
+            'delete leave requests',
+            'submit leave requests',
+            'approve leave requests',
+            'reject leave requests',
+            'cancel leave requests',
+            'view leave balances',
+            'adjust leave balances',
+            'view leave types',
+            'manage leave types',
+            'export leave reports',
+
+            // ============================================================
+            // PAYROLL & BENEFITS MANAGEMENT
+            // ============================================================
+            'view payroll',
+            'create payroll',
+            'edit payroll',
+            'delete payroll',
+            'process payroll',
+            'approve payroll',
+            'export payroll',
+            'view benefits',
+            'manage benefits',
+            'approve benefit payouts',
+            'export payroll reports',
+
+            // ============================================================
+            // INSURANCE MANAGEMENT
+            // ============================================================
             'view insurance reports',
             'create insurance reports',
             'approve insurance records',
@@ -138,6 +231,65 @@ class RolesAndPermissionsSeeder extends Seeder
             'finalize insurance reports',
             'export insurance reports',
             'delete insurance reports',
+
+            // ============================================================
+            // PERFORMANCE MANAGEMENT
+            // ============================================================
+            'view performance reviews',
+            'create performance reviews',
+            'edit performance reviews',
+            'delete performance reviews',
+            'approve performance reviews',
+            'view KPI data',
+            'manage KPI templates',
+            'export performance reports',
+
+            // ============================================================
+            // REWARDS & DISCIPLINE
+            // ============================================================
+            'view rewards',
+            'create rewards',
+            'edit rewards',
+            'delete rewards',
+            'approve rewards',
+            'view disciplines',
+            'create disciplines',
+            'edit disciplines',
+            'delete disciplines',
+            'approve disciplines',
+
+            // ============================================================
+            // REPORTS & ANALYTICS
+            // ============================================================
+            'view all reports',
+            'view department reports',
+            'view employee reports',
+            'view contract reports',
+            'view leave reports',
+            'view payroll reports',
+            'view performance reports',
+            'export all reports',
+            'export department reports',
+            'schedule reports',
+            'create custom reports',
+
+            // ============================================================
+            // SETTINGS & CONFIGURATION
+            // ============================================================
+            'view settings',
+            'edit settings',
+            'manage notification templates',
+            'manage email templates',
+
+            // ============================================================
+            // LEGACY/BACKFILL DATA (no approval workflow)
+            // ============================================================
+            'import legacy data',
+            'backfill employees',
+            'backfill contracts',
+            'backfill leave requests',
+            'backfill insurance records',
+            'backfill payroll records',
         ];
 
         foreach ($permissions as $permission) {
@@ -151,24 +303,57 @@ class RolesAndPermissionsSeeder extends Seeder
         $superAdmin->givePermissionTo(Permission::all());
 
         // Admin - has all permissions except Permission Management and Backup Management
-        $admin = Role::create(['name' => 'Admin']);
+        // Đổi tên thành HR Admin để rõ ràng hơn về nghiệp vụ
+        $hrAdmin = Role::create(['name' => 'HR Admin']);
         $excludedPermissions = [
+            // System admin only
+            'manage system settings',
+            'view system logs',
+            'manage integrations',
+
+            // Permission management (Super Admin only)
             'view permissions',
+            'create permissions',
+            'edit permissions',
+            'delete permissions',
             'assign permissions',
+
+            // Backup management (Super Admin only)
             'view backups',
             'create backups',
             'restore backups',
             'delete backups',
             'configure backups',
         ];
-        $adminPermissions = Permission::whereNotIn('name', $excludedPermissions)->pluck('name');
-        $admin->givePermissionTo($adminPermissions);
+        $hrAdminPermissions = Permission::whereNotIn('name', $excludedPermissions)->pluck('name');
+        $hrAdmin->givePermissionTo($hrAdminPermissions);
 
         // HR Staff - can manage insurance reports
-        $hrStaff = Role::create(['name' => 'HR Staff']);
-        $hrStaff->givePermissionTo([
+        // Đổi tên thành Payroll Admin để rõ về chuyên môn lương/BHXH
+        $payrollAdmin = Role::create(['name' => 'Payroll Admin']);
+        $payrollAdmin->givePermissionTo([
+            // View only
             'view employees',
             'view contracts',
+            'view leave requests',
+            'view leave balances',
+
+            // Payroll full access
+            'view payroll',
+            'create payroll',
+            'edit payroll',
+            'delete payroll',
+            'process payroll',
+            'approve payroll',
+            'export payroll',
+            'export payroll reports',
+
+            // Benefits management
+            'view benefits',
+            'manage benefits',
+            'approve benefit payouts',
+
+            // Insurance full access
             'view insurance reports',
             'create insurance reports',
             'approve insurance records',
@@ -177,9 +362,15 @@ class RolesAndPermissionsSeeder extends Seeder
             'finalize insurance reports',
             'export insurance reports',
             'delete insurance reports',
+
+            // Backfill quyền cho insurance & payroll
+            'import legacy data',
+            'backfill insurance records',
+            'backfill payroll records',
         ]);
 
         // Director - can approve contracts at director level, manage users
+        // Director không được quyền backfill (chỉ approval role)
         $director = Role::create(['name' => 'Director']);
         $director->givePermissionTo([
             'view users',
@@ -188,32 +379,67 @@ class RolesAndPermissionsSeeder extends Seeder
             'view departments',
             'create departments',
             'edit departments',
-            'view contracts',
-            'approve contracts', // Director có quyền approve
-            'approve appendixes', // Director có quyền approve phụ lục
-            'reject appendixes',
             'view employees',
+            'view employee profiles',
+            'view contracts',
+            'approve contracts',
+            'approve appendixes',
+            'reject appendixes',
+            'view leave requests',
+            'approve leave requests',
+            'reject leave requests',
+            'view payroll',
+            'approve payroll',
+            'view insurance reports',
+            'view performance reviews',
+            'approve performance reviews',
+            'view rewards',
+            'approve rewards',
+            'view disciplines',
+            'approve disciplines',
+            'view all reports',
+            'view department reports',
+            'view employee reports',
         ]);
 
         // Manager - can approve contracts at manager level, manage departments
-        $manager = Role::create(['name' => 'Manager']);
-        $manager->givePermissionTo([
+        // Đổi tên thành Department Manager để rõ ràng hơn
+        // Department Manager không được quyền backfill (chỉ quản lý department hiện tại)
+        $deptManager = Role::create(['name' => 'Department Manager']);
+        $deptManager->givePermissionTo([
             'view users',
             'create users',
             'edit users',
             'view departments',
-            'view contracts',
-            'approve contracts', // Manager có quyền approve
-            'approve appendixes', // Manager có quyền approve phụ lục
-            'reject appendixes',
             'view employees',
+            'create employees',
+            'edit employees',
+            'view employee profiles',
+            'edit employee profiles',
+            'transfer employees',
+            'view contracts',
+            'approve contracts',
+            'approve appendixes',
+            'reject appendixes',
+            'view leave requests',
+            'approve leave requests',
+            'reject leave requests',
+            'view leave balances',
+            'view performance reviews',
+            'create performance reviews',
+            'edit performance reviews',
+            'view KPI data',
+            'view rewards',
+            'create rewards',
+            'view disciplines',
+            'create disciplines',
+            'view department reports',
+            'view employee reports',
         ]);
 
-        // User - basic permissions
-        $user = Role::create(['name' => 'User']);
-        $user->givePermissionTo([
-            'view activity logs',
-        ]);
+        // Xóa role User vì không có Employee/Team Lead trong hệ thống
+        // $user = Role::create(['name' => 'User']);
+        // $user->givePermissionTo(['view activity logs']);
 
         $this->command->info('Roles and permissions created successfully!');
     }

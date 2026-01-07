@@ -62,9 +62,25 @@
                         {{ formatDate(slotProps.data.created_at) }}
                     </template>
                 </Column>
-                <Column v-if="isSuperAdmin()" :exportable="false" style="min-width: 12rem">
+                <Column v-if="isSuperAdmin()" :exportable="false" style="min-width: 16rem">
                     <template #body="slotProps">
-                        <Button icon="pi pi-pencil" outlined rounded class="mr-2" @click="editRole(slotProps.data)" />
+                        <Button
+                            icon="pi pi-lock"
+                            outlined
+                            rounded
+                            severity="info"
+                            class="mr-2"
+                            @click="managePermissions(slotProps.data)"
+                            v-tooltip.top="'Phân quyền'"
+                        />
+                        <Button
+                            icon="pi pi-pencil"
+                            outlined
+                            rounded
+                            class="mr-2"
+                            @click="editRole(slotProps.data)"
+                            v-tooltip.top="'Sửa'"
+                        />
                         <Button
                             icon="pi pi-trash"
                             outlined
@@ -72,6 +88,7 @@
                             severity="danger"
                             @click="confirmDeleteRole(slotProps.data)"
                             :disabled="isSystemRole(slotProps.data.name)"
+                            v-tooltip.top="'Xóa'"
                         />
                     </template>
                 </Column>
@@ -92,22 +109,10 @@
                         class="w-full"
                     />
                     <small class="text-red-500" v-if="errors.name">{{ errors.name }}</small>
-                </div>
-
-                <div>
-                    <label class="block font-bold mb-3">Quyền hạn</label>
-                    <div class="grid grid-cols-2 gap-3">
-                        <div v-for="permission in allPermissions" :key="permission.id" class="flex items-center">
-                            <Checkbox
-                                v-model="form.permissions"
-                                :inputId="'permission-' + permission.id"
-                                :value="permission.id"
-                                :disabled="isSystemRole(form.name) && isEdit"
-                            />
-                            <label :for="'permission-' + permission.id" class="ml-2">{{ permission.name }}</label>
-                        </div>
-                    </div>
-                    <small class="text-red-500" v-if="errors.permissions">{{ errors.permissions }}</small>
+                    <small class="text-surface-500 block mt-2">
+                        <i class="pi pi-info-circle mr-1"></i>
+                        Để phân quyền cho vai trò này, vui lòng sử dụng nút "Phân quyền" (biểu tượng khóa)
+                    </small>
                 </div>
             </div>
 
@@ -149,7 +154,7 @@
 
 <script setup>
 import { ref, computed } from 'vue';
-import { useForm, Head } from '@inertiajs/vue3';
+import { useForm, Head, router } from '@inertiajs/vue3';
 import { useFormValidation } from '@/composables/useFormValidation';
 import { usePermission } from '@/composables/usePermission';
 import { RoleService } from '@/services';
@@ -208,12 +213,12 @@ const formatDate = (date) => {
 };
 
 const getRoleSeverity = (roleName) => {
-    const systemRoles = ['Super Admin', 'Admin', 'Manager', 'User'];
+    const systemRoles = ['Super Admin', 'HR Admin', 'Department Manager', 'Director', 'Payroll Admin'];
     return systemRoles.includes(roleName) ? 'danger' : 'info';
 };
 
 const isSystemRole = (roleName) => {
-    const systemRoles = ['Super Admin', 'Admin'];
+    const systemRoles = ['Super Admin'];
     return systemRoles.includes(roleName);
 };
 
@@ -237,17 +242,19 @@ const editRole = (role) => {
 
     // Set giá trị cho form
     form.name = role.name;
-    form.permissions = role.permissions ? role.permissions.map(p => p.id) : [];
 
     selectedRole.value = role;
     isEdit.value = true;
     roleDialog.value = true;
 };
 
+const managePermissions = (role) => {
+    router.visit(`/permissions/role/${role.id}/manage`);
+};
+
 const saveRole = () => {
     const roleData = {
-        name: form.name,
-        permissions: form.permissions
+        name: form.name
     };
 
     const onSuccess = () => {

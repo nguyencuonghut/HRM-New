@@ -57,7 +57,17 @@ Route::group(['middleware' => 'auth'], function () {
 
     // Role Management Routes - Authorization handled by RolePolicy
     Route::delete('roles/bulk-delete', [RoleController::class, 'bulkDelete'])->name('roles.bulk-delete');
+    Route::get('roles/{role}/permissions', [RoleController::class, 'getPermissions'])->name('roles.permissions');
+    Route::post('roles/{role}/sync-permissions', [RoleController::class, 'syncPermissions'])->name('roles.sync-permissions');
+    Route::get('roles/{role}/users', [RoleController::class, 'getUsersWithRole'])->name('roles.users');
     Route::resource('roles', RoleController::class);
+
+    // Permission Management Routes - Authorization handled by PermissionController
+    Route::delete('permissions/bulk-delete', [\App\Http\Controllers\PermissionController::class, 'bulkDelete'])->name('permissions.bulk-delete');
+    Route::get('permissions/role/{role}', [\App\Http\Controllers\PermissionController::class, 'getByRole'])->name('permissions.by-role');
+    Route::post('permissions/role/{role}/sync', [\App\Http\Controllers\PermissionController::class, 'syncRolePermissions'])->name('permissions.sync-role');
+    Route::get('permissions/role/{role}/manage', [\App\Http\Controllers\PermissionController::class, 'manageRolePermissions'])->name('permissions.role-manage');
+    Route::resource('permissions', \App\Http\Controllers\PermissionController::class);
 
     // Activity Log Routes - Authorization handled by ActivityPolicy
     Route::delete('activity-logs/clear', [ActivityLogController::class, 'clear'])->name('activity-logs.clear');

@@ -167,8 +167,17 @@ const model = computed(() => {
     if (canViewRoles()) {
         systemMenuItems.push({
             label: t('nav.roles'),
-            icon: 'pi pi-fw pi-lock',
+            icon: 'pi pi-fw pi-shield',
             to: '/roles'
+        });
+    }
+
+    // Permissions menu - check permission (Super Admin only)
+    if (can('view permissions')) {
+        systemMenuItems.push({
+            label: 'Quản lý quyền',
+            icon: 'pi pi-fw pi-lock',
+            to: '/permissions'
         });
     }
 
