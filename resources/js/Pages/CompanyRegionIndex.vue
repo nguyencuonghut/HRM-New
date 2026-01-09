@@ -207,6 +207,7 @@ onMounted(() => {
             <Toolbar class="mb-6">
                 <template #start>
                     <Button
+                        v-if="can('create departments')"
                         label="Thêm mới"
                         icon="pi pi-plus"
                         @click="openNew"

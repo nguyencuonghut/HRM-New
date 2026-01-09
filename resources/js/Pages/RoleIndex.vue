@@ -7,8 +7,8 @@
         <div class="card">
             <Toolbar class="mb-6">
                 <template #start>
-                    <Button v-if="isSuperAdmin()" label="Thêm vai trò" icon="pi pi-plus" class="mr-2" @click="openNew" />
-                    <Button v-if="isSuperAdmin()" label="Xóa" icon="pi pi-trash" severity="danger" variant="outlined" @click="confirmDeleteSelected" :disabled="!selectedRoles || !selectedRoles.length" />
+                    <Button v-if="can('create roles')" label="Thêm vai trò" icon="pi pi-plus" class="mr-2" @click="openNew" />
+                    <Button v-if="can('delete roles')" label="Xóa" icon="pi pi-trash" severity="danger" variant="outlined" @click="confirmDeleteSelected" :disabled="!selectedRoles || !selectedRoles.length" />
                 </template>
 
                 <template #end>
@@ -41,7 +41,7 @@
                     </div>
                 </template>
 
-                <Column selectionMode="multiple" style="width: 3rem" :exportable="false" v-if="isSuperAdmin()"></Column>
+                <Column selectionMode="multiple" style="width: 3rem" :exportable="false" v-if="can('delete roles')"></Column>
                 <Column field="name" header="Tên vai trò" sortable style="min-width: 16rem">
                     <template #body="slotProps">
                         <Tag :value="slotProps.data.name" :severity="getRoleSeverity(slotProps.data.name)" />
@@ -62,9 +62,10 @@
                         {{ formatDate(slotProps.data.created_at) }}
                     </template>
                 </Column>
-                <Column v-if="isSuperAdmin()" :exportable="false" style="min-width: 16rem">
+                <Column v-if="can('edit roles') || can('delete roles')" :exportable="false" style="min-width: 16rem">
                     <template #body="slotProps">
                         <Button
+                            v-if="can('edit roles')"
                             icon="pi pi-lock"
                             outlined
                             rounded
@@ -74,6 +75,7 @@
                             v-tooltip.top="'Phân quyền'"
                         />
                         <Button
+                            v-if="can('edit roles')"
                             icon="pi pi-pencil"
                             outlined
                             rounded
@@ -82,6 +84,7 @@
                             v-tooltip.top="'Sửa'"
                         />
                         <Button
+                            v-if="can('delete roles')"
                             icon="pi pi-trash"
                             outlined
                             rounded
@@ -160,7 +163,7 @@ import { usePermission } from '@/composables/usePermission';
 import { RoleService } from '@/services';
 
 const { errors, hasError, getError } = useFormValidation();
-const { isSuperAdmin } = usePermission();
+const { can } = usePermission();
 
 // Props
 const props = defineProps({

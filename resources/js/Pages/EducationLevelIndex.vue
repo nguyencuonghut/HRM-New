@@ -5,8 +5,8 @@
     <div class="card">
       <Toolbar class="mb-6">
         <template #start>
-          <Button label="Thêm mới" icon="pi pi-plus" class="mr-2" @click="openNew" />
-          <Button label="Xóa" icon="pi pi-trash" severity="danger" variant="outlined"
+          <Button v-if="can('create education levels')" label="Thêm mới" icon="pi pi-plus" class="mr-2" @click="openNew" />
+          <Button v-if="can('delete education levels')" label="Xóa" icon="pi pi-trash" severity="danger" variant="outlined"
                   @click="confirmDeleteSelected" :disabled="!selectedRows || !selectedRows.length" />
         </template>
         <template #end>
