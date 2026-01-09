@@ -214,7 +214,7 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, watch } from 'vue'
 import { Head } from '@inertiajs/vue3'
 import Select from 'primevue/select'
 import DatePicker from 'primevue/datepicker'
@@ -260,9 +260,14 @@ const statusFilter = ref(null)
 const employeesForSelect = computed(() => props.employees || [])
 const departmentsForSelect = computed(() => props.departments || [])
 const positionsForSelect = computed(() => {
-  return (props.positions || []).map(pos => ({
+  // Filter positions by selected department
+  const filtered = form.value.department_id
+    ? (props.positions || []).filter(pos => pos.department_id === form.value.department_id)
+    : (props.positions || [])
+
+  return filtered.map(pos => ({
     ...pos,
-    displayLabel: pos.department?.name ? `${pos.title} (${pos.department.name})` : pos.title
+    displayLabel: pos.title // Department already selected, no need to show in label
   }))
 })
 const roleTypesForSelect = computed(() => props.enums?.role_types || [])
@@ -290,6 +295,13 @@ const form = ref({
   status: 'ACTIVE',
 })
 const isEditing = computed(() => !!form.value.id)
+
+// Clear position when department changes
+watch(() => form.value.department_id, (newVal, oldVal) => {
+  if (newVal !== oldVal && oldVal !== undefined) {
+    form.value.position_id = null
+  }
+})
 
 function openNew() {
   submitted.value = false
