@@ -487,7 +487,7 @@ class EmployeeInsuranceProfileService
 
         // Get minimum wage from InsuranceConfigResolver using company's region
         $companyRegion = \App\Models\CompanyRegion::getRegionAtDate($date);
-        $region = $companyRegion ? $companyRegion->region : 3; // Fallback to region 3
+        $region = $companyRegion?->region ?? 3; // Fallback to region 3 if not configured
         $minWageAmount = $this->resolver->getMinimumWage($region, $date);
 
         if (!$minWageAmount) {
@@ -530,7 +530,7 @@ class EmployeeInsuranceProfileService
 
         // Use InsuranceConfigResolver for minimum wage using company's region
         $companyRegion = \App\Models\CompanyRegion::current()->first();
-        $region = $companyRegion ? $companyRegion->region : 3; // Fallback to region 3
+        $region = $companyRegion?->region ?? 3; // Fallback to region 3 if not configured
         $minWageAmount = $this->resolver->getMinimumWage($region);
 
         if (!$minWageAmount) {

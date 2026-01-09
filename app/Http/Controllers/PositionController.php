@@ -191,7 +191,7 @@ class PositionController extends Controller
 
         // Get region from company configuration at the specific date
         $companyRegion = \App\Models\CompanyRegion::getRegionAtDate($date);
-        $defaultRegion = $companyRegion ? $companyRegion->region : 3; // Fallback to region 3 if not configured
+        $defaultRegion = $companyRegion?->region ?? 3; // Fallback to region 3 if not configured
 
         // Get employee's current insurance profile to determine grade
         $employeeProfile = null;

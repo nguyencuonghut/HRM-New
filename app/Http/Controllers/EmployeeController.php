@@ -99,8 +99,9 @@ class EmployeeController extends Controller
         $currentInsuranceProfile = $employee->currentInsuranceProfile;
 
         if ($currentInsuranceProfile) {
-            // Giả sử vùng 2 (có thể lấy từ employee hoặc company setting)
-            $region = 2;// TODO: Lấy vùng lương tối thiểu từ đâu đó
+            // Lấy vùng BHXH hiện tại từ cấu hình công ty
+            $companyRegion = \App\Models\CompanyRegion::current()->first();
+            $region = $companyRegion?->region ?? 3; // Fallback to region 3 if not configured
 
             // Tính lương BHXH
             $calculation = $insuranceCalculator->calculateForEmployee(

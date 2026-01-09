@@ -135,7 +135,7 @@ class InsuranceReportController extends Controller
      */
     public function approve(Request $request, InsuranceChangeRecord $record)
     {
-        $this->authorize('update', InsuranceMonthlyReport::class);
+        $this->authorize('update', $record->report);
 
         $validated = $request->validate([
             'admin_notes' => 'nullable|string|max:1000',
@@ -165,7 +165,7 @@ class InsuranceReportController extends Controller
      */
     public function reject(Request $request, InsuranceChangeRecord $record)
     {
-        $this->authorize('update', InsuranceMonthlyReport::class);
+        $this->authorize('update', $record->report);
 
         $validated = $request->validate([
             'reason' => 'required|string|max:1000',
@@ -195,7 +195,7 @@ class InsuranceReportController extends Controller
      */
     public function adjust(Request $request, InsuranceChangeRecord $record)
     {
-        $this->authorize('update', InsuranceMonthlyReport::class);
+        $this->authorize('update', $record->report);
 
         $validated = $request->validate([
             'adjusted_salary' => 'required|numeric|min:0',
