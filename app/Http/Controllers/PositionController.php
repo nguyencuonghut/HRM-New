@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use App\Models\Position;
 use App\Models\Department;
+use App\Models\InsuranceSalaryCategory;
 use App\Http\Resources\PositionResource;
 use App\Http\Resources\DepartmentResource;
 use App\Http\Requests\StorePositionRequest;
@@ -26,6 +27,7 @@ class PositionController extends Controller
         $positions = PositionResource::collection(
             Position::with([
                 'department',
+                'insuranceSalaryCategory',
                 'salaryGrades' => function ($query) {
                     $query->where('is_active', true)
                           ->orderBy('grade', 'asc');
@@ -37,7 +39,12 @@ class PositionController extends Controller
             Department::where('is_active', true)->orderBy('name')->get()
         )->resolve();
 
-        return inertia('PositionIndex', compact('positions', 'departments'));
+        $insuranceSalaryCategories = InsuranceSalaryCategory::where('is_active', true)
+            ->ordered()
+            ->get(['id', 'code', 'name'])
+            ->toArray();
+
+        return inertia('PositionIndex', compact('positions', 'departments', 'insuranceSalaryCategories'));
     }
 
     /**
@@ -182,8 +189,9 @@ class PositionController extends Controller
         $employeeId = $request->query('employee_id');
         $date = $request->query('date', now());
 
-        // Default region (you can enhance this to detect from employee's work location)
-        $defaultRegion = 2; //TODO: Lấy vùng lương tối thiểu từ đâu đó
+        // Get region from company configuration at the specific date
+        $companyRegion = \App\Models\CompanyRegion::getRegionAtDate($date);
+        $defaultRegion = $companyRegion ? $companyRegion->region : 3; // Fallback to region 3 if not configured
 
         // Get employee's current insurance profile to determine grade
         $employeeProfile = null;
@@ -226,17 +234,11 @@ class PositionController extends Controller
 
         $coefficient = (float) $gradeData->coefficient;
 
-        // Get minimum wage for region
-        $minWageData = \App\Models\MinimumWage::where('region', $defaultRegion)
-            ->where('is_active', true)
-            ->whereDate('effective_from', '<=', $date)
-            ->where(function ($q) use ($date) {
-                $q->whereNull('effective_to')
-                  ->orWhereDate('effective_to', '>=', $date);
-            })
-            ->first();
+        // Get minimum wage for region from InsuranceConfigResolver
+        $resolver = app(\App\Services\InsuranceConfigResolver::class);
+        $minWage = $resolver->getMinimumWage($defaultRegion, $date);
 
-        if (!$minWageData) {
+        if (!$minWage) {
             return response()->json([
                 'suggested_insurance_salary' => null,
                 'minimum_wage' => null,
@@ -246,9 +248,7 @@ class PositionController extends Controller
                 'explain' => 'Không tìm thấy lương tối thiểu vùng'
             ]);
         }
-
-        $minWage = $minWageData->amount;
-        $suggestedSalary = (int) round($minWage * $coefficient);
+        $suggestedSalary = (int) round($minWage * (float) $coefficient);
 
         // Format region as Roman numeral
         $regionMap = [1 => 'I', 2 => 'II', 3 => 'III', 4 => 'IV'];
@@ -256,11 +256,11 @@ class PositionController extends Controller
 
         return response()->json([
             'suggested_insurance_salary' => $suggestedSalary,
-            'minimum_wage' => $minWage,
+            'minimum_wage' => (float) $minWage,
             'region' => $regionDisplay,
             'grade' => $grade,
             'coefficient' => $coefficient,
-            'explain' => number_format($minWage, 0, ',', '.') . ' × ' . $coefficient . ' (Bậc ' . $grade . ' - ' . $position->title . ')'
+            'explain' => number_format((float) $minWage, 0, ',', '.') . ' × ' . $coefficient . ' (Bậc ' . $grade . ' - ' . $position->title . ')'
         ]);
     }
 }

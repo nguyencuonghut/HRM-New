@@ -22,6 +22,8 @@ import { SkillCategoryService } from './SkillCategoryService';
 import { SkillService } from './SkillService';
 import { EmployeeKpiMonthService } from './EmployeeKpiMonthService';
 import { EmployeeAnnualReviewService } from './EmployeeAnnualReviewService';
+import { CompanyRegionService } from './CompanyRegionService';
+import { InsuranceSalaryCategoryService } from './InsuranceSalaryCategoryService';
 
 export {
     AuthService,
@@ -48,4 +50,6 @@ export {
     SkillService,
     EmployeeKpiMonthService,
     EmployeeAnnualReviewService,
+    CompanyRegionService,
+    InsuranceSalaryCategoryService,
 };

@@ -2,7 +2,6 @@
 
 namespace App\Services;
 
-use App\Models\MinimumWage;
 use App\Models\PositionSalaryGrade;
 use App\Models\EmployeeInsuranceProfile;
 use Carbon\Carbon;
@@ -18,9 +17,18 @@ use Carbon\Carbon;
  * - BHXH Report (báo cáo đóng BHXH)
  * - Contract/Appendix (preview lương BHXH trước khi tạo)
  * - UI display (card BHXH trong profile)
+ *
+ * NOTE: Đang dùng InsuranceConfigResolver cho minimum wages.
+ * PositionSalaryGrade vẫn giữ nguyên vì chưa migrate sang config system.
  */
 class InsuranceSalaryCalculatorService
 {
+    protected InsuranceConfigResolver $resolver;
+
+    public function __construct(InsuranceConfigResolver $resolver)
+    {
+        $this->resolver = $resolver;
+    }
     /**
      * Tính lương BHXH = Lương tối thiểu vùng × Hệ số bậc
      *
@@ -223,27 +231,26 @@ class InsuranceSalaryCalculatorService
      */
     public function getMinimumWage(int $region, string $date): ?array
     {
-        $minWage = MinimumWage::where('region', $region)
-            ->where('effective_from', '<=', $date)
-            ->where(function ($q) use ($date) {
-                $q->whereNull('effective_to')
-                  ->orWhere('effective_to', '>=', $date);
-            })
-            ->where('is_active', true)
-            ->orderBy('effective_from', 'desc')
-            ->first();
+        // Use InsuranceConfigResolver for minimum wage
+        $amount = $this->resolver->getMinimumWage($region, $date);
 
-        if (!$minWage) {
+        if (!$amount) {
             return null;
         }
 
+        $regionNames = [
+            1 => 'Vùng I',
+            2 => 'Vùng II',
+            3 => 'Vùng III',
+            4 => 'Vùng IV',
+        ];
+
         return [
-            'id' => $minWage->id,
-            'region' => $minWage->region,
-            'region_name' => $minWage->region_name,
-            'amount' => $minWage->amount,
-            'effective_from' => $minWage->effective_from->format('d/m/Y'),
-            'note' => $minWage->note,
+            'region' => $region,
+            'region_name' => $regionNames[$region] ?? "Vùng {$region}",
+            'amount' => $amount,
+            'effective_from' => Carbon::parse($date)->format('d/m/Y'),
+            'note' => 'Từ Insurance Config System',
         ];
     }
 
@@ -302,20 +309,29 @@ class InsuranceSalaryCalculatorService
      */
     public function getAllCurrentMinimumWages(): array
     {
-        $wages = MinimumWage::where('is_active', true)
-            ->whereNull('effective_to')
-            ->orderBy('region')
-            ->get();
+        // Use InsuranceConfigResolver for all minimum wages
+        $wages = $this->resolver->getAllMinimumWages();
 
-        return $wages->map(function ($wage) {
+        if (empty($wages)) {
+            return [];
+        }
+
+        $regionNames = [
+            1 => 'Vùng I',
+            2 => 'Vùng II',
+            3 => 'Vùng III',
+            4 => 'Vùng IV',
+        ];
+
+        return array_map(function ($wage) use ($regionNames) {
             return [
-                'region' => $wage->region,
-                'region_name' => $wage->region_name,
-                'amount' => $wage->amount,
-                'formatted' => $wage->formatted_amount,
-                'effective_from' => $wage->effective_from->format('d/m/Y'),
+                'region' => $wage['region'],
+                'region_name' => $regionNames[$wage['region']] ?? "Vùng {$wage['region']}",
+                'amount' => $wage['amount'],
+                'formatted' => number_format($wage['amount'], 0, ',', '.') . ' VNĐ',
+                'effective_from' => 'Hiện tại',
             ];
-        })->toArray();
+        }, $wages);
     }
 
     /**

@@ -31,6 +31,14 @@ class PositionResource extends JsonResource
             'department_parent' => $this->department?->parent?->name,
             'title' => $this->title,
             'level' => $this->level,
+            'insurance_salary_category_id' => $this->insurance_salary_category_id,
+            'insurance_salary_category' => $this->whenLoaded('insuranceSalaryCategory', function () {
+                return [
+                    'id' => $this->insuranceSalaryCategory->id,
+                    'code' => $this->insuranceSalaryCategory->code,
+                    'name' => $this->insuranceSalaryCategory->name,
+                ];
+            }),
             'insurance_base_salary' => $this->insurance_base_salary,
             'position_salary' => $this->position_salary,
             'competency_salary' => $this->competency_salary,

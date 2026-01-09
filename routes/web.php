@@ -107,6 +107,10 @@ Route::group(['middleware' => 'auth'], function () {
     // Department resource routes
     Route::resource('departments', DepartmentController::class)->except(['show']);
 
+    // Insurance Salary Categories (Nhóm chức danh BHXH)
+    Route::delete('insurance-salary-categories/bulk-delete', [\App\Http\Controllers\InsuranceSalaryCategoryController::class, 'bulkDelete'])->name('insurance-salary-categories.bulk-delete');
+    Route::resource('insurance-salary-categories', \App\Http\Controllers\InsuranceSalaryCategoryController::class)->except(['show']);
+
     // Skill Categories
     Route::resource('skill-categories', \App\Http\Controllers\SkillCategoryController::class)->except(['show']);
     Route::post('skill-categories/bulk-delete', [\App\Http\Controllers\SkillCategoryController::class, 'bulkDelete'])->name('skill-categories.bulk-delete');
@@ -313,6 +317,9 @@ Route::group(['middleware' => 'auth'], function () {
     Route::get('/api/provinces', [ProvinceController::class, 'index'])->name('api.provinces.index');
     Route::get('/api/provinces/{province}/wards', [ProvinceController::class, 'getWards'])->name('api.provinces.wards');
 
+    // Position Categories API
+    Route::get('/api/positions/categories-with-grades', [\App\Http\Controllers\Api\PositionCategoryController::class, 'getCategoriesWithGrades'])->name('api.positions.categories-with-grades');
+
     // Education Levels
     Route::get('education-levels', [EducationLevelController::class, 'index'])->name('education-levels.index');
     Route::post('education-levels', [EducationLevelController::class, 'store'])->name('education-levels.store');
@@ -368,6 +375,16 @@ Route::group(['middleware' => 'auth'], function () {
     Route::post('insurance-records/{record}/approve', [\App\Http\Controllers\InsuranceReportController::class, 'approve'])->name('insurance-records.approve');
     Route::post('insurance-records/{record}/reject', [\App\Http\Controllers\InsuranceReportController::class, 'reject'])->name('insurance-records.reject');
     Route::post('insurance-records/{record}/adjust', [\App\Http\Controllers\InsuranceReportController::class, 'adjust'])->name('insurance-records.adjust');
+
+    // Insurance Config Routes
+    Route::get('insurance-config-sets/current', [\App\Http\Controllers\InsuranceConfigSetController::class, 'current'])->name('insurance-config-sets.current');
+    Route::post('insurance-config-sets/{id}/activate', [\App\Http\Controllers\InsuranceConfigSetController::class, 'activate'])->name('insurance-config-sets.activate');
+    Route::post('insurance-config-sets/{id}/archive', [\App\Http\Controllers\InsuranceConfigSetController::class, 'archive'])->name('insurance-config-sets.archive');
+    Route::post('insurance-config-sets/{id}/clone', [\App\Http\Controllers\InsuranceConfigSetController::class, 'cloneSet'])->name('insurance-config-sets.clone');
+    Route::resource('insurance-config-sets', \App\Http\Controllers\InsuranceConfigSetController::class);
+
+    // Company Region Routes
+    Route::resource('company-regions', \App\Http\Controllers\CompanyRegionController::class);
 
     // Report Routes
     Route::prefix('reports')->name('reports.')->group(function () {

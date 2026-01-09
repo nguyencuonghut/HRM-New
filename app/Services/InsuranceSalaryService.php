@@ -4,7 +4,6 @@ namespace App\Services;
 
 use App\Models\Employee;
 use App\Models\EmployeeInsuranceProfile;
-use App\Models\MinimumWage;
 use App\Models\PositionSalaryGrade;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
@@ -17,9 +16,19 @@ use Illuminate\Support\Facades\DB;
  * - Tính thâm niên theo vị trí
  * - Đề xuất tăng bậc
  * - Khởi tạo hồ sơ BHXH
+ *
+ * NOTE: Đang dùng InsuranceConfigResolver cho minimum wages.
+ * PositionSalaryGrade vẫn giữ nguyên vì chưa migrate sang config system.
  */
 class InsuranceSalaryService
 {
+    protected InsuranceConfigResolver $resolver;
+
+    public function __construct(InsuranceConfigResolver $resolver)
+    {
+        $this->resolver = $resolver;
+    }
+
     /**
      * Tính lương BHXH cho nhân viên tại thời điểm cụ thể
      *
@@ -52,27 +61,34 @@ class InsuranceSalaryService
             return null;
         }
 
-        // Lấy lương tối thiểu vùng
-        $minWage = MinimumWage::getForRegion($region, $date);
+        // Lấy lương tối thiểu vùng từ InsuranceConfigResolver
+        $minWageAmount = $this->resolver->getMinimumWage($region, $date);
 
-        if (!$minWage) {
+        if (!$minWageAmount) {
             return null;
         }
 
+        $regionNames = [
+            1 => 'Vùng I',
+            2 => 'Vùng II',
+            3 => 'Vùng III',
+            4 => 'Vùng IV',
+        ];
+
         // Tính lương BHXH
-        $amount = $minWage->amount * $gradeData->coefficient;
+        $amount = $minWageAmount * (float) $gradeData->coefficient;
 
         return [
             'amount' => $amount,
             'breakdown' => [
                 'region' => $region,
-                'region_name' => $minWage->region_name,
-                'minimum_wage' => $minWage->amount,
-                'minimum_wage_effective_from' => $minWage->effective_from->format('d/m/Y'),
+                'region_name' => $regionNames[$region] ?? "Vùng {$region}",
+                'minimum_wage' => $minWageAmount,
+                'minimum_wage_effective_from' => Carbon::parse($date)->format('d/m/Y'),
                 'position' => $profile->position->title ?? null,
                 'grade' => $profile->grade,
                 'coefficient' => $gradeData->coefficient,
-                'formula' => "{$minWage->amount} × {$gradeData->coefficient} = {$amount}",
+                'formula' => "{$minWageAmount} × {$gradeData->coefficient} = {$amount}",
             ],
         ];
     }

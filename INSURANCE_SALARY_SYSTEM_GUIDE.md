@@ -24,7 +24,107 @@ Lương BHXH = Lương tối thiểu vùng × Hệ số bậc
 
 ---
 
-## Kiến Trúc Database
+## 🆕 Kiến Trúc Mới - Config System (2025)
+
+### Insurance Config Versioning System
+
+Hệ thống quản lý cấu hình bảo hiểm theo phiên bản (config sets) với trạng thái **DRAFT → ACTIVE → ARCHIVED**. Cho phép CRUD qua UI thay vì chỉ seeding JSON.
+
+**3 bảng chính:**
+1. **`insurance_config_sets`** - Phiên bản config (container)
+2. **`insurance_minimum_wage_configs`** - Lương tối thiểu 4 vùng
+3. **`insurance_salary_grade_configs`** - Hệ số 7 bậc
+
+### 1. `insurance_config_sets` - Phiên bản Config
+
+**Cấu trúc:**
+```
+- id (UUID, PK)
+- code (string, unique): Mã định danh (VD: VN_INS_2024_07)
+- name (string): Tên mô tả (VD: Bảng lương BHXH 2024)
+- description (text): Mô tả chi tiết
+- status (enum): DRAFT | ACTIVE | ARCHIVED
+- effective_from (date): Ngày bắt đầu hiệu lực
+- effective_to (date, nullable): Ngày kết thúc
+- based_on_set_id (UUID, nullable, FK): Clone từ config set nào
+- created_by (bigint, FK users)
+- activated_by (bigint, nullable, FK users)
+- activated_at (timestamp, nullable)
+- archived_by (bigint, nullable, FK users)
+- archived_at (timestamp, nullable)
+- timestamps + soft_deletes
+```
+
+**Trạng thái workflow:**
+```
+DRAFT (soạn thảo) 
+  ↓ activate()
+ACTIVE (đang áp dụng)
+  ↓ archive()  
+ARCHIVED (lưu trữ)
+```
+
+**Quy tắc quan trọng:**
+- ✅ Chỉ DRAFT mới được update/delete
+- ✅ Khi activate → tự động archive các ACTIVE khác
+- ✅ Validation: phải có đủ 4 vùng (1,2,3,4) + 7 bậc (1-7)
+- ✅ Không được trùng khoảng effective dates với ACTIVE khác
+
+### 2. `insurance_minimum_wage_configs` - Lương tối thiểu
+
+**Cấu trúc:**
+```
+- id (UUID, PK)
+- config_set_id (UUID, FK → insurance_config_sets)
+- region (int 1-4): Vùng I, II, III, IV
+- amount (bigint): Mức lương (VND)
+- timestamps + soft_deletes
+```
+
+**Unique key:** `config_set_id` + `region`
+
+### 3. `insurance_salary_grade_configs` - Hệ số bậc
+
+**Cấu trúc:**
+```
+- id (UUID, PK)
+- config_set_id (UUID, FK → insurance_config_sets)
+- grade (int 1-7): Bậc lương
+- coefficient (decimal 5,2): Hệ số nhân
+- timestamps + soft_deletes
+```
+
+**Unique key:** `config_set_id` + `grade`
+
+**Ví dụ data:**
+
+**Config Set:**
+| Code | Name | Status | Effective From | Effective To |
+|------|------|--------|----------------|--------------|
+| VN_INS_2024_07 | Bảng lương BHXH 2024 | ACTIVE | 2024-07-01 | null |
+
+**Minimum Wages (VN_INS_2024_07):**
+| Region | Amount |
+|--------|--------|
+| 1 | 4,960,000 |
+| 2 | 4,410,000 |
+| 3 | 3,860,000 |
+| 4 | 3,450,000 |
+
+**Salary Grades (VN_INS_2024_07):**
+| Grade | Coefficient |
+|-------|-------------|
+| 1 | 1.00 |
+| 2 | 1.15 |
+| 3 | 1.32 |
+| 4 | 1.52 |
+| 5 | 1.75 |
+| 6 | 2.01 |
+| 7 | 2.32 |
+
+---
+
+## Kiến Trúc Database (Legacy - Deprecated)
 
 ### 1. `minimum_wages` - Lương tối thiểu vùng
 
@@ -478,6 +578,485 @@ foreach ($grades as $grade) {
 
 4. **Không hardcode lương tối thiểu vùng trong code**
    - Luôn lấy từ bảng `minimum_wages`
+
+---
+
+## 🚀 InsuranceConfigResolver Service - Developer Guide
+
+### Tại sao cần InsuranceConfigResolver?
+
+**Vấn đề cũ:**
+- Code phân tán, query trực tiếp `MinimumWage::where()...`
+- Khó maintain khi thay đổi source data (từ `minimum_wages` → `insurance_*_configs`)
+- Không consistent trong việc lấy config theo date
+
+**Giải pháp:**
+`InsuranceConfigResolver` là **centralized service** để resolve config tại bất kỳ thời điểm nào.
+
+### Cách sử dụng
+
+#### 1. Inject service qua constructor (khuyến nghị)
+
+```php
+use App\Services\InsuranceConfigResolver;
+
+class MyService 
+{
+    protected InsuranceConfigResolver $configResolver;
+    
+    public function __construct(InsuranceConfigResolver $resolver)
+    {
+        $this->configResolver = $resolver;
+    }
+    
+    public function calculate($region, $grade, $date = null)
+    {
+        // Tính lương BHXH
+        $amount = $this->configResolver->calculate($region, $grade, $date);
+        return $amount;
+    }
+}
+```
+
+#### 2. Sử dụng helper `app()`
+
+```php
+// Trong controller, model, blade, command...
+$resolver = app(InsuranceConfigResolver::class);
+
+// Lấy lương tối thiểu vùng 2 tại ngày hiện tại
+$minWage = $resolver->getMinimumWage(2);
+// Returns: 4410000.0
+
+// Lấy hệ số bậc 3 tại ngày 2024-07-15
+$coefficient = $resolver->getGradeCoefficient(3, '2024-07-15');
+// Returns: 1.32
+
+// Tính trực tiếp lương BHXH: Vùng 2, Bậc 3
+$salary = $resolver->calculate(2, 3);
+// Returns: 5821200.0 (= 4410000 × 1.32)
+```
+
+### API Reference
+
+#### `getActiveSet(?string $date = null): ?InsuranceConfigSet`
+
+Lấy config set ACTIVE tại thời điểm cụ thể.
+
+```php
+$configSet = $resolver->getActiveSet(); // Hôm nay
+$configSet = $resolver->getActiveSet('2024-07-01'); // 01/07/2024
+
+// Returns null nếu không tìm thấy config nào ACTIVE
+```
+
+#### `getMinimumWage(int $region, ?string $date = null): float`
+
+Lấy lương tối thiểu vùng (trả về số tiền VNĐ).
+
+```php
+$amount = $resolver->getMinimumWage(1); // Vùng 1, hôm nay
+// Returns: 4960000.0
+
+$amount = $resolver->getMinimumWage(4, '2024-06-30'); 
+// Returns lương tối thiểu vùng 4 ngày 30/06/2024
+// Throws exception nếu không có config ACTIVE tại date đó
+```
+
+**Validation:**
+- Region phải trong 1-4, throw `InvalidArgumentException` nếu sai
+- Throw exception nếu không tìm thấy config set ACTIVE hoặc region không tồn tại
+
+#### `getGradeCoefficient(int $grade, ?string $date = null): float`
+
+Lấy hệ số bậc lương.
+
+```php
+$coef = $resolver->getGradeCoefficient(1); // Bậc 1, hôm nay
+// Returns: 1.00
+
+$coef = $resolver->getGradeCoefficient(7, '2025-01-01'); 
+// Returns hệ số bậc 7 ngày 01/01/2025
+```
+
+**Validation:**
+- Grade phải trong 1-7, throw `InvalidArgumentException` nếu sai
+- Throw exception nếu không tìm thấy grade trong config set ACTIVE
+
+#### `calculate(int $region, int $grade, ?string $date = null): float`
+
+Tính lương BHXH = Lương tối thiểu vùng × Hệ số bậc.
+
+```php
+// Vùng 2, Bậc 5, hôm nay
+$salary = $resolver->calculate(2, 5);
+// Returns: 7717500.0 (= 4410000 × 1.75)
+
+// Tính cho quá khứ
+$salary = $resolver->calculate(3, 2, '2024-08-15');
+// Returns lương BHXH vùng 3, bậc 2 tại 15/08/2024
+```
+
+#### `getMinimumWageDetail(int $region, ?string $date = null): array`
+
+Lấy thông tin chi tiết minimum wage (bao gồm model instance).
+
+```php
+$detail = $resolver->getMinimumWageDetail(2);
+// Returns:
+// [
+//     'config_set' => InsuranceConfigSet instance,
+//     'wage_config' => InsuranceMinimumWageConfig instance,
+//     'region' => 2,
+//     'amount' => 4410000.0
+// ]
+```
+
+#### `calculateDetailed(int $region, int $grade, ?string $date = null): array`
+
+Tính lương BHXH với thông tin chi tiết.
+
+```php
+$detail = $resolver->calculateDetailed(2, 3);
+// Returns:
+// [
+//     'config_set' => InsuranceConfigSet instance,
+//     'region' => 2,
+//     'minimum_wage' => 4410000.0,
+//     'grade' => 3,
+//     'coefficient' => 1.32,
+//     'insurance_salary' => 5821200.0
+// ]
+```
+
+#### `getAllMinimumWages(?string $date = null): array`
+
+Lấy toàn bộ 4 vùng với lương tối thiểu.
+
+```php
+$wages = $resolver->getAllMinimumWages();
+// Returns:
+// [
+//     1 => 4960000.0,
+//     2 => 4410000.0,
+//     3 => 3860000.0,
+//     4 => 3450000.0
+// ]
+```
+
+### Migration Guide: Từ MinimumWage → InsuranceConfigResolver
+
+#### ❌ Cách cũ (Deprecated)
+
+```php
+// Trực tiếp query model
+$minWage = MinimumWage::where('region', 2)
+    ->where('is_active', true)
+    ->whereNull('effective_to')
+    ->first();
+
+if ($minWage) {
+    $amount = $minWage->amount;
+}
+
+// Tính lương BHXH
+$gradeData = PositionSalaryGrade::where('position_id', $positionId)
+    ->where('grade', $grade)
+    ->active()
+    ->first();
+
+$insuranceSalary = $minWage->amount * $gradeData->coefficient;
+```
+
+**Vấn đề:**
+- Hardcode logic query
+- Không xử lý null/missing data
+- Khó test, khó maintain
+- Không support versioning config
+
+#### ✅ Cách mới (Recommended)
+
+```php
+use App\Services\InsuranceConfigResolver;
+
+// Inject service
+$resolver = app(InsuranceConfigResolver::class);
+
+// Lấy lương tối thiểu (đã có validation + exception handling)
+$amount = $resolver->getMinimumWage(2);
+
+// Tính lương BHXH trực tiếp
+$insuranceSalary = $resolver->calculate($region, $grade);
+
+// Hoặc lấy chi tiết đầy đủ
+$detail = $resolver->calculateDetailed($region, $grade);
+echo "Config set: {$detail['config_set']->name}\n";
+echo "Lương BHXH: " . number_format($detail['insurance_salary']) . " VNĐ\n";
+```
+
+**Lợi ích:**
+- ✅ Centralized logic, dễ bảo trì
+- ✅ Validation + exception handling built-in
+- ✅ Support config versioning với effective dates
+- ✅ Testable (mock service trong unit test)
+- ✅ Consistent API across codebase
+
+### Ví dụ thực tế
+
+#### Trong Service: EmployeeInsuranceService
+
+```php
+use App\Services\InsuranceConfigResolver;
+
+class EmployeeInsuranceService
+{
+    public function __construct(
+        private InsuranceConfigResolver $configResolver
+    ) {}
+    
+    public function calculateCurrentInsuranceSalary(Employee $employee): array
+    {
+        $profile = $employee->currentInsuranceProfile;
+        
+        if (!$profile) {
+            throw new \Exception('Nhân viên chưa có hồ sơ BHXH');
+        }
+        
+        $region = $employee->branch->insurance_region;
+        $grade = $profile->grade;
+        
+        // Tính lương BHXH với detail
+        return $this->configResolver->calculateDetailed($region, $grade);
+    }
+}
+```
+
+#### Trong Model: EmployeeInsuranceProfile
+
+```php
+use App\Services\InsuranceConfigResolver;
+
+class EmployeeInsuranceProfile extends Model
+{
+    public function calculateInsuranceSalary(int $region, ?string $date = null): float
+    {
+        $resolver = app(InsuranceConfigResolver::class);
+        return $resolver->calculate($region, $this->grade, $date);
+    }
+    
+    public function getInsuranceSalaryAttribute(): ?float
+    {
+        if (!$this->employee || !$this->employee->branch) {
+            return null;
+        }
+        
+        $region = $this->employee->branch->insurance_region;
+        return $this->calculateInsuranceSalary($region);
+    }
+}
+```
+
+#### Trong Command/Job: Payroll Calculation
+
+```php
+use App\Services\InsuranceConfigResolver;
+
+class CalculatePayrollCommand extends Command
+{
+    public function handle(InsuranceConfigResolver $configResolver)
+    {
+        $period = PayrollPeriod::find($this->argument('period_id'));
+        
+        foreach ($period->employees as $employee) {
+            $region = $employee->branch->insurance_region;
+            $grade = $employee->currentInsuranceProfile->grade;
+            
+            // Tính lương BHXH tại thời điểm kỳ lương (không phải hôm nay!)
+            $insuranceSalary = $configResolver->calculate(
+                $region,
+                $grade,
+                $period->end_date // Quan trọng: dùng date của kỳ lương
+            );
+            
+            // Lưu vào payroll record...
+        }
+    }
+}
+```
+
+---
+
+## UI Workflow - Quản lý Config BHXH
+
+### Quy trình sử dụng UI
+
+**Bước 1: Tạo config set mới (DRAFT)**
+1. Vào menu: Cấu hình → Bảo hiểm → Config Sets
+2. Click "Tạo mới"
+3. Điền thông tin:
+   - Code: `VN_INS_2025_01` (unique)
+   - Tên: `Bảng lương BHXH 2025`
+   - Khoảng hiệu lực: 01/01/2025 → 31/12/2025
+   - Mô tả: Theo Nghị định XX/2024/NĐ-CP
+4. Click "Sao chép từ config cũ" (nếu muốn) → Chọn `VN_INS_2024_07`
+5. Lưu → Config ở trạng thái **DRAFT**
+
+**Bước 2: Điều chỉnh lương tối thiểu vùng**
+1. Form tự động hiển thị 4 vùng (nếu clone từ config cũ)
+2. Cập nhật số tiền mới:
+   - Vùng 1: 5,200,000 VNĐ
+   - Vùng 2: 4,620,000 VNĐ
+   - Vùng 3: 4,050,000 VNĐ
+   - Vùng 4: 3,620,000 VNĐ
+
+**Bước 3: Điều chỉnh hệ số bậc (nếu cần)**
+1. Form hiển thị 7 bậc với hệ số
+2. Chỉnh sửa nếu có thay đổi chính sách
+3. Hệ số mặc định: 1.00, 1.15, 1.32, 1.52, 1.75, 2.01, 2.32
+
+**Bước 4: Kiểm tra validation**
+- Hệ thống tự động validate:
+  - ✅ Phải có đủ 4 vùng (1, 2, 3, 4)
+  - ✅ Phải có đủ 7 bậc (1, 2, 3, 4, 5, 6, 7)
+  - ✅ Không trùng khoảng hiệu lực với config ACTIVE khác
+  - ✅ Code không trùng
+
+**Bước 5: Kích hoạt config**
+1. Click "Kích hoạt"
+2. Hệ thống:
+   - Kiểm tra validation lần cuối
+   - Tự động archive tất cả config ACTIVE cũ
+   - Chuyển config hiện tại → **ACTIVE**
+3. Từ thời điểm này, toàn bộ hệ thống dùng config mới
+
+**Bước 6: Lưu trữ config cũ (tùy chọn)**
+- Config ACTIVE cũ đã tự động chuyển sang **ARCHIVED**
+- Có thể xem lịch sử trong tab "Archived"
+- Không thể chỉnh sửa config ARCHIVED
+
+### Quy tắc quan trọng
+
+**❌ Không thể:**
+- Update config đang ACTIVE (chỉ DRAFT mới edit được)
+- Xóa config ACTIVE hoặc ARCHIVED (chỉ xóa DRAFT)
+- Activate config thiếu vùng/bậc
+- Activate config trùng effective dates với ACTIVE khác
+
+**✅ Có thể:**
+- Clone config bất kỳ (DRAFT, ACTIVE, ARCHIVED)
+- Archive config ACTIVE thủ công
+- Xem chi tiết/lịch sử config đã archived
+- Tạo nhiều config DRAFT song song
+
+### Form Request Validation
+
+Backend validation rules (không cần validate lại ở FE):
+
+**StoreInsuranceConfigSetRequest:**
+```php
+// Code unique
+'code' => 'required|string|unique:insurance_config_sets,code'
+
+// Phải có 4 vùng (distinct, region 1-4)
+'minimum_wages' => 'required|array|size:4'
+'minimum_wages.*.region' => 'required|integer|between:1,4|distinct'
+
+// Phải có 7 bậc (distinct, grade 1-7)
+'salary_grades' => 'required|array|size:7'
+'salary_grades.*.grade' => 'required|integer|between:1,7|distinct'
+
+// Effective dates
+'effective_from' => 'required|date'
+'effective_to' => 'nullable|date|after:effective_from'
+```
+
+**Custom validation (withValidator):**
+- Kiểm tra tồn tại đủ 4 regions: [1, 2, 3, 4]
+- Kiểm tra tồn tại đủ 7 grades: [1, 2, 3, 4, 5, 6, 7]
+
+**Error messages:** 
+- Tất cả validation errors trả về từ BE dạng JSON
+- FE hiển thị toast notification tự động
+- Flash message type: `success` hoặc `error`
+
+### Resource Transformation
+
+`InsuranceConfigSetResource` format data chuẩn:
+
+```json
+{
+    "id": "uuid",
+    "code": "VN_INS_2024_07",
+    "name": "Bảng lương BHXH 2024",
+    "status": "ACTIVE",
+    "effective_from": "2024-07-01",
+    "effective_to": null,
+    "minimum_wages": [
+        {
+            "id": "uuid",
+            "region": 1,
+            "region_name": "Vùng I",
+            "amount": 4960000.0,
+            "formatted_amount": "4,960,000 VNĐ"
+        }
+    ],
+    "salary_grades": [
+        {
+            "id": "uuid",
+            "grade": 1,
+            "coefficient": 1.00,
+            "formatted_coefficient": "1.00x"
+        }
+    ],
+    "based_on_set": { ... },
+    "created_by": 1,
+    "activated_by": 2,
+    "activated_at": "2024-07-01T00:00:00Z",
+    "created_at": "2024-06-15T00:00:00Z"
+}
+```
+
+### Activity Logging
+
+Mọi thao tác đều được log vào `activity_log`:
+
+```php
+// Store
+activity()
+    ->performedOn($configSet)
+    ->causedBy(auth()->user())
+    ->log('Tạo bộ config bảo hiểm: ' . $configSet->code);
+
+// Activate
+activity()
+    ->performedOn($configSet)
+    ->causedBy(auth()->user())
+    ->withProperties([
+        'attributes' => [
+            'code' => $configSet->code,
+            'status' => 'ACTIVE',
+        ]
+    ])
+    ->log('Kích hoạt bộ config bảo hiểm');
+
+// Update
+activity()
+    ->performedOn($configSet)
+    ->causedBy(auth()->user())
+    ->withProperties([
+        'old' => $oldAttributes,
+        'attributes' => $newAttributes,
+    ])
+    ->log('Cập nhật bộ config bảo hiểm');
+```
+
+**Xem activity log:**
+```php
+$activities = Activity::forSubject($configSet)
+    ->with('causer')
+    ->orderBy('created_at', 'desc')
+    ->get();
+```
 
 ---
 

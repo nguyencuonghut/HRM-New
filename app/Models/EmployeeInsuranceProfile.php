@@ -121,21 +121,15 @@ class EmployeeInsuranceProfile extends Model
             return null;
         }
 
-        // Lấy lương tối thiểu vùng tại thời điểm applied_from
-        $minWage = MinimumWage::where('region', $region)
-            ->where('effective_from', '<=', $this->applied_from)
-            ->where(function ($q) {
-                $q->whereNull('effective_to')
-                  ->orWhere('effective_to', '>=', $this->applied_from);
-            })
-            ->where('is_active', true)
-            ->first();
+        // Lấy lương tối thiểu vùng từ InsuranceConfigResolver
+        $resolver = app(\App\Services\InsuranceConfigResolver::class);
+        $minWageAmount = $resolver->getMinimumWage($region, $this->applied_from->format('Y-m-d'));
 
-        if (!$minWage) {
+        if (!$minWageAmount) {
             return null;
         }
 
         // Tính: Lương BHXH = Lương tối thiểu vùng × Hệ số bậc
-        return $minWage->amount * $gradeData->coefficient;
+        return $minWageAmount * (float) $gradeData->coefficient;
     }
 }

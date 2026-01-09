@@ -2,137 +2,137 @@
   "minimum_wages": [
     {
       "region": 1,
-      "amount": 4960000,
-      "effective_from": "2024-07-01",
+      "amount": 5310000,
+      "effective_from": "2026-01-01",
       "effective_to": null,
       "is_active": true,
-      "note": "Nghị định 24/2023/NĐ-CP - Vùng I (thành phố lớn như Hà Nội, TP.HCM)"
+      "note": "Nghị định 293/2025/NĐ-CP - Vùng I (thành phố lớn như Hà Nội, TP.HCM)"
     },
     {
       "region": 2,
-      "amount": 4410000,
-      "effective_from": "2024-07-01",
+      "amount": 4730000,
+      "effective_from": "2026-01-01",
       "effective_to": null,
       "is_active": true,
-      "note": "Nghị định 24/2023/NĐ-CP - Vùng II"
+      "note": "Nghị định 293/2025-CP - Vùng II"
     },
     {
       "region": 3,
-      "amount": 3860000,
-      "effective_from": "2024-07-01",
+      "amount": 4140000,
+      "effective_from": "2026-01-01",
       "effective_to": null,
       "is_active": true,
-      "note": "Nghị định 24/2023/NĐ-CP - Vùng III"
+      "note": "Nghị định 293/2025/NĐ-CP - Vùng III"
     },
     {
       "region": 4,
-      "amount": 3450000,
-      "effective_from": "2024-07-01",
+      "amount": 3700000,
+      "effective_from": "2026-01-01",
       "effective_to": null,
       "is_active": true,
-      "note": "Nghị định 24/2023/NĐ-CP - Vùng IV (vùng sâu, vùng xa)"
+      "note": "Nghị định 293/2025/NĐ-CP - Vùng IV (vùng sâu, vùng xa)"
     }
   ],
   "salary_grade_categories": [
     {
         "title": "Chủ tịch HĐQT",
         "coefficient": [2.68, 3.08, 3.54, 4.08, 4.98, 6.07, 7.41],
-        "effective_from": "2024-07-01"
+        "effective_from": "2026-01-01"
     },
     {
         "title": "Nhân viên kinh doanh",
         "coefficient": [1.10, 1.16, 1.11, 1.31, 1.41, 1.53, 1.67],
-        "effective_from": "2024-07-01"
+        "effective_from": "2026-01-01"
     },
     {
         "title": "Nhân viên kỹ thuật trại",
         "coefficient": [1.10, 1.16, 1.11, 1.31, 1.41, 1.53, 1.67],
-        "effective_from": "2024-07-01"
+        "effective_from": "2026-01-01"
     },
     {
         "title": "Trưởng vùng kinh doanh",
         "coefficient": [1.50, 1.61, 1.72, 1.84, 1.97, 2.10, 2.27],
-        "effective_from": "2024-07-01"
+        "effective_from": "2026-01-01"
     },
     {
         "title": "Giám sát bán hàng",
         "coefficient": [1.50, 1.61, 1.72, 1.84, 1.97, 2.10, 2.27],
-        "effective_from": "2024-07-01"
+        "effective_from": "2026-01-01"
     },
     {
         "title": "Giám đốc vùng",
         "coefficient": [1.70, 1.82, 1.95, 2.10, 2.29, 2.50, 2.72],
-        "effective_from": "2024-07-01"
+        "effective_from": "2026-01-01"
     },
     {
         "title": "Trưởng nhóm kỹ thuật thị trường gia cầm",
         "coefficient": [1.50, 1.61, 1.72, 1.84, 1.97, 2.10, 2.27],
-        "effective_from": "2024-07-01"
+        "effective_from": "2026-01-01"
     },
     {
         "title": "Quyền trưởng vùng kinh doanh",
         "coefficient": [1.50, 1.61, 1.72, 1.84, 1.97, 2.10, 2.27],
-        "effective_from": "2024-07-01"
+        "effective_from": "2026-01-01"
     },
     {
         "title": "Nhân viên kỹ thuật thị trường gia cầm",
         "coefficient": [1.10, 1.16, 1.11, 1.31, 1.41, 1.53, 1.67],
-        "effective_from": "2024-07-01"
+        "effective_from": "2026-01-01"
     },
     {
         "title": "PGĐ Kinh doanh",
         "coefficient": [1.70, 1.82, 1.95, 2.10, 2.29, 2.50, 2.72],
-        "effective_from": "2024-07-01"
+        "effective_from": "2026-01-01"
     },
     {
         "title": "Nhân viên lái xe",
         "coefficient": [1.14, 1.20, 1.27, 1.34, 1.44, 1.54, 1.69],
-        "effective_from": "2024-07-01"
+        "effective_from": "2026-01-01"
     },
     {
         "title": "Nhân viên kỹ thuật thị trường thủy sản",
         "coefficient": [1.10, 1.16, 1.11, 1.31, 1.41, 1.53, 1.67],
-        "effective_from": "2024-07-01"
+        "effective_from": "2026-01-01"
     },
     {
         "title": "Nhân viên kỹ thuật thị trường",
         "coefficient": [1.10, 1.16, 1.11, 1.31, 1.41, 1.53, 1.67],
-        "effective_from": "2024-07-01"
+        "effective_from": "2026-01-01"
     },
     {
         "title": "Nhân viên chăm sóc và phát triển khách hàng KAC",
         "coefficient": [1.10, 1.16, 1.11, 1.31, 1.41, 1.53, 1.67],
-        "effective_from": "2024-07-01"
+        "effective_from": "2026-01-01"
     },
     {
         "title": "Trưởng nhóm kỹ thuật thị trường gia súc vùng 1.3.6.7",
         "coefficient": [1.50, 1.61, 1.72, 1.84, 1.97, 2.10, 2.27],
-        "effective_from": "2024-07-01"
+        "effective_from": "2026-01-01"
     },
     {
         "title": "Chuyên viên kỹ thuật thị trường thủy sản",
         "coefficient": [1.10, 1.16, 1.11, 1.31, 1.41, 1.53, 1.67],
-        "effective_from": "2024-07-01"
+        "effective_from": "2026-01-01"
     },
     {
         "title": "Trưởng nhóm Admin Kinh Doanh",
         "coefficient": [1.50, 1.61, 1.72, 1.84, 1.97, 2.10, 2.27],
-        "effective_from": "2024-07-01"
+        "effective_from": "2026-01-01"
     },
     {
         "title": "Nhân viên Sales admin",
         "coefficient": [1.10, 1.16, 1.11, 1.31, 1.41, 1.53, 1.67],
-        "effective_from": "2024-07-01"
+        "effective_from": "2026-01-01"
     },
     {
         "title": "Chuyên viên hỗ trợ",
         "coefficient": [1.10, 1.16, 1.11, 1.31, 1.41, 1.53, 1.67],
-        "effective_from": "2024-07-01"
+        "effective_from": "2026-01-01"
     },
     {
         "title": "Nhân viên kĩ thuật thị trường heo",
         "coefficient": [1.10, 1.16, 1.11, 1.31, 1.41, 1.53, 1.67],
-        "effective_from": "2024-07-01"
+        "effective_from": "2026-01-01"
     },
     {
         "title": "Phó giám đốc kinh doanh thuốc thú y- phụ trách mảng KAC",

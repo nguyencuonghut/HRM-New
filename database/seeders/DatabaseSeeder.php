@@ -21,6 +21,8 @@ class DatabaseSeeder extends Seeder
             WardSeeder::class,
             DepartmentSeeder::class,
             PositionSeeder::class,
+            CompanyRegionSeeder::class, // Company BHXH region tracking
+            PositionSalaryCategorySeeder::class, // Assign categories to positions and create salary grades
             EmployeeSeeder::class,
             EmployeeAssignmentSeeder::class,
             RoleScopeSeeder::class,
@@ -38,8 +40,10 @@ class DatabaseSeeder extends Seeder
             ContractAppendixSeeder::class, // Test appendices for contract modifications
             InsuranceTestDataSeeder::class, // Test data for insurance workflow
             MigrateExistingEmployeesToEmploymentSeeder::class, // Migrate existing insurance data
-            InsuranceSalarySystemSeeder::class, // Hệ thống lương BHXH
             BenefitTypeSeeder::class, // Danh mục loại phúc lợi
+            InsuranceConfigSeeder::class, // Cấu hình bảo hiểm
+            InsuranceSalaryCategorySeeder::class, // Liên kết loại lương BHXH cho các vị trí
+            PositionSalaryCategorySeeder::class, // Cập nhật nhóm chức danh BHXH cho các vị trí
         ]);
     }
 }

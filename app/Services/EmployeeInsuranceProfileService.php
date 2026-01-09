@@ -22,9 +22,17 @@ use Illuminate\Support\Facades\Log;
  * 3. Appendix POSITION ACTIVE → updateProfileFromPositionAppendix()
  * 4. Contract END → closeProfileOnContractEnd()
  * 5. Backfill legacy → backfillProfileFromLegacyContract()
+ *
+ * NOTE: Đang dùng InsuranceConfigResolver cho minimum wages.
  */
 class EmployeeInsuranceProfileService
 {
+    protected InsuranceConfigResolver $resolver;
+
+    public function __construct(InsuranceConfigResolver $resolver)
+    {
+        $this->resolver = $resolver;
+    }
     /**
      * Tạo insurance profile từ Contract khi chuyển sang ACTIVE
      *
@@ -477,17 +485,12 @@ class EmployeeInsuranceProfileService
             return null;
         }
 
-        // Get minimum wage (assume region 2 - có thể enhance later)
-        $minWage = \App\Models\MinimumWage::where('region', 2)
-            ->where('is_active', true)
-            ->whereDate('effective_from', '<=', $date)
-            ->where(function ($q) use ($date) {
-                $q->whereNull('effective_to')
-                  ->orWhereDate('effective_to', '>=', $date);
-            })
-            ->first();
+        // Get minimum wage from InsuranceConfigResolver using company's region
+        $companyRegion = \App\Models\CompanyRegion::getRegionAtDate($date);
+        $region = $companyRegion ? $companyRegion->region : 3; // Fallback to region 3
+        $minWageAmount = $this->resolver->getMinimumWage($region, $date);
 
-        if (!$minWage) {
+        if (!$minWageAmount) {
             return null;
         }
 
@@ -496,7 +499,7 @@ class EmployeeInsuranceProfileService
         $minDiff = PHP_INT_MAX;
 
         foreach ($grades as $gradeData) {
-            $calculatedSalary = $minWage->amount * $gradeData->coefficient;
+            $calculatedSalary = $minWageAmount * (float) $gradeData->coefficient;
             $diff = abs($calculatedSalary - $insuranceSalary);
 
             if ($diff < $minDiff) {
@@ -525,14 +528,15 @@ class EmployeeInsuranceProfileService
             return null;
         }
 
-        $minWage = \App\Models\MinimumWage::where('region', 2)
-            ->where('is_active', true)
-            ->first();
+        // Use InsuranceConfigResolver for minimum wage using company's region
+        $companyRegion = \App\Models\CompanyRegion::current()->first();
+        $region = $companyRegion ? $companyRegion->region : 3; // Fallback to region 3
+        $minWageAmount = $this->resolver->getMinimumWage($region);
 
-        if (!$minWage) {
+        if (!$minWageAmount) {
             return null;
         }
 
-        return (int) round($minWage->amount * $grade->coefficient);
+        return (int) round($minWageAmount * (float) $grade->coefficient);
     }
 }

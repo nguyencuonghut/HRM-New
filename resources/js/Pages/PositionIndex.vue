@@ -53,6 +53,12 @@
                         <Tag v-if="slotProps.data.department_parent" :value="slotProps.data.department_parent" severity="primary" />
                     </template>
                 </Column>
+                <Column field="insurance_salary_category.name" header="Nhóm BHXH" sortable style="min-width: 14rem">
+                    <template #body="slotProps">
+                        <Tag v-if="slotProps.data.insurance_salary_category" :value="slotProps.data.insurance_salary_category.name" severity="secondary" />
+                        <span v-else class="text-gray-400 italic text-sm">Chưa phân nhóm</span>
+                    </template>
+                </Column>
                 <Column field="insurance_grades" header="Thang BHXH" style="min-width: 16rem">
                     <template #body="slotProps">
                         <div v-if="slotProps.data.insurance_grades && slotProps.data.insurance_grades.length > 0">
@@ -135,6 +141,24 @@
                     <small class="text-red-500" v-if="errors.level">{{ errors.level }}</small>
                 </div>
 
+                <div>
+                    <label for="insurance_salary_category_id" class="block font-bold mb-3">Nhóm chức danh BHXH</label>
+                    <Select
+                        id="insurance_salary_category_id"
+                        v-model="form.insurance_salary_category_id"
+                        :options="insuranceSalaryCategories"
+                        optionLabel="name"
+                        optionValue="id"
+                        placeholder="Chọn nhóm chức danh BHXH"
+                        :class="{ 'p-invalid': errors.insurance_salary_category_id }"
+                        class="w-full"
+                        filter
+                        showClear
+                    />
+                    <small class="text-red-500" v-if="errors.insurance_salary_category_id">{{ errors.insurance_salary_category_id }}</small>
+                    <small class="text-gray-500 block mt-1">Để phân loại hệ số bậc lương BHXH</small>
+                </div>
+
                 <div class="grid grid-cols-3 gap-4">
                     <div>
                         <label for="position_salary" class="block font-bold mb-3">Lương chức vụ</label>
@@ -149,9 +173,7 @@
                         />
                         <small class="text-red-500" v-if="errors.position_salary">{{ errors.position_salary }}</small>
                     </div>
-                </div>
 
-                <div class="grid grid-cols-3 gap-4">
                     <div>
                         <label for="competency_salary" class="block font-bold mb-3">Lương năng lực</label>
                         <InputNumber
@@ -224,7 +246,8 @@ import { useForm, Head } from '@inertiajs/vue3';
 import { useFormValidation } from '@/composables/useFormValidation';
 import { usePermission } from '@/composables/usePermission';
 import { PositionService } from '@/services';
-import Select from 'primevue/select'
+import Select from 'primevue/select';
+import Textarea from 'primevue/textarea';
 
 const { errors, hasError, getError } = useFormValidation();
 const { hasPermission } = usePermission();
@@ -236,6 +259,10 @@ const props = defineProps({
         required: true
     },
     departments: {
+        type: Array,
+        required: true
+    },
+    insuranceSalaryCategories: {
         type: Array,
         required: true
     }
@@ -267,6 +294,7 @@ const form = useForm({
     department_id: null,
     title: '',
     level: '',
+    insurance_salary_category_id: null,
     position_salary: null,
     competency_salary: null,
     allowance: null
@@ -323,6 +351,7 @@ const editPosition = (position) => {
     form.department_id = position.department_id;
     form.title = position.title;
     form.level = position.level;
+    form.insurance_salary_category_id = position.insurance_salary_category_id;
     form.position_salary = position.position_salary;
     form.competency_salary = position.competency_salary;
     form.allowance = position.allowance;
@@ -337,6 +366,7 @@ const savePosition = () => {
         department_id: form.department_id,
         title: form.title,
         level: form.level,
+        insurance_salary_category_id: form.insurance_salary_category_id,
         position_salary: form.position_salary,
         competency_salary: form.competency_salary,
         allowance: form.allowance

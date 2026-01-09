@@ -29,6 +29,7 @@ class StorePositionRequest extends FormRequest
             'position_salary' => ['nullable', 'numeric', 'min:0'],
             'competency_salary' => ['nullable', 'numeric', 'min:0'],
             'allowance' => ['nullable', 'numeric', 'min:0'],
+            'insurance_salary_category_id' => ['nullable', 'uuid', 'exists:insurance_salary_categories,id'],
         ];
     }
 
@@ -45,6 +46,8 @@ class StorePositionRequest extends FormRequest
             'position_salary' => 'lương chức vụ',
             'competency_salary' => 'lương năng lực',
             'allowance' => 'phụ cấp',
+            'insurance_salary_category_id' => 'nhóm chức danh BHXH',
+            'salary_category_description' => 'mô tả nhóm chức danh',
         ];
     }
 

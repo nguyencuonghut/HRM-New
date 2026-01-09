@@ -3,6 +3,7 @@
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\DB;
 
 return new class extends Migration {
     public function up(): void {
@@ -50,7 +51,11 @@ return new class extends Migration {
             // Performance indexes
             $table->index('employee_code', 'idx_employees_code');
             $table->index(['status', 'created_at'], 'idx_employees_status_created');
-            $table->fullText(['employee_code', 'full_name', 'phone', 'company_email'], 'idx_employees_search');
+
+            // Fulltext index (skip for SQLite in testing)
+            if (DB::getDriverName() !== 'sqlite') {
+                $table->fullText(['employee_code', 'full_name', 'phone', 'company_email'], 'idx_employees_search');
+            }
         });
 
         // Gợi ý (tuỳ bạn bật FK hay không):

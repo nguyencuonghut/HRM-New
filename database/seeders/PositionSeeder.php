@@ -163,6 +163,9 @@ class PositionSeeder extends Seeder
                 'competency_salary' => 6500000,
                 'allowance' => 0,
 
+                // FK to insurance_salary_categories (will be set later or manually)
+                'insurance_salary_category_id' => null,
+
                 'created_at' => $now,
                 'updated_at' => $now,
             ];

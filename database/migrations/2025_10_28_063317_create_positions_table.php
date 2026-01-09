@@ -40,6 +40,15 @@ return new class extends Migration {
             $table->decimal('position_salary', 14, 2)->nullable(); // Lương vị trí
             $table->decimal('competency_salary', 14, 2)->nullable(); // Lương năng lực/kỹ năng
             $table->decimal('allowance', 14, 2)->nullable(); // Phụ cấp (nếu có)
+
+            // Nhóm chức danh BHXH - FK to insurance_salary_categories
+            $table->uuid('insurance_salary_category_id')->nullable()->index()
+                  ->comment('FK đến bảng insurance_salary_categories - Nhóm chức danh BHXH để tính lương');
+            $table->foreign('insurance_salary_category_id')
+                  ->references('id')
+                  ->on('insurance_salary_categories')
+                  ->onDelete('set null');
+
             $table->timestamps(); // created_at, updated_at
         });
     }

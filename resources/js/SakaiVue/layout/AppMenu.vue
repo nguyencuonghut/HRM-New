@@ -262,6 +262,31 @@ const model = computed(() => {
         });
     }
 
+    // Insurance Configuration - check permission
+    if (can('view employees') || can('manage insurance')) {
+        systemMenuItems.push({
+            label: 'Cấu hình BHXH',
+            icon: 'pi pi-fw pi-shield',
+            items: [
+                {
+                    label: 'Cấu hình tham số',
+                    icon: 'pi pi-fw pi-sliders-h',
+                    to: '/insurance-config-sets'
+                },
+                {
+                    label: 'Vùng BHXH Công ty',
+                    icon: 'pi pi-fw pi-map-marker',
+                    to: '/company-regions'
+                },
+                {
+                    label: 'Nhóm chức danh BHXH',
+                    icon: 'pi pi-fw pi-sitemap',
+                    to: '/insurance-salary-categories'
+                }
+            ]
+        });
+    }
+
     // Backup menu - check permission
     if (canViewBackups()) {
         systemMenuItems.push({
