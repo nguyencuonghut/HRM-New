@@ -3,6 +3,7 @@
 namespace App\Observers;
 
 use App\Models\Contract;
+use App\Models\InsuranceParticipation;
 use App\Services\EmploymentResolver;
 use App\Services\EmployeeStatusService;
 use App\Services\EmployeeInsuranceProfileService;
@@ -247,6 +248,7 @@ class ContractObserver
 
     /**
      * Handle insurance profile creation when contract becomes ACTIVE
+     * Also creates InsuranceParticipation for backfilled contracts
      */
     protected function handleInsuranceProfileOnContractActive(Contract $contract): void
     {
@@ -270,6 +272,11 @@ class ContractObserver
                     'contract_id' => $contract->id,
                 ]);
             }
+
+            // Create InsuranceParticipation for backfilled contracts
+            // (contracts created directly with status ACTIVE, not going through approval workflow)
+            $this->createInsuranceParticipationIfNeeded($contract);
+
         } catch (\Exception $e) {
             Log::error("ContractObserver: Failed to create insurance profile", [
                 'contract_id' => $contract->id,
@@ -348,6 +355,79 @@ class ContractObserver
             }
         } catch (\Exception $e) {
             Log::error("EmploymentResolver: Failed to clean up employment after contract deletion", [
+                'contract_id' => $contract->id ?? 'unknown',
+                'error' => $e->getMessage(),
+            ]);
+        }
+    }
+
+    /**
+     * Create InsuranceParticipation for backfilled contracts
+     *
+     * This handles contracts that are created directly with status ACTIVE
+     * (not going through the approval workflow which fires ContractApproved event)
+     */
+    protected function createInsuranceParticipationIfNeeded(Contract $contract): void
+    {
+        // Only create if contract has insurance salary
+        if (!$contract->insurance_salary || $contract->insurance_salary <= 0) {
+            return;
+        }
+
+        // Check if already exists (avoid duplicate from ContractApproved listener)
+        $exists = InsuranceParticipation::where('employee_id', $contract->employee_id)
+            ->where('contract_id', $contract->id)
+            ->exists();
+
+        if ($exists) {
+            Log::info("ContractObserver: Insurance participation already exists for contract {$contract->id}");
+            return;
+        }
+
+        try {
+            // Get employment start date (more accurate than contract start date)
+            $employment = $contract->employee->employments()
+                ->where('is_current', true)
+                ->first();
+
+            $startDate = $employment ? $employment->start_date : $contract->start_date;
+
+            InsuranceParticipation::create([
+                'employee_id' => $contract->employee_id,
+                'participation_start_date' => $startDate,
+                'participation_end_date' => null, // Active
+                'has_social_insurance' => $contract->has_social_insurance ?? true,
+                'has_health_insurance' => $contract->has_health_insurance ?? true,
+                'has_unemployment_insurance' => $contract->has_unemployment_insurance ?? true,
+                'insurance_salary' => $contract->insurance_salary,
+                'contract_id' => $contract->id,
+                'contract_appendix_id' => null,
+                'status' => 'ACTIVE',
+            ]);
+
+            Log::info("ContractObserver: Created insurance participation for backfilled contract", [
+                'contract_id' => $contract->id,
+                'employee_id' => $contract->employee_id,
+                'insurance_salary' => $contract->insurance_salary,
+            ]);
+
+            // Activity log
+            if (auth()->check()) {
+                activity()
+                    ->useLog('insurance-participation')
+                    ->performedOn($contract->employee)
+                    ->causedBy(auth()->user())
+                    ->withProperties([
+                        'contract_id' => $contract->id,
+                        'insurance_salary' => $contract->insurance_salary,
+                        'start_date' => $startDate,
+                        'source' => 'backfill',
+                    ])
+                    ->log('Tạo tham gia bảo hiểm từ hợp đồng backfill');
+            }
+
+        } catch (\Exception $e) {
+            Log::error("ContractObserver: Failed to create insurance participation", [
                 'contract_id' => $contract->id,
                 'error' => $e->getMessage(),
             ]);
