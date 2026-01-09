@@ -167,7 +167,7 @@ const model = computed(() => {
     if (canViewRoles()) {
         systemMenuItems.push({
             label: t('nav.roles'),
-            icon: 'pi pi-fw pi-shield',
+            icon: 'pi pi-fw pi-id-card',
             to: '/roles'
         });
     }
@@ -266,7 +266,7 @@ const model = computed(() => {
     if (can('view employees') || can('manage insurance')) {
         systemMenuItems.push({
             label: 'Cấu hình BHXH',
-            icon: 'pi pi-fw pi-shield',
+            icon: 'pi pi-fw pi-credit-card',
             items: [
                 {
                     label: 'Cấu hình tham số',
