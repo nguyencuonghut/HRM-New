@@ -31,6 +31,12 @@ class InsuranceChangeRecord extends Model
         'admin_notes',
         'adjusted_salary',
         'adjustment_reason',
+        // Declaration month fields (Phase 2)
+        'suggested_declaration_month',
+        'declaration_month',
+        'declaration_set_by',
+        'declaration_set_at',
+        'declaration_override_reason',
     ];
 
     protected $casts = [
@@ -41,6 +47,7 @@ class InsuranceChangeRecord extends Model
         'has_social_insurance' => 'boolean',
         'has_health_insurance' => 'boolean',
         'has_unemployment_insurance' => 'boolean',
+        'declaration_set_at' => 'datetime', // New cast
     ];
 
     // Change type constants

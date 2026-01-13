@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class InsuranceParticipation extends Model
 {
@@ -60,6 +61,22 @@ class InsuranceParticipation extends Model
     public function contractAppendix(): BelongsTo
     {
         return $this->belongsTo(ContractAppendix::class);
+    }
+
+    /**
+     * Get participation components (new relationship for component-based architecture)
+     */
+    public function components(): HasMany
+    {
+        return $this->hasMany(InsuranceParticipationComponent::class, 'insurance_participation_id');
+    }
+
+    /**
+     * Get enabled components only
+     */
+    public function enabledComponents(): HasMany
+    {
+        return $this->components()->where('is_enabled', true);
     }
 
     /**

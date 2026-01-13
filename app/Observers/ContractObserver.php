@@ -275,7 +275,8 @@ class ContractObserver
 
             // Create InsuranceParticipation for backfilled contracts
             // (contracts created directly with status ACTIVE, not going through approval workflow)
-            $this->createInsuranceParticipationIfNeeded($contract);
+            // DISABLED: ContractController already handles participation creation with components
+            // $this->createInsuranceParticipationIfNeeded($contract);
 
         } catch (\Exception $e) {
             Log::error("ContractObserver: Failed to create insurance profile", [

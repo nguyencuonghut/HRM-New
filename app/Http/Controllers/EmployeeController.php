@@ -190,6 +190,9 @@ class EmployeeController extends Controller
             // BHXH theo thang-bậc-hệ số
             'insurance_data' => $insuranceData,
             'insurance_history' => $insuranceHistory,
+            // Insurance Participation (NEW - for Insurance tab)
+            'current_participation' => $this->getCurrentInsuranceParticipation($currentContract),
+            'participation_history' => $this->getInsuranceParticipationHistory($employee),
             // Khen thưởng & Kỷ luật
             'rewards_disciplines_data' => EmployeeRewardDisciplineController::getProfileData($employee),
             // KPI tháng
@@ -445,5 +448,38 @@ class EmployeeController extends Controller
         return Inertia::render('Employees/Show', [
             'employee' => new EmployeeResource($employee)
         ]);
+    }
+
+    /**
+     * Get current insurance participation from active contract
+     */
+    private function getCurrentInsuranceParticipation($contract)
+    {
+        if (!$contract) {
+            return null;
+        }
+
+        $participation = \App\Models\InsuranceParticipation::where('contract_id', $contract->id)
+            ->where('status', 'ACTIVE')
+            ->with(['components.component'])
+            ->latest('participation_start_date')
+            ->first();
+
+        return $participation ? (new \App\Http\Resources\InsuranceParticipationResource($participation))->resolve() : null;
+    }
+
+    /**
+     * Get insurance participation history for employee
+     */
+    private function getInsuranceParticipationHistory($employee)
+    {
+        $participations = \App\Models\InsuranceParticipation::whereHas('contract', function($q) use ($employee) {
+                $q->where('employee_id', $employee->id);
+            })
+            ->with(['contract:id,contract_number', 'components.component'])
+            ->orderByDesc('participation_start_date')
+            ->get();
+
+        return \App\Http\Resources\InsuranceParticipationResource::collection($participations)->resolve();
     }
 }

@@ -397,6 +397,7 @@ return [
                 'finalize insurance reports' => ['label' => 'Hoàn tất báo cáo BHXH', 'description' => 'Finalize report'],
                 'export insurance reports' => ['label' => 'Xuất báo cáo BHXH', 'description' => 'Export'],
                 'delete insurance reports' => ['label' => 'Xóa báo cáo BHXH', 'description' => 'Xóa report'],
+                'manage insurance components' => ['label' => 'Quản lý cấu hình BHXH', 'description' => 'Sửa tỷ lệ đóng BHXH'],
             ]
         ],
 

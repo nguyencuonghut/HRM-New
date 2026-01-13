@@ -133,6 +133,14 @@
             <PayrollTab :current-payroll="props.current_payroll" />
           </div>
 
+          <!-- BẢO HIỂM XÃ HỘI -->
+          <div v-show="activeTab === 'insurance'" class="content-section">
+            <InsuranceTab
+              :current-participation="current_participation"
+              :participation-history="participation_history"
+            />
+          </div>
+
           <!-- SỐ DƯ PHÉP -->
           <div v-show="activeTab === 'leave-balances'" class="content-section">
             <LeaveBalanceTab :employee="employee" />
@@ -204,6 +212,7 @@ import AssignmentsTab from '@/Pages/Employees/Components/AssignmentsTab.vue'
 import LeaveBalanceTab from '@/Pages/Employees/Components/LeaveBalanceTab.vue'
 import ContractTab from '@/Pages/Employees/Components/ContractTab.vue'
 import PayrollTab from '@/Pages/Employees/Components/PayrollTab.vue'
+import InsuranceTab from '@/Pages/Employees/Components/InsuranceTab.vue'
 import RewardsDisciplinesTab from '@/Pages/Employees/Components/RewardsDisciplinesTab.vue'
 import EmploymentHistoryTab from '@/Pages/Employees/Components/EmploymentHistoryTab.vue'
 import TimelineTab from '@/Pages/Employees/Components/TimelineTab.vue'
@@ -226,6 +235,11 @@ const props = defineProps({
   employee_skills: { type: Array, default: () => [] },  // kỹ năng của NV
   assignments: { type: Array, default: () => [] },      // phân công của NV
   contracts: { type: Array, default: () => [] },        // hợp đồng của NV
+  current_payroll:   { type: Object, default: null },
+  insurance_data:    { type: Object, default: null },
+  insurance_history: { type: Array,  default: () => [] },
+  current_participation: { type: Object, default: null },  // NEW - for Insurance tab
+  participation_history: { type: Array, default: () => [] }, // NEW - for Insurance tab
   rewards_disciplines_data: { type: Object, default: () => ({ records: [], stats: {}, categoryOptions: {} }) }, // khen thưởng & kỷ luật
   kpis: { type: Array, default: () => [] },             // KPI tháng của NV
   annual_reviews: { type: Array, default: () => [] },   // Đánh giá cuối năm của NV

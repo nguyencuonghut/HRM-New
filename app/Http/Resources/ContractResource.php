@@ -102,6 +102,37 @@ class ContractResource extends JsonResource
                 });
             }),
 
+            // Insurance participation (for new component-based system)
+            'participation' => $this->when(
+                $this->employee,
+                function () {
+                    $participation = \App\Models\InsuranceParticipation::where('employee_id', $this->employee_id)
+                        ->with('components.component')
+                        ->first();
+
+                    if (!$participation) {
+                        return null;
+                    }
+
+                    return [
+                        'id' => $participation->id,
+                        'status' => $participation->status,
+                        'insurance_salary' => $participation->insurance_salary,
+                        'components' => $participation->components->map(function ($pc) {
+                            return [
+                                'id' => $pc->id,
+                                'component_id' => $pc->component_id,
+                                'component_code' => $pc->component->code,
+                                'is_enabled' => $pc->is_enabled,
+                                'base_type' => $pc->base_type,
+                                'base_amount' => $pc->base_amount,
+                                'rate_total' => $pc->rate_total,
+                            ];
+                        }),
+                    ];
+                }
+            ),
+
             // Appendixes
             'appendixes' => $this->whenLoaded('appendixes', function () {
                 return ContractAppendixResource::collection($this->appendixes);

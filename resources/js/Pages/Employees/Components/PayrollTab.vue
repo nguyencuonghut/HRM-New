@@ -66,24 +66,10 @@
           </div>
         </div>
       </div>
-      <!-- Card phụ: Bảo hiểm & điều kiện làm việc -->
+      <!-- Card phụ: Điều kiện làm việc -->
       <div class="bg-gray-50 rounded shadow p-6 border mb-6">
-        <h4 class="font-semibold text-base mb-4">Bảo hiểm & điều kiện làm việc</h4>
+        <h4 class="font-semibold text-base mb-4">Điều kiện làm việc</h4>
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <div class="mb-2 flex justify-between">
-              <span class="text-gray-600">BHXH:</span>
-              <span>{{ currentPayroll.social_insurance ? 'Có' : 'Không' }}</span>
-            </div>
-            <div class="mb-2 flex justify-between">
-              <span class="text-gray-600">BHYT:</span>
-              <span>{{ currentPayroll.health_insurance ? 'Có' : 'Không' }}</span>
-            </div>
-            <div class="mb-2 flex justify-between">
-              <span class="text-gray-600">BHTN:</span>
-              <span>{{ currentPayroll.unemployment_insurance ? 'Có' : 'Không' }}</span>
-            </div>
-          </div>
           <div>
             <div class="mb-2 flex justify-between">
               <span class="text-gray-600">Thời gian làm việc:</span>
@@ -92,6 +78,12 @@
             <div class="mb-2 flex justify-between">
               <span class="text-gray-600">Địa điểm làm việc:</span>
               <span>{{ currentPayroll.work_location || '-' }}</span>
+            </div>
+          </div>
+          <div>
+            <div class="text-sm text-blue-600">
+              <i class="pi pi-info-circle mr-1"></i>
+              <span>Thông tin BHXH xem tại tab "Bảo hiểm xã hội"</span>
             </div>
           </div>
         </div>
@@ -216,23 +208,6 @@
             </table>
           </div>
         </div>
-      </div>
-
-      <!-- Thông báo: Chưa có hồ sơ BHXH -->
-      <div v-else-if="insuranceData && !insuranceData.has_profile"
-           class="bg-orange-50 border-l-4 border-orange-400 p-4 rounded mb-6 flex items-center gap-3">
-        <i class="pi pi-exclamation-triangle text-orange-600 text-2xl"></i>
-        <div class="flex-1">
-          <div class="font-bold text-orange-800 mb-1">Chưa khởi tạo hồ sơ BHXH</div>
-          <div class="text-sm text-orange-700">
-            Nhân viên chưa có hồ sơ bậc lương BHXH. Vui lòng khởi tạo để áp dụng hệ thống thang-bậc-hệ số.
-          </div>
-        </div>
-        <button @click="handleInitializeInsurance"
-                class="px-4 py-2 bg-orange-500 hover:bg-orange-600 text-white text-sm font-semibold rounded shadow transition">
-          <i class="pi pi-plus mr-2"></i>
-          Khởi tạo
-        </button>
       </div>
     </template>
     <template v-else>

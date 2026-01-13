@@ -161,9 +161,11 @@ return new class extends Migration
 
     public function down(): void
     {
+        Schema::disableForeignKeyConstraints();
         Schema::dropIfExists('employee_absences');
         Schema::dropIfExists('insurance_change_records');
         Schema::dropIfExists('insurance_monthly_reports');
         Schema::dropIfExists('insurance_participations');
+        Schema::enableForeignKeyConstraints();
     }
 };

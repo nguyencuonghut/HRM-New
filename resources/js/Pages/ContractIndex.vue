@@ -249,6 +249,92 @@
           <small class="text-red-500" v-if="hasError('insurance_salary')">{{ errors.insurance_salary }}</small>
         </div>
 
+        <!-- Insurance Components Section -->
+        <div class="md:col-span-2 border-t pt-4 mt-2">
+          <h3 class="text-lg font-semibold mb-4 flex items-center gap-2">
+            <i class="pi pi-shield"></i>
+            <span>Tham gia Bảo hiểm</span>
+          </h3>
+
+          <div v-if="loadingComponents" class="flex items-center gap-2 text-gray-600">
+            <i class="pi pi-spin pi-spinner"></i>
+            <span>Đang tải danh sách bảo hiểm...</span>
+          </div>
+
+          <div v-else class="space-y-3">
+            <!-- Component Cards with Base Type Configuration -->
+            <div v-for="component in insuranceComponents" :key="component.code" class="border rounded-lg overflow-hidden">
+              <!-- Component Header -->
+              <div class="flex items-start gap-3 p-3 bg-gray-50">
+                <Checkbox
+                  :id="component.code"
+                  v-model="component.enabled"
+                  :binary="true"
+                  @change="syncLegacyFields"
+                />
+                <label :for="component.code" class="flex-1 cursor-pointer">
+                  <div class="font-medium">{{ component.name_vi }}</div>
+                  <div class="text-sm text-gray-500">Tỷ lệ đóng: {{ (component.default_rate_total * 100).toFixed(1) }}%</div>
+                </label>
+              </div>
+
+              <!-- Base Type Configuration (hiện khi component enabled) -->
+              <div v-if="component.enabled" class="p-4 bg-blue-50 border-t border-blue-100">
+                <label class="font-medium text-sm block mb-3">Cơ sở tính {{ component.name_vi }}:</label>
+
+                <div class="flex flex-col gap-3">
+                  <!-- Radio: INSURANCE_SALARY -->
+                  <div class="flex items-center gap-2">
+                    <input
+                      type="radio"
+                      :id="`${component.code}_salary`"
+                      v-model="component.base_type"
+                      value="INSURANCE_SALARY"
+                      class="w-4 h-4"
+                    />
+                    <label :for="`${component.code}_salary`" class="cursor-pointer">Theo lương BH của hợp đồng</label>
+                  </div>
+
+                  <!-- Radio: FIXED_AMOUNT -->
+                  <div class="flex items-center gap-2">
+                    <input
+                      type="radio"
+                      :id="`${component.code}_fixed`"
+                      v-model="component.base_type"
+                      value="FIXED_AMOUNT"
+                      class="w-4 h-4"
+                    />
+                    <label :for="`${component.code}_fixed`" class="cursor-pointer flex-1">Mức cố định</label>
+
+                    <InputText
+                      v-if="component.base_type === 'FIXED_AMOUNT'"
+                      v-model.number="component.base_amount"
+                      type="number"
+                      :min="0"
+                      :step="100000"
+                      class="w-64"
+                      placeholder="Nhập mức đóng"
+                    />
+                  </div>
+                </div>
+
+                <!-- Info hint -->
+                <div class="mt-3 text-xs text-blue-600 flex items-center gap-1">
+                  <i class="pi pi-info-circle"></i>
+                  <span v-if="component.base_type === 'INSURANCE_SALARY'">Sẽ tự động tính theo lương BH</span>
+                  <span v-else-if="component.code === 'BHTN'">Lưu ý: Mức trần BHTN hiện hành: 72.000.000đ</span>
+                  <span v-else>Nhập mức đóng cố định cho {{ component.name_vi }}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Hidden Legacy Fields for Backward Compatibility -->
+          <input type="hidden" v-model="form.has_social_insurance" />
+          <input type="hidden" v-model="form.has_health_insurance" />
+          <input type="hidden" v-model="form.has_unemployment_insurance" />
+        </div>
+
         <div>
           <label class="block font-bold mb-2">Phụ cấp vị trí</label>
           <InputText v-model.number="form.position_allowance" type="number" class="w-full" placeholder="VND/tháng (không bắt buộc)" />
@@ -519,12 +605,13 @@
 </template>
 
 <script setup>
-import { ref, computed, watch } from 'vue'
+import { ref, computed, watch, onMounted } from 'vue'
 import { Head, router } from '@inertiajs/vue3'
 import DatePicker from 'primevue/datepicker'
 import Select from 'primevue/select'
 import Textarea from 'primevue/textarea'
 import Checkbox from 'primevue/checkbox'
+import axios from 'axios'
 import { ContractService } from '@/services/ContractService'
 import { useFormValidation } from '@/composables/useFormValidation'
 import { usePermissions } from '@/Composables/usePermissions'
@@ -618,6 +705,10 @@ const insuranceSalarySuggestion = ref(null)
 const insuranceSuggestionNote = ref('')
 const loadingSuggestion = ref(false)
 
+// Insurance components state
+const insuranceComponents = ref([])
+const loadingComponents = ref(false)
+
 // Options - Backend sẽ cung cấp qua props
 const contractTypeOptions = computed(() => definePropsData.contractTypeOptions || [])
 const statusOptions = computed(() => definePropsData.statusOptions || [])
@@ -702,6 +793,76 @@ function applySuggestion() {
   }
 }
 
+// Insurance Components Functions
+async function loadInsuranceComponents() {
+  loadingComponents.value = true
+  try {
+    const response = await axios.get('/insurance-components/active')
+    insuranceComponents.value = response.data.map(comp => ({
+      id: comp.id,
+      code: comp.code,
+      name_vi: comp.name_vi,
+      default_rate_total: comp.default_rate_total,
+      enabled: false,
+      base_type: 'INSURANCE_SALARY',
+      base_amount: comp.code === 'BHTN' ? 72000000 : null
+    }))
+  } catch (error) {
+    console.error('Failed to load insurance components:', error)
+  } finally {
+    loadingComponents.value = false
+  }
+}
+
+// Auto-sync: 5 components → 3 legacy booleans
+function syncLegacyFields() {
+  const bhxhEnabled = insuranceComponents.value
+    .filter(c => ['BHXH_HUU_TU', 'BHXH_BENH', 'BHXH_TNLD'].includes(c.code))
+    .some(c => c.enabled)
+
+  const bhtnEnabled = insuranceComponents.value.find(c => c.code === 'BHTN')?.enabled || false
+  const bhytEnabled = insuranceComponents.value.find(c => c.code === 'BHYT')?.enabled || false
+
+  form.value.has_social_insurance = bhxhEnabled
+  form.value.has_unemployment_insurance = bhtnEnabled
+  form.value.has_health_insurance = bhytEnabled
+}
+
+// Prepare insurance components data for submission
+function prepareInsuranceComponentsData() {
+  const enabledComponents = insuranceComponents.value.filter(c => c.enabled)
+
+  return enabledComponents.map(c => ({
+    component_id: c.id,
+    is_enabled: true,
+    base_type: c.base_type,
+    base_amount: c.base_type === 'FIXED_AMOUNT' ? c.base_amount : null,
+    rate_total: c.default_rate_total // Use default rate from component
+  }))
+}
+
+// Load existing participation components when editing
+function loadParticipationComponents(contract) {
+  // Reset all to disabled first
+  insuranceComponents.value.forEach(c => c.enabled = false)
+
+  // If contract has participation data, enable components
+  if (contract.participation && contract.participation.components) {
+    contract.participation.components.forEach(pc => {
+      const component = insuranceComponents.value.find(c => c.id === pc.component_id)
+      if (component) {
+        component.enabled = pc.is_enabled
+        component.base_type = pc.base_type || 'INSURANCE_SALARY'
+        if (pc.base_type === 'FIXED_AMOUNT' && pc.base_amount) {
+          component.base_amount = pc.base_amount
+        }
+      }
+    })
+
+    syncLegacyFields()
+  }
+}
+
 // CRUD
 function openNew() {
   form.value = {
@@ -722,11 +883,22 @@ function openNew() {
     status: 'DRAFT',
     source: 'LEGACY',
     source_id: '',
-    note: ''
+    note: '',
+    has_social_insurance: false,
+    has_health_insurance: false,
+    has_unemployment_insurance: false
   }
   insuranceSalarySuggestion.value = null
   insuranceSuggestionNote.value = ''
   submitted.value = false
+
+  // Reset insurance components
+  insuranceComponents.value.forEach(c => {
+    c.enabled = false
+    c.base_type = 'INSURANCE_SALARY'
+    c.base_amount = null
+  })
+
   dialog.value = true
 }
 function edit(row) {
@@ -751,10 +923,17 @@ function edit(row) {
     note: row.note || '',
     attachments: row.attachments || [],
     newAttachments: [],
-    deleteAttachments: []
+    deleteAttachments: [],
+    has_social_insurance: row.has_social_insurance || false,
+    has_health_insurance: row.has_health_insurance || false,
+    has_unemployment_insurance: row.has_unemployment_insurance || false
   }
   // Fetch suggestion but don't auto-fill when editing
   fetchInsuranceSuggestion()
+
+  // Load existing participation components
+  loadParticipationComponents(row)
+
   submitted.value = false
   dialog.value = true
 }
@@ -813,6 +992,20 @@ function save() {
   if (form.value.deleteAttachments && form.value.deleteAttachments.length > 0) {
     form.value.deleteAttachments.forEach(id => {
       formData.append('delete_attachments[]', id)
+    })
+  }
+
+  // Add insurance components data
+  const insuranceComponentsData = prepareInsuranceComponentsData()
+  if (insuranceComponentsData.length > 0) {
+    insuranceComponentsData.forEach((comp, index) => {
+      formData.append(`insurance_components[${index}][component_id]`, comp.component_id)
+      formData.append(`insurance_components[${index}][is_enabled]`, comp.is_enabled ? '1' : '0')
+      formData.append(`insurance_components[${index}][base_type]`, comp.base_type)
+      formData.append(`insurance_components[${index}][rate_total]`, comp.rate_total)
+      if (comp.base_amount) {
+        formData.append(`insurance_components[${index}][base_amount]`, comp.base_amount)
+      }
     })
   }
 
@@ -1076,6 +1269,11 @@ function openTerminateDialog(row) {
   contractToTerminate.value = row
   terminateDialog.value = true
 }
+
+// Load insurance components on mount
+onMounted(() => {
+  loadInsuranceComponents()
+})
 </script>
 
 <style scoped>

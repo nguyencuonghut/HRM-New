@@ -19,11 +19,14 @@ import Message from 'primevue/message';
 import { useConfirm } from 'primevue/useconfirm';
 import { useToast } from 'primevue/usetoast';
 import { CompanyRegionService } from '@/services';
+import { usePermissions } from '@/Composables/usePermissions';
 
 const props = defineProps({
     regions: Array,
     enums: Object,
 });
+
+const { can } = usePermissions();
 
 const confirm = useConfirm();
 const toast = useToast();

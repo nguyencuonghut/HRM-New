@@ -101,6 +101,28 @@ class ContractController extends Controller
             }
         }
 
+        // Create insurance participation if components provided
+        if ($request->has('insurance_components') && is_array($request->insurance_components) && count($request->insurance_components) > 0) {
+            $participation = \App\Models\InsuranceParticipation::create([
+                'employee_id' => $row->employee_id,
+                'contract_id' => $row->id,
+                'participation_start_date' => $payload['start_date'],
+                'status' => 'ACTIVE',
+                'insurance_salary' => $payload['insurance_salary'],
+            ]);
+
+            foreach ($request->insurance_components as $componentData) {
+                \App\Models\InsuranceParticipationComponent::create([
+                    'insurance_participation_id' => $participation->id,
+                    'component_id' => $componentData['component_id'],
+                    'is_enabled' => filter_var($componentData['is_enabled'], FILTER_VALIDATE_BOOLEAN),
+                    'base_type' => $componentData['base_type'] ?? 'INSURANCE_SALARY',
+                    'base_amount' => isset($componentData['base_amount']) ? $componentData['base_amount'] : null,
+                    'rate_total' => $componentData['rate_total'] ?? 0,
+                ]);
+            }
+        }
+
         $row->load(['employee:id,full_name,employee_code', 'department:id,name', 'position:id,title', 'template:id,name']);
 
         $employee = $row->employee;
@@ -187,6 +209,41 @@ class ContractController extends Controller
                     \Storage::disk('public')->delete($attachment->file_path);
                 }
                 $attachment->delete();
+            }
+        }
+
+        // Update insurance participation if components provided
+        if ($request->has('insurance_components') && is_array($request->insurance_components)) {
+            // Find or create participation for this employee
+            $participation = \App\Models\InsuranceParticipation::firstOrCreate(
+                ['employee_id' => $contract->employee_id],
+                [
+                    'participation_start_date' => $payload['start_date'],
+                    'status' => 'ACTIVE',
+                    'insurance_salary' => $payload['insurance_salary'],
+                ]
+            );
+
+            // Update insurance salary if changed
+            if ($participation->insurance_salary != $payload['insurance_salary']) {
+                $participation->update(['insurance_salary' => $payload['insurance_salary']]);
+            }
+
+            // Delete old components
+            \App\Models\InsuranceParticipationComponent::where('insurance_participation_id', $participation->id)->delete();
+
+            // Create new components
+            if (count($request->insurance_components) > 0) {
+                foreach ($request->insurance_components as $componentData) {
+                    \App\Models\InsuranceParticipationComponent::create([
+                        'insurance_participation_id' => $participation->id,
+                        'component_id' => $componentData['component_id'],
+                        'is_enabled' => filter_var($componentData['is_enabled'], FILTER_VALIDATE_BOOLEAN),
+                        'base_type' => $componentData['base_type'] ?? 'INSURANCE_SALARY',
+                        'base_amount' => isset($componentData['base_amount']) ? $componentData['base_amount'] : null,
+                        'rate_total' => $componentData['rate_total'] ?? 0,
+                    ]);
+                }
             }
         }
 

@@ -30,6 +30,52 @@
                 {{ data.auto_reason_label || data.system_notes || '-' }}
             </template>
         </Column>
+        <Column header="Tháng KK gợi ý" style="min-width: 120px">
+            <template #body="{ data }">
+                <Tag
+                    :value="data.suggested_declaration_month || '-'"
+                    severity="info"
+                    class="font-mono"
+                />
+            </template>
+        </Column>
+        <Column header="Tháng KK chính thức" style="min-width: 150px">
+            <template #body="{ data }">
+                <div class="flex items-center gap-2">
+                    <Select
+                        v-if="!isFinalized && data.approval_status === 'PENDING'"
+                        v-model="data.declaration_month"
+                        :options="getAvailableMonths(data)"
+                        placeholder="Chọn tháng"
+                        class="w-28"
+                        :class="{ 'border-yellow-500': data.declaration_month !== data.suggested_declaration_month }"
+                        @change="onDeclarationMonthChange(data)"
+                    />
+                    <span v-else class="font-mono">{{ data.declaration_month || '-' }}</span>
+                    <i
+                        v-if="data.declaration_month !== data.suggested_declaration_month"
+                        class="pi pi-exclamation-triangle text-yellow-500"
+                        v-tooltip.top="'Đã thay đổi từ tháng gợi ý'"
+                    />
+                </div>
+            </template>
+        </Column>
+        <Column header="Lý do thay đổi tháng KK" style="min-width: 200px">
+            <template #body="{ data }">
+                <InputText
+                    v-if="!isFinalized && data.approval_status === 'PENDING' && data.declaration_month !== data.suggested_declaration_month"
+                    v-model="data.declaration_override_reason"
+                    placeholder="Nhập lý do (bắt buộc)"
+                    class="w-full text-sm"
+                    :class="{ 'border-red-500': !data.declaration_override_reason && data.declaration_month !== data.suggested_declaration_month }"
+                    @blur="validateOverrideReason(data)"
+                />
+                <span v-else-if="data.declaration_override_reason" class="text-sm text-gray-600">
+                    {{ data.declaration_override_reason }}
+                </span>
+                <span v-else class="text-gray-400">-</span>
+            </template>
+        </Column>
         <Column header="Trạng thái" style="min-width: 120px">
             <template #body="{ data }">
                 <Tag
@@ -98,10 +144,17 @@
 </template>
 
 <script setup>
+import { ref } from 'vue';
 import DataTable from 'primevue/datatable';
 import Column from 'primevue/column';
 import Button from 'primevue/button';
 import Tag from 'primevue/tag';
+import Select from 'primevue/select';
+import InputText from 'primevue/inputtext';
+import { useToast } from 'primevue/usetoast';
+import axios from 'axios';
+
+const toast = useToast();
 
 defineProps({
     records: Array,
@@ -110,7 +163,7 @@ defineProps({
     changeType: String, // 'INCREASE', 'DECREASE', 'ADJUST'
 });
 
-defineEmits(['approve']);
+defineEmits(['approve', 'declarationMonthUpdated']);
 
 // Helper methods
 const formatCurrency = (value) => {
@@ -151,5 +204,79 @@ const getStatusSeverity = (status) => {
         ADJUSTED: 'info',
     };
     return severities[status] || 'secondary';
+};
+
+// Declaration month helpers
+const getAvailableMonths = (record) => {
+    // Generate 12 months from current year
+    const currentDate = new Date();
+    const year = currentDate.getFullYear();
+    const months = [];
+
+    for (let month = 1; month <= 12; month++) {
+        const value = `${year}-${String(month).padStart(2, '0')}`;
+        months.push(value);
+    }
+
+    return months;
+};
+
+const onDeclarationMonthChange = async (record) => {
+    if (record.declaration_month === record.suggested_declaration_month) {
+        // Cleared override - remove reason
+        record.declaration_override_reason = null;
+        await saveDeclarationMonth(record);
+    } else {
+        // Require reason
+        if (!record.declaration_override_reason) {
+            toast.add({
+                severity: 'warn',
+                summary: 'Yêu cầu lý do',
+                detail: 'Vui lòng nhập lý do thay đổi tháng kê khai',
+                life: 3000
+            });
+        }
+    }
+};
+
+const validateOverrideReason = async (record) => {
+    if (record.declaration_month !== record.suggested_declaration_month && record.declaration_override_reason) {
+        await saveDeclarationMonth(record);
+    }
+};
+
+const saveDeclarationMonth = async (record) => {
+    // Validate
+    if (record.declaration_month !== record.suggested_declaration_month && !record.declaration_override_reason) {
+        toast.add({
+            severity: 'error',
+            summary: 'Lỗi',
+            detail: 'Phải nhập lý do khi thay đổi tháng kê khai',
+            life: 3000
+        });
+        return;
+    }
+
+    try {
+        await axios.post(`/insurance-records/${record.id}/update-declaration-month`, {
+            declaration_month: record.declaration_month,
+            declaration_override_reason: record.declaration_override_reason
+        });
+
+        toast.add({
+            severity: 'success',
+            summary: 'Đã cập nhật',
+            detail: 'Tháng kê khai đã được cập nhật',
+            life: 2000
+        });
+    } catch (error) {
+        console.error('Save declaration month error:', error);
+        toast.add({
+            severity: 'error',
+            summary: 'Lỗi',
+            detail: error.response?.data?.message || 'Không thể cập nhật tháng kê khai',
+            life: 5000
+        });
+    }
 };
 </script>

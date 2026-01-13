@@ -154,6 +154,7 @@ class RolesAndPermissionsSeeder extends Seeder
             'view insurance reports', 'create insurance reports', 'delete insurance reports',
             'approve insurance records', 'reject insurance records', 'adjust insurance records',
             'finalize insurance reports', 'export insurance reports',
+            'manage insurance components',
 
             // Benefits - Full access
             'view benefits', 'manage benefits',

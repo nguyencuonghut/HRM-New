@@ -43,6 +43,10 @@ class AppServiceProvider extends ServiceProvider
         // Register policy for Spatie Activity model (cannot auto-discover external package models)
         Gate::policy(Activity::class, ActivityPolicy::class);
 
+        // Register Insurance policies
+        Gate::policy(\App\Models\InsuranceComponent::class, \App\Policies\InsuranceComponentPolicy::class);
+        Gate::policy(\App\Models\InsuranceMonthlyReport::class, \App\Policies\InsuranceMonthlyReportPolicy::class);
+
         // Register observers
         Employee::observe(EmployeeObserver::class);
         Contract::observe(ContractObserver::class);

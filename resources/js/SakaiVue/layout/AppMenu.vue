@@ -83,12 +83,22 @@ const model = computed(() => {
         items: leaveMenuItems
     });
 
-    // Add Insurance Reports - for HR staff
-    if (can('view insurance reports') || can('manage insurance')) {
+    // Add Insurance Management - for HR staff
+    if (can('view insurance reports') || can('manage insurance components')) {
+        const insuranceMenuItems = [];
+
+        if (can('view insurance reports')) {
+            insuranceMenuItems.push({
+                label: 'Báo cáo BHXH',
+                icon: 'pi pi-fw pi-file-edit',
+                to: '/insurance-reports'
+            });
+        }
+
         homeItems.push({
-            label: 'Báo cáo BHXH',
+            label: 'Quản lý BHXH',
             icon: 'pi pi-fw pi-shield',
-            to: '/insurance-reports'
+            items: insuranceMenuItems
         });
     }
 
@@ -268,6 +278,11 @@ const model = computed(() => {
             label: 'Cấu hình BHXH',
             icon: 'pi pi-fw pi-credit-card',
             items: [
+                {
+                    label: 'Các thành phần BHXH',
+                    icon: 'pi pi-fw pi-cog',
+                    to: '/insurance-components/manage'
+                },
                 {
                     label: 'Cấu hình tham số',
                     icon: 'pi pi-fw pi-sliders-h',

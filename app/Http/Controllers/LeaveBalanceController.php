@@ -152,7 +152,7 @@ class LeaveBalanceController extends Controller
      */
     public function show(Employee $employee, Request $request)
     {
-        $this->authorize('view', LeaveBalance::class);
+        $this->authorize('viewAny', LeaveBalance::class);
 
         $year = $request->input('year', now()->year);
 

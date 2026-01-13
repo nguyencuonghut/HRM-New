@@ -50,6 +50,14 @@ class InsuranceMonthlyReport extends Model
     }
 
     /**
+     * Get contributions snapshot (Phase 3)
+     */
+    public function contributions(): HasMany
+    {
+        return $this->hasMany(InsuranceMonthlyContribution::class, 'report_id');
+    }
+
+    /**
      * Get increase records
      */
     public function increaseRecords(): HasMany
@@ -131,6 +139,22 @@ class InsuranceMonthlyReport extends Model
     public function allRecordsApproved(): bool
     {
         return $this->pendingRecords()->count() === 0;
+    }
+
+    /**
+     * Get report month as YYYY-MM string (Phase 2)
+     */
+    public function getReportMonth(): string
+    {
+        return $this->year . '-' . str_pad($this->month, 2, '0', STR_PAD_LEFT);
+    }
+
+    /**
+     * Check if report has snapshot (Phase 3)
+     */
+    public function hasSnapshot(): bool
+    {
+        return $this->contributions()->exists();
     }
 
     /**

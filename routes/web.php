@@ -370,11 +370,14 @@ Route::group(['middleware' => 'auth'], function () {
     // Insurance Report Actions
     Route::post('insurance-reports/{insuranceReport}/finalize', [\App\Http\Controllers\InsuranceReportController::class, 'finalize'])->name('insurance-reports.finalize');
     Route::get('insurance-reports/{insuranceReport}/export', [\App\Http\Controllers\InsuranceReportController::class, 'export'])->name('insurance-reports.export');
+    Route::get('insurance-reports/{insuranceReport}/snapshot', [\App\Http\Controllers\InsuranceReportController::class, 'getSnapshot'])->name('insurance-reports.snapshot');
+    Route::get('insurance-reports/{insuranceReport}/export-excel', [\App\Http\Controllers\InsuranceReportController::class, 'exportToExcel'])->name('insurance-reports.export-excel');
 
     // Insurance Change Record Actions
     Route::post('insurance-records/{record}/approve', [\App\Http\Controllers\InsuranceReportController::class, 'approve'])->name('insurance-records.approve');
     Route::post('insurance-records/{record}/reject', [\App\Http\Controllers\InsuranceReportController::class, 'reject'])->name('insurance-records.reject');
     Route::post('insurance-records/{record}/adjust', [\App\Http\Controllers\InsuranceReportController::class, 'adjust'])->name('insurance-records.adjust');
+    Route::post('insurance-records/{record}/update-declaration-month', [\App\Http\Controllers\InsuranceReportController::class, 'updateDeclarationMonth'])->name('insurance-records.update-declaration-month');
 
     // Insurance Config Routes
     Route::get('insurance-config-sets/current', [\App\Http\Controllers\InsuranceConfigSetController::class, 'current'])->name('insurance-config-sets.current');
@@ -382,6 +385,12 @@ Route::group(['middleware' => 'auth'], function () {
     Route::post('insurance-config-sets/{id}/archive', [\App\Http\Controllers\InsuranceConfigSetController::class, 'archive'])->name('insurance-config-sets.archive');
     Route::post('insurance-config-sets/{id}/clone', [\App\Http\Controllers\InsuranceConfigSetController::class, 'cloneSet'])->name('insurance-config-sets.clone');
     Route::resource('insurance-config-sets', \App\Http\Controllers\InsuranceConfigSetController::class);
+
+    // Insurance Component Routes
+    Route::get('insurance-components/active', [\App\Http\Controllers\InsuranceComponentController::class, 'getActiveComponents'])->name('insurance-components.active');
+    Route::get('insurance-components/manage', [\App\Http\Controllers\InsuranceComponentController::class, 'index'])->name('insurance-components.manage');
+    Route::get('insurance-components', [\App\Http\Controllers\InsuranceComponentController::class, 'list'])->name('insurance-components.list');
+    Route::put('insurance-components/{component}', [\App\Http\Controllers\InsuranceComponentController::class, 'update'])->name('insurance-components.update');
 
     // Company Region Routes
     Route::resource('company-regions', \App\Http\Controllers\CompanyRegionController::class);

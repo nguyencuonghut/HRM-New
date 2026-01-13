@@ -3,6 +3,8 @@
 namespace App\Services;
 
 use App\Models\InsuranceChangeRecord;
+use App\Models\InsuranceMonthlyContribution;
+use App\Models\InsuranceMonthlyContributionItem;
 use App\Models\InsuranceMonthlyReport;
 use App\Models\User;
 use Carbon\Carbon;
@@ -12,10 +14,17 @@ use Illuminate\Support\Facades\Log;
 class InsuranceReportService
 {
     protected InsuranceCalculationService $calculationService;
+    protected InsuranceDeclarationService $declarationService;
+    protected InsuranceContributionCalculatorService $contributionCalculator;
 
-    public function __construct(InsuranceCalculationService $calculationService)
-    {
+    public function __construct(
+        InsuranceCalculationService $calculationService,
+        InsuranceDeclarationService $declarationService,
+        InsuranceContributionCalculatorService $contributionCalculator
+    ) {
         $this->calculationService = $calculationService;
+        $this->declarationService = $declarationService;
+        $this->contributionCalculator = $contributionCalculator;
     }
 
     /**
@@ -100,6 +109,10 @@ class InsuranceReportService
             ->latest()
             ->first();
 
+        // Calculate declaration month based on effective date
+        $effectiveDate = Carbon::parse($changeData['effective_date']);
+        $suggestedMonth = $this->declarationService->suggestDeclarationMonth($effectiveDate);
+
         return InsuranceChangeRecord::create([
             'report_id' => $report->id,
             'employee_id' => $employee->id,
@@ -115,6 +128,8 @@ class InsuranceReportService
             'contract_appendix_id' => $changeData['contract_appendix_id'] ?? null,
             'leave_request_id' => $changeData['leave_request_id'] ?? null,
             'approval_status' => InsuranceChangeRecord::APPROVAL_PENDING,
+            'suggested_declaration_month' => $suggestedMonth,
+            'declaration_month' => $suggestedMonth, // Default to suggested, can be overridden later
         ]);
     }
 
@@ -265,6 +280,79 @@ class InsuranceReportService
     }
 
     /**
+     * Update declaration month for a change record
+     * Allows reviewer to override suggested declaration month with reason
+     * If declaration_month changes to different report month, moves record to appropriate report
+     */
+    public function updateDeclarationMonth(
+        InsuranceChangeRecord $record,
+        User $admin,
+        string $declarationMonth,
+        ?string $overrideReason = null
+    ): bool {
+        if ($record->report->isFinalized()) {
+            throw new \Exception('Báo cáo đã hoàn tất, không thể thay đổi tháng đóng BHXH');
+        }
+
+        DB::beginTransaction();
+        try {
+            $oldDeclarationMonth = $record->declaration_month;
+            $oldReport = $record->report;
+
+            // Update declaration month fields
+            $record->update([
+                'declaration_month' => $declarationMonth,
+                'declaration_set_by' => $admin->id,
+                'declaration_set_at' => now(),
+                'declaration_override_reason' => $overrideReason,
+            ]);
+
+            // Check if record needs to move to different report
+            if (!$this->declarationService->canRecordBelongToReport($record->fresh(), $oldReport)) {
+                // Move record to appropriate report
+                $newReport = $this->declarationService->moveRecordToReport(
+                    $record->fresh(),
+                    $declarationMonth,
+                    $oldReport
+                );
+
+                // Log the move
+                activity()
+                    ->useLog('insurance-declaration')
+                    ->performedOn($record)
+                    ->causedBy($admin)
+                    ->withProperties([
+                        'employee_name' => $record->employee->full_name,
+                        'old_report' => $oldReport->year . '-' . str_pad($oldReport->month, 2, '0', STR_PAD_LEFT),
+                        'new_report' => $newReport->year . '-' . str_pad($newReport->month, 2, '0', STR_PAD_LEFT),
+                    ])
+                    ->log('Di chuyển record sang báo cáo khác');
+            }
+
+            // Log activity
+            activity()
+                ->useLog('insurance-declaration')
+                ->performedOn($record)
+                ->causedBy($admin)
+                ->withProperties([
+                    'employee_name' => $record->employee->full_name,
+                    'suggested_month' => $record->suggested_declaration_month,
+                    'old_declaration_month' => $oldDeclarationMonth,
+                    'new_declaration_month' => $declarationMonth,
+                    'override_reason' => $overrideReason,
+                ])
+                ->log('Cập nhật tháng đóng BHXH');
+
+            DB::commit();
+            return true;
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error("Error updating declaration month: {$e->getMessage()}");
+            throw $e;
+        }
+    }
+
+    /**
      * Finalize report (lock it, no more changes allowed)
      */
     public function finalizeReport(InsuranceMonthlyReport $report, User $admin): bool
@@ -279,8 +367,22 @@ class InsuranceReportService
             throw new \Exception("Còn {$pendingCount} record chưa được duyệt");
         }
 
+        // Validate declaration months match report month
+        $validation = $this->declarationService->validateDeclarationMonth($report);
+        if (!$validation['valid']) {
+            $errorMessages = implode("\n", $validation['errors']);
+            throw new \Exception(
+                "Không thể hoàn tất báo cáo: Có " . count($validation['errors']) .
+                " record với tháng đóng BHXH không khớp với tháng báo cáo.\n\n" .
+                $errorMessages
+            );
+        }
+
         DB::beginTransaction();
         try {
+            // Generate contribution snapshots before finalizing
+            $this->generateSnapshotContributions($report);
+
             $report->update([
                 'status' => InsuranceMonthlyReport::STATUS_FINALIZED,
                 'finalized_by' => $admin->id,
@@ -325,6 +427,88 @@ class InsuranceReportService
     }
 
     /**
+     * Generate contribution snapshots for all approved employees
+     * Called during report finalization - creates immutable snapshot of contributions
+     * Idempotent: deletes existing snapshots before regenerating
+     *
+     * @param InsuranceMonthlyReport $report
+     * @return int Number of contributions generated
+     * @throws \Exception
+     */
+    public function generateSnapshotContributions(InsuranceMonthlyReport $report): int
+    {
+        // Delete existing snapshots for this report (idempotent)
+        InsuranceMonthlyContribution::where('report_id', $report->id)->delete();
+
+        // Get declaration month for calculation
+        $declarationMonth = sprintf('%04d-%02d', $report->year, $report->month);
+
+        // Get all approved change records
+        $approvedRecords = $report->changeRecords()
+            ->whereIn('approval_status', [
+                InsuranceChangeRecord::APPROVAL_APPROVED,
+                InsuranceChangeRecord::APPROVAL_ADJUSTED,
+            ])
+            ->with('employee')
+            ->get();
+
+        if ($approvedRecords->isEmpty()) {
+            Log::warning("No approved records found for report {$report->id}");
+            return 0;
+        }
+
+        $contributionCount = 0;
+        $errors = [];
+
+        foreach ($approvedRecords as $record) {
+            try {
+                // Calculate contributions using the calculator service
+                $calculation = $this->contributionCalculator->calculateForEmployee(
+                    $record->employee,
+                    $declarationMonth
+                );
+
+                // Create parent contribution record
+                $contribution = InsuranceMonthlyContribution::create([
+                    'report_id' => $report->id,
+                    'employee_id' => $record->employee->id,
+                    'change_record_id' => $record->id,
+                    'base_insurance_salary' => $calculation['base_insurance_salary'],
+                    'total_amount' => $calculation['total_amount'],
+                ]);
+
+                // Create contribution items for each component
+                foreach ($calculation['components'] as $componentData) {
+                    InsuranceMonthlyContributionItem::create([
+                        'contribution_id' => $contribution->id,
+                        'component_id' => $componentData['component_id'],
+                        'component_code' => $componentData['component_code'],
+                        'component_name' => $componentData['component_name'],
+                        'base_type' => $componentData['base_type'],
+                        'base_used' => $componentData['base_used'],
+                        'rate_total' => $componentData['rate_total'],
+                        'amount' => $componentData['amount'],
+                    ]);
+                }
+
+                $contributionCount++;
+            } catch (\Exception $e) {
+                $errors[] = "Employee {$record->employee->full_name}: {$e->getMessage()}";
+                Log::error("Failed to generate contribution snapshot for employee {$record->employee->id}: {$e->getMessage()}");
+            }
+        }
+
+        // If we had errors, throw exception with details
+        if (!empty($errors)) {
+            $errorMessage = "Lỗi khi tạo snapshot đóng BHXH:\n" . implode("\n", $errors);
+            throw new \Exception($errorMessage);
+        }
+
+        Log::info("Generated {$contributionCount} contribution snapshots for report {$report->id}");
+        return $contributionCount;
+    }
+
+    /**
      * Delete report (only if DRAFT and no approved records)
      */
     public function deleteReport(InsuranceMonthlyReport $report): bool
@@ -364,5 +548,125 @@ class InsuranceReportService
             Log::error("Error deleting report: {$e->getMessage()}");
             throw $e;
         }
+    }
+
+    /**
+     * Export report data from snapshot (only for FINALIZED reports)
+     * Returns structured data ready for Excel/CSV export
+     *
+     * @param InsuranceMonthlyReport $report
+     * @return array [
+     *     'report_info' => [...],
+     *     'employees' => [...],
+     *     'summary' => [...]
+     * ]
+     * @throws \Exception if report is not finalized or has no snapshots
+     */
+    public function exportReport(InsuranceMonthlyReport $report): array
+    {
+        if (!$report->isFinalized()) {
+            throw new \Exception('Chỉ có thể export báo cáo đã hoàn tất');
+        }
+
+        // Get all contribution snapshots with items
+        $contributions = InsuranceMonthlyContribution::where('report_id', $report->id)
+            ->with(['employee', 'items.component', 'changeRecord'])
+            ->orderBy('employee_id')
+            ->get();
+
+        if ($contributions->isEmpty()) {
+            throw new \Exception('Báo cáo chưa có dữ liệu snapshot đóng BHXH');
+        }
+
+        // Report metadata
+        $reportInfo = [
+            'year' => $report->year,
+            'month' => $report->month,
+            'report_month' => sprintf('%04d-%02d', $report->year, $report->month),
+            'total_employees' => $contributions->count(),
+            'finalized_by' => $report->finalizedBy->full_name ?? null,
+            'finalized_at' => $report->finalized_at?->format('d/m/Y H:i'),
+            'total_increase' => $report->total_increase,
+            'total_decrease' => $report->total_decrease,
+            'total_adjust' => $report->total_adjust,
+            'total_insurance_salary' => $report->total_insurance_salary,
+        ];
+
+        // Get all unique components from snapshots
+        $allComponents = InsuranceMonthlyContributionItem::whereIn(
+            'contribution_id',
+            $contributions->pluck('id')
+        )->distinct('component_code')
+            ->orderBy('component_id')
+            ->get(['component_id', 'component_code', 'component_name'])
+            ->keyBy('component_code');
+
+        // Employee rows with contributions breakdown
+        $employeeRows = [];
+        $summaryByComponent = [];
+
+        foreach ($contributions as $contribution) {
+            $employee = $contribution->employee;
+            $changeRecord = $contribution->changeRecord;
+
+            $row = [
+                'employee_id' => $employee->id,
+                'employee_code' => $employee->employee_code,
+                'employee_name' => $employee->full_name,
+                'department' => $employee->department->name ?? '',
+                'position' => $employee->position->name ?? '',
+                'change_type' => $changeRecord->change_type ?? '',
+                'effective_date' => $changeRecord->effective_date?->format('d/m/Y') ?? '',
+                'declaration_month' => $changeRecord->declaration_month ?? '',
+                'base_insurance_salary' => $contribution->base_insurance_salary,
+                'components' => [],
+                'total_contribution' => $contribution->total_amount,
+            ];
+
+            // Add each component amount
+            foreach ($contribution->items as $item) {
+                $row['components'][$item->component_code] = [
+                    'code' => $item->component_code,
+                    'name' => $item->component_name,
+                    'base_type' => $item->base_type,
+                    'base_amount' => $item->base_amount,
+                    'rate' => $item->rate_total,
+                    'amount' => $item->contribution_amount,
+                ];
+
+                // Accumulate summary
+                if (!isset($summaryByComponent[$item->component_code])) {
+                    $summaryByComponent[$item->component_code] = [
+                        'component_name' => $item->component_name,
+                        'total_amount' => 0,
+                        'employee_count' => 0,
+                    ];
+                }
+                $summaryByComponent[$item->component_code]['total_amount'] += $item->contribution_amount;
+                $summaryByComponent[$item->component_code]['employee_count']++;
+            }
+
+            $employeeRows[] = $row;
+        }
+
+        // Summary totals
+        $summary = [
+            'total_employees' => $contributions->count(),
+            'total_base_salary' => $contributions->sum('base_insurance_salary'),
+            'total_contribution' => $contributions->sum('total_amount'),
+            'by_component' => $summaryByComponent,
+            'by_change_type' => [
+                'INCREASE' => $contributions->filter(fn($c) => $c->changeRecord?->change_type === 'INCREASE')->count(),
+                'DECREASE' => $contributions->filter(fn($c) => $c->changeRecord?->change_type === 'DECREASE')->count(),
+                'ADJUST' => $contributions->filter(fn($c) => $c->changeRecord?->change_type === 'ADJUST')->count(),
+            ],
+        ];
+
+        return [
+            'report_info' => $reportInfo,
+            'component_list' => $allComponents->values()->toArray(),
+            'employees' => $employeeRows,
+            'summary' => $summary,
+        ];
     }
 }

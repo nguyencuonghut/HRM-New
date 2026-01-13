@@ -225,6 +225,46 @@ class InsuranceReportController extends Controller
     }
 
     /**
+     * Update declaration month for a change record
+     * Allows reviewer to override suggested declaration month
+     */
+    public function updateDeclarationMonth(Request $request, InsuranceChangeRecord $record)
+    {
+        $this->authorize('update', $record->report);
+
+        $validated = $request->validate([
+            'declaration_month' => 'required|string|regex:/^\d{4}-\d{2}$/',
+            'override_reason' => 'nullable|string|max:1000',
+        ]);
+
+        // If declaration_month differs from suggested, reason is required
+        if ($validated['declaration_month'] !== $record->suggested_declaration_month) {
+            $request->validate([
+                'override_reason' => 'required|string|max:1000',
+            ]);
+        }
+
+        try {
+            $this->reportService->updateDeclarationMonth(
+                $record,
+                Auth::user(),
+                $validated['declaration_month'],
+                $validated['override_reason'] ?? null
+            );
+
+            return redirect()->back()->with([
+                'message' => 'Cập nhật tháng đóng BHXH thành công',
+                'type' => 'success'
+            ]);
+        } catch (\Exception $e) {
+            return redirect()->back()->with([
+                'message' => $e->getMessage(),
+                'type' => 'error'
+            ]);
+        }
+    }
+
+    /**
      * Finalize report (lock it)
      */
     public function finalize(InsuranceMonthlyReport $insuranceReport)
@@ -286,4 +326,77 @@ class InsuranceReportController extends Controller
             ]);
         }
     }
+
+    /**
+     * Get snapshot contributions for finalized report
+     */
+    public function getSnapshot(InsuranceMonthlyReport $insuranceReport)
+    {
+        $this->authorize('view', $insuranceReport);
+
+        // Check if report is finalized
+        if ($insuranceReport->status !== 'FINALIZED') {
+            return response()->json([
+                'message' => 'Báo cáo chưa được hoàn tất'
+            ], 422);
+        }
+
+        // Load snapshot contributions with items
+        $contributions = \App\Models\InsuranceMonthlyContribution::where('report_id', $insuranceReport->id)
+            ->with([
+                'employee:id,employee_code,full_name',
+                'items' => function ($query) {
+                    $query->orderBy('component_code');
+                }
+            ])
+            ->orderBy('employee_id')
+            ->get();
+
+        return response()->json([
+            'contributions' => $contributions->map(function ($contrib) {
+                return [
+                    'id' => $contrib->id,
+                    'employee' => $contrib->employee ? [
+                        'id' => $contrib->employee->id,
+                        'employee_code' => $contrib->employee->employee_code,
+                        'full_name' => $contrib->employee->full_name,
+                    ] : null,
+                    'base_insurance_salary' => $contrib->base_insurance_salary,
+                    'total_amount' => $contrib->total_amount,
+                    'items' => $contrib->items->map(function ($item) {
+                        return [
+                            'component_id' => $item->component_id,
+                            'component_code' => $item->component_code,
+                            'component_name' => $item->component_name,
+                            'base_type' => $item->base_type,
+                            'base_used' => $item->base_used,
+                            'rate_total' => $item->rate_total,
+                            'amount' => $item->amount,
+                        ];
+                    }),
+                ];
+            }),
+        ]);
+    }
+
+    /**
+     * Export snapshot to Excel file
+     */
+    public function exportToExcel(InsuranceMonthlyReport $insuranceReport)
+    {
+        $this->authorize('view', $insuranceReport);
+
+        try {
+            // Use existing export service to generate Excel
+            $filePath = InsuranceExportService::exportToFile($insuranceReport);
+
+            return Storage::download($filePath, "BaoCao_BHXH_{$insuranceReport->year}_{$insuranceReport->month}.xlsx");
+        } catch (\Exception $e) {
+            return redirect()->back()->with([
+                'message' => $e->getMessage(),
+                'type' => 'error'
+            ]);
+        }
+    }
 }
+

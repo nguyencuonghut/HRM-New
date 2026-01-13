@@ -38,6 +38,7 @@ class DatabaseSeeder extends Seeder
             LeaveTypeSeeder::class, // Leave types with colors and configurations
             ContractSeeder::class, // Test contracts for leave balance system
             ContractAppendixSeeder::class, // Test appendices for contract modifications
+            InsuranceComponentSeeder::class, // 5 insurance components (BHXH, BHYT, BHTN, etc.)
             InsuranceTestDataSeeder::class, // Test data for insurance workflow
             MigrateExistingEmployeesToEmploymentSeeder::class, // Migrate existing insurance data
             BenefitTypeSeeder::class, // Danh mục loại phúc lợi

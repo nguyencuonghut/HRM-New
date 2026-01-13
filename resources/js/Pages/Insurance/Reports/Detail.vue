@@ -106,6 +106,10 @@
                         <Tab value="0">TĂNG LAO ĐỘNG</Tab>
                         <Tab value="1">GIẢM</Tab>
                         <Tab value="2">ĐIỀU CHỈNH</Tab>
+                        <Tab value="3" :disabled="!report.is_finalized">
+                            <i class="pi pi-chart-bar mr-2"></i>
+                            TỔNG HỢP ĐÓNG BHXH
+                        </Tab>
                     </TabList>
                     <TabPanels>
                         <!-- Tab 1: TĂNG -->
@@ -139,6 +143,11 @@
                                 change-type="ADJUST"
                                 @approve="openApprovalDialog"
                             />
+                        </TabPanel>
+
+                        <!-- Tab 4: TỔNG HỢP ĐÓNG BHXH -->
+                        <TabPanel value="3">
+                            <ContributionSummaryTab :report="report" />
                         </TabPanel>
                     </TabPanels>
                 </Tabs>
@@ -206,6 +215,7 @@ import TabPanel from 'primevue/tabpanel';
 import Dialog from 'primevue/dialog';
 import RecordsTable from './Components/RecordsTable.vue';
 import ApprovalDialog from './Components/ApprovalDialog.vue';
+import ContributionSummaryTab from './Components/ContributionSummaryTab.vue';
 
 const props = defineProps({
     report: Object,
