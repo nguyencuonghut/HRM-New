@@ -8,6 +8,7 @@ use App\Models\Employee;
 use App\Models\InsuranceComponent;
 use App\Models\InsuranceParticipation;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Log;
 
 /**
  * Service: Insurance Contribution Calculator
@@ -126,7 +127,7 @@ class InsuranceContributionCalculatorService
                 $results[] = $this->calculateForEmployee($employee, $declarationMonth);
             } catch (\Exception $e) {
                 // Log error but continue with other employees
-                \Log::warning("Failed to calculate insurance for employee {$employee->id}: {$e->getMessage()}");
+                Log::warning("Failed to calculate insurance for employee {$employee->id}: {$e->getMessage()}");
             }
         }
 
@@ -159,21 +160,23 @@ class InsuranceContributionCalculatorService
     {
         $declarationDate = Carbon::createFromFormat('Y-m', $declarationMonth)->startOfMonth();
 
-        // First, try to find ContractAppendix active at declaration month
-        $appendix = ContractAppendix::where('employee_id', $employee->id)
-            ->where('appendix_start_date', '<=', $declarationDate)
-            ->where(function ($query) use ($declarationDate) {
-                $query->whereNull('appendix_end_date')
-                    ->orWhere('appendix_end_date', '>=', $declarationDate);
+        // Tìm ContractAppendix active tại tháng khai báo, join với Contract để lấy employee_id
+        $appendix = ContractAppendix::whereHas('contract', function ($query) use ($employee) {
+                $query->where('employee_id', $employee->id);
             })
-            ->orderBy('appendix_start_date', 'desc')
+            ->where('effective_date', '<=', $declarationDate)
+            ->where(function ($query) use ($declarationDate) {
+                $query->whereNull('end_date')
+                    ->orWhere('end_date', '>=', $declarationDate);
+            })
+            ->orderBy('effective_date', 'desc')
             ->first();
 
         if ($appendix && $appendix->insurance_salary !== null) {
             return $appendix->insurance_salary;
         }
 
-        // If no appendix, try to find active Contract
+        // Nếu không có appendix, tìm Contract active
         $contract = Contract::where('employee_id', $employee->id)
             ->where('start_date', '<=', $declarationDate)
             ->where(function ($query) use ($declarationDate) {

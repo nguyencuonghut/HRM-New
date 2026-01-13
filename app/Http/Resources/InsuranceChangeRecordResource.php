@@ -52,7 +52,7 @@ class InsuranceChangeRecordResource extends JsonResource
                 'id' => $this->approvedBy->id,
                 'name' => $this->approvedBy->name,
             ]),
-            'approved_at' => $this->approved_at?->format('d/m/Y H:i'),
+            'approved_at' => $this->approved_at?->toDateTimeString(),
             'admin_notes' => $this->admin_notes,
             'adjustment_reason' => $this->adjustment_reason,
 

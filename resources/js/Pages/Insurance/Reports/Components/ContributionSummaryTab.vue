@@ -15,17 +15,17 @@
                 <h4 class="text-lg font-semibold">
                     Tổng hợp đóng BHXH tháng {{ reportMonth }}
                 </h4>
-                <Button 
-                    label="Xuất Excel" 
-                    icon="pi pi-download" 
+                <Button
+                    label="Xuất Excel"
+                    icon="pi pi-download"
                     severity="success"
                     @click="exportToExcel"
                     :loading="exporting"
                 />
             </div>
 
-            <DataTable 
-                :value="contributions" 
+            <DataTable
+                :value="contributions"
                 :rows="10"
                 :paginator="contributions.length > 10"
                 showGridlines
@@ -34,7 +34,7 @@
                 <!-- Fixed columns -->
                 <Column field="employee_code" header="Mã NV" style="min-width: 100px" frozen />
                 <Column field="employee_name" header="Họ tên" style="min-width: 180px" frozen />
-                
+
                 <Column header="Lương BH" style="min-width: 140px">
                     <template #body="{ data }">
                         <span class="font-semibold">{{ formatCurrency(data.base_insurance_salary) }}</span>
@@ -44,31 +44,31 @@
                 <!-- 5 Component Columns -->
                 <Column header="BHXH Hưu trí - Tử tuất" style="min-width: 150px">
                     <template #body="{ data }">
-                        {{ formatCurrency(getComponentAmount(data, 'BHXH_HUU_TU')) }}
+                        {{ formatCurrency(getComponentAmount(data, 'RETIREMENT_SURVIVOR')) }}
                     </template>
                 </Column>
 
                 <Column header="BHXH Ốm đau - Thai sản" style="min-width: 150px">
                     <template #body="{ data }">
-                        {{ formatCurrency(getComponentAmount(data, 'BHXH_BENH')) }}
+                        {{ formatCurrency(getComponentAmount(data, 'SICKNESS_MATERNITY')) }}
                     </template>
                 </Column>
 
                 <Column header="BHXH TNLĐ - BNN" style="min-width: 140px">
                     <template #body="{ data }">
-                        {{ formatCurrency(getComponentAmount(data, 'BHXH_TNLD')) }}
+                        {{ formatCurrency(getComponentAmount(data, 'OCC_ACCIDENT_DISEASE')) }}
                     </template>
                 </Column>
 
                 <Column header="BHTN" style="min-width: 140px">
                     <template #body="{ data }">
                         <div>
-                            <div>{{ formatCurrency(getComponentAmount(data, 'BHTN')) }}</div>
-                            <div 
-                                v-if="getComponentBaseType(data, 'BHTN') === 'FIXED_AMOUNT'" 
+                            <div>{{ formatCurrency(getComponentAmount(data, 'UNEMPLOYMENT')) }}</div>
+                            <div
+                                v-if="getComponentBaseType(data, 'UNEMPLOYMENT') === 'FIXED_AMOUNT'"
                                 class="text-xs text-gray-500 mt-1"
                             >
-                                (Cố định: {{ formatCurrency(getComponentBaseUsed(data, 'BHTN')) }})
+                                (Cố định: {{ formatCurrency(getComponentBaseUsed(data, 'UNEMPLOYMENT')) }})
                             </div>
                         </div>
                     </template>
@@ -76,7 +76,7 @@
 
                 <Column header="BHYT" style="min-width: 130px">
                     <template #body="{ data }">
-                        {{ formatCurrency(getComponentAmount(data, 'BHYT')) }}
+                        {{ formatCurrency(getComponentAmount(data, 'HEALTH')) }}
                     </template>
                 </Column>
 
@@ -204,7 +204,7 @@ const loadContributions = async () => {
 
     try {
         const response = await axios.get(`/insurance-reports/${props.report.id}/snapshot`);
-        
+
         // Transform data to match table structure
         contributions.value = response.data.contributions.map(contrib => ({
             employee_code: contrib.employee?.employee_code || '-',

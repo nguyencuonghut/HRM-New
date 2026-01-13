@@ -32,16 +32,12 @@
         </Column>
         <Column header="Ngày hiệu lực" style="min-width: 120px">
             <template #body="{ data }">
-                <span>{{ data.effective_date || '-' }}</span>
+                <span>{{ isFinalized ? formatDate(data.effective_date) : data.effective_date || '-' }}</span>
             </template>
         </Column>
         <Column header="Tháng KK gợi ý" style="min-width: 120px">
             <template #body="{ data }">
-                <Tag
-                    :value="data.suggested_declaration_month || '-'"
-                    severity="info"
-                    class="font-mono"
-                />
+                <Tag :value="data.suggested_declaration_month || '-'" severity="info" class="font-mono" />
             </template>
         </Column>
         <Column header="Tháng KK chính thức" style="min-width: 150px">
@@ -58,7 +54,7 @@
                     />
                     <span v-else>{{ data.declaration_month || '-' }}</span>
                     <i
-                        v-if="data.declaration_month !== data.suggested_declaration_month"
+                        v-if="data.declaration_month !== data.suggested_declaration_month && !isFinalized"
                         class="pi pi-exclamation-triangle text-yellow-500"
                         v-tooltip.top="'Đã thay đổi từ tháng gợi ý'"
                     />
@@ -132,7 +128,7 @@
         <Column v-if="isFinalized" header="Thời gian duyệt" style="min-width: 150px">
             <template #body="{ data }">
                 <div v-if="data.approval_status !== 'PENDING'" class="text-sm">
-                    {{ formatDate(data.approved_at) }}
+                    {{ formatDateTime(data.approved_at) }}
                     <div v-if="data.reject_reason" class="text-red-600 mt-1">
                         {{ data.reject_reason }}
                     </div>
@@ -158,6 +154,7 @@ import Select from 'primevue/select';
 import InputText from 'primevue/inputtext';
 import { useToast } from 'primevue/usetoast';
 import axios from 'axios';
+import { formatDate, formatDateTime } from '@/utils/dateHelper';
 
 const toast = useToast();
 
@@ -177,18 +174,6 @@ const formatCurrency = (value) => {
         style: 'currency',
         currency: 'VND'
     }).format(value);
-};
-
-const formatDate = (dateString) => {
-    if (!dateString) return '';
-    const date = new Date(dateString);
-    return new Intl.DateTimeFormat('vi-VN', {
-        year: 'numeric',
-        month: '2-digit',
-        day: '2-digit',
-        hour: '2-digit',
-        minute: '2-digit',
-    }).format(date);
 };
 
 const getStatusLabel = (status) => {
