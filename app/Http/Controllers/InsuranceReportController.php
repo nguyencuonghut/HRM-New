@@ -234,13 +234,13 @@ class InsuranceReportController extends Controller
 
         $validated = $request->validate([
             'declaration_month' => 'required|string|regex:/^\d{4}-\d{2}$/',
-            'override_reason' => 'nullable|string|max:1000',
+            'declaration_override_reason' => 'nullable|string|max:1000',
         ]);
 
         // If declaration_month differs from suggested, reason is required
         if ($validated['declaration_month'] !== $record->suggested_declaration_month) {
             $request->validate([
-                'override_reason' => 'required|string|max:1000',
+                'declaration_override_reason' => 'required|string|max:1000',
             ]);
         }
 
@@ -249,7 +249,7 @@ class InsuranceReportController extends Controller
                 $record,
                 Auth::user(),
                 $validated['declaration_month'],
-                $validated['override_reason'] ?? null
+                $validated['declaration_override_reason'] ?? null
             );
 
             return redirect()->back()->with([

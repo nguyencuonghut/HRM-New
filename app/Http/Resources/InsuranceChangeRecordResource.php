@@ -38,6 +38,9 @@ class InsuranceChangeRecordResource extends JsonResource
             'has_unemployment_insurance' => $this->has_unemployment_insurance,
 
             'system_notes' => $this->system_notes,
+            'suggested_declaration_month' => $this->suggested_declaration_month,
+            'declaration_month' => $this->declaration_month,
+            'declaration_override_reason' => $this->declaration_override_reason,
             'effective_date' => $this->effective_date->format('d/m/Y'),
 
             // Approval info

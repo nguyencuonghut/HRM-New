@@ -30,6 +30,11 @@
                 {{ data.auto_reason_label || data.system_notes || '-' }}
             </template>
         </Column>
+        <Column header="Ngày hiệu lực" style="min-width: 120px">
+            <template #body="{ data }">
+                <span>{{ data.effective_date || '-' }}</span>
+            </template>
+        </Column>
         <Column header="Tháng KK gợi ý" style="min-width: 120px">
             <template #body="{ data }">
                 <Tag
@@ -47,11 +52,11 @@
                         v-model="data.declaration_month"
                         :options="getAvailableMonths(data)"
                         placeholder="Chọn tháng"
-                        class="w-28"
+                        class="w-full"
                         :class="{ 'border-yellow-500': data.declaration_month !== data.suggested_declaration_month }"
                         @change="onDeclarationMonthChange(data)"
                     />
-                    <span v-else class="font-mono">{{ data.declaration_month || '-' }}</span>
+                    <span v-else>{{ data.declaration_month || '-' }}</span>
                     <i
                         v-if="data.declaration_month !== data.suggested_declaration_month"
                         class="pi pi-exclamation-triangle text-yellow-500"
@@ -208,16 +213,26 @@ const getStatusSeverity = (status) => {
 
 // Declaration month helpers
 const getAvailableMonths = (record) => {
-    // Generate 12 months from current year
-    const currentDate = new Date();
-    const year = currentDate.getFullYear();
+    // Nếu có suggested_declaration_month thì sinh ra ±3 tháng quanh đó
     const months = [];
-
-    for (let month = 1; month <= 12; month++) {
-        const value = `${year}-${String(month).padStart(2, '0')}`;
-        months.push(value);
+    let baseMonth = record.suggested_declaration_month;
+    if (baseMonth && /^\d{4}-\d{2}$/.test(baseMonth)) {
+        const [year, month] = baseMonth.split('-').map(Number);
+        for (let offset = -3; offset <= 3; offset++) {
+            const d = new Date(year, month - 1 + offset);
+            const y = d.getFullYear();
+            const m = String(d.getMonth() + 1).padStart(2, '0');
+            months.push(`${y}-${m}`);
+        }
+        // Loại trùng
+        return [...new Set(months)];
     }
-
+    // Fallback: 12 tháng hiện tại như cũ
+    const currentDate = new Date();
+    const fallbackYear = currentDate.getFullYear();
+    for (let m = 1; m <= 12; m++) {
+        months.push(`${fallbackYear}-${String(m).padStart(2, '0')}`);
+    }
     return months;
 };
 
