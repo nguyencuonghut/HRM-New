@@ -148,6 +148,15 @@ class InsuranceReportService
 
         DB::beginTransaction();
         try {
+            // ✅ Require reason when declaration_month differs from effective month
+            $effectiveMonth = Carbon::parse($record->effective_date)->format('Y-m');
+            if ($record->declaration_month !== $effectiveMonth && empty($record->declaration_override_reason)) {
+                throw new \Exception('Vui lòng nhập lý do thay đổi tháng kê khai (do khác tháng của Ngày hiệu lực).');
+            }
+
+            $oldReport = $record->report;
+            $oldReportMonth = $oldReport->year . '-' . str_pad($oldReport->month, 2, '0', STR_PAD_LEFT);
+
             $record->update([
                 'approval_status' => InsuranceChangeRecord::APPROVAL_APPROVED,
                 'approved_by' => $admin->id,
@@ -155,10 +164,23 @@ class InsuranceReportService
                 'admin_notes' => $adminNotes,
             ]);
 
-            // Update report counters
-            $this->updateReportCounters($record->report);
+            // ✅ Auto move after approving if declaration_month != report_month
+            $recordFresh = $record->fresh();
+            if (!empty($recordFresh->declaration_month) && $recordFresh->declaration_month !== $oldReportMonth) {
+                $this->declarationService->moveRecordToReport(
+                    $recordFresh,
+                    $recordFresh->declaration_month,
+                    $oldReport
+                );
+            }
 
-            // Log activity
+            // Update counters for involved reports
+            $this->updateReportCounters($oldReport);
+            if ($recordFresh->declaration_month && $recordFresh->declaration_month !== $oldReportMonth) {
+                $newReport = $this->declarationService->getOrCreateReportForMonth($recordFresh->declaration_month);
+                $this->updateReportCounters($newReport);
+            }
+
             activity()
                 ->useLog('insurance-approval')
                 ->performedOn($record)
@@ -227,13 +249,8 @@ class InsuranceReportService
     /**
      * Adjust a change record (Admin modifies salary)
      */
-    public function adjustRecord(
-        InsuranceChangeRecord $record,
-        User $admin,
-        float $adjustedSalary,
-        string $adjustmentReason,
-        ?string $adminNotes = null
-    ): bool {
+    public function adjustRecord(InsuranceChangeRecord $record, User $admin, array $adjustedData, ?string $adminNotes = null): bool
+    {
         if (!$record->isPending()) {
             throw new \Exception('Record không ở trạng thái chờ duyệt');
         }
@@ -244,19 +261,48 @@ class InsuranceReportService
 
         DB::beginTransaction();
         try {
-            $record->update([
+            $oldReport = $record->report;
+            $oldReportMonth = $oldReport->year . '-' . str_pad($oldReport->month, 2, '0', STR_PAD_LEFT);
+
+            // ✅ Enforce requirement:
+            // Reason is required when official declaration month differs from effective month (NOT suggested month)
+            $effectiveMonth = Carbon::parse($record->effective_date)->format('Y-m');
+            $currentDeclarationMonth = $record->declaration_month;
+
+            if (!empty($currentDeclarationMonth) && $currentDeclarationMonth !== $effectiveMonth) {
+                if (empty($record->declaration_override_reason)) {
+                    throw new \Exception('Vui lòng nhập lý do thay đổi tháng kê khai (do khác tháng của Ngày hiệu lực).');
+                }
+            }
+
+            // --- Apply adjustments to record fields ---
+            // Tuỳ code bạn đang cho phép adjust fields gì: change_type, insurance_salary, components, etc.
+            // Giữ style "update theo adjustedData", không tự ý thêm field lạ.
+            $record->update(array_merge($adjustedData, [
                 'approval_status' => InsuranceChangeRecord::APPROVAL_ADJUSTED,
                 'approved_by' => $admin->id,
                 'approved_at' => now(),
-                'adjusted_salary' => $adjustedSalary,
-                'adjustment_reason' => $adjustmentReason,
                 'admin_notes' => $adminNotes,
-            ]);
+            ]));
 
-            // Update report counters
-            $this->updateReportCounters($record->report);
+            // ✅ Auto move after adjusting if declaration_month != report_month
+            $recordFresh = $record->fresh();
 
-            // Log activity
+            if (!empty($recordFresh->declaration_month) && $recordFresh->declaration_month !== $oldReportMonth) {
+                $this->declarationService->moveRecordToReport(
+                    $recordFresh,
+                    $recordFresh->declaration_month,
+                    $oldReport
+                );
+            }
+
+            // Update counters for involved reports
+            $this->updateReportCounters($oldReport);
+            if (!empty($recordFresh->declaration_month) && $recordFresh->declaration_month !== $oldReportMonth) {
+                $newReport = $this->declarationService->getOrCreateReportForMonth($recordFresh->declaration_month);
+                $this->updateReportCounters($newReport);
+            }
+
             activity()
                 ->useLog('insurance-approval')
                 ->performedOn($record)
@@ -264,9 +310,12 @@ class InsuranceReportService
                 ->withProperties([
                     'employee_name' => $record->employee->full_name,
                     'change_type' => $record->change_type,
-                    'original_salary' => $record->insurance_salary,
-                    'adjusted_salary' => $adjustedSalary,
-                    'reason' => $adjustmentReason,
+                    'action' => 'adjust',
+                    'old_report_month' => $oldReportMonth,
+                    'new_report_month' => $recordFresh->declaration_month,
+                    'effective_month' => $effectiveMonth,
+                    'declaration_override_reason' => $recordFresh->declaration_override_reason,
+                    'adjusted_data' => $adjustedData,
                 ])
                 ->log('Điều chỉnh thay đổi BH');
 
@@ -285,10 +334,10 @@ class InsuranceReportService
      * If declaration_month changes to different report month, moves record to appropriate report
      */
     public function updateDeclarationMonth(
-        InsuranceChangeRecord $record,
-        User $admin,
-        string $declarationMonth,
-        ?string $overrideReason = null
+    InsuranceChangeRecord $record,
+    User $admin,
+    string $declarationMonth,
+    ?string $overrideReason = null
     ): bool {
         if ($record->report->isFinalized()) {
             throw new \Exception('Báo cáo đã hoàn tất, không thể thay đổi tháng đóng BHXH');
@@ -299,7 +348,12 @@ class InsuranceReportService
             $oldDeclarationMonth = $record->declaration_month;
             $oldReport = $record->report;
 
-            // Update declaration month fields
+            // ✅ Enforce requirement in service too
+            $effectiveMonth = Carbon::parse($record->effective_date)->format('Y-m');
+            if ($declarationMonth !== $effectiveMonth && empty($overrideReason)) {
+                throw new \Exception('Vui lòng nhập lý do thay đổi tháng kê khai (do khác tháng của Ngày hiệu lực).');
+            }
+
             $record->update([
                 'declaration_month' => $declarationMonth,
                 'declaration_set_by' => $admin->id,
@@ -307,16 +361,14 @@ class InsuranceReportService
                 'declaration_override_reason' => $overrideReason,
             ]);
 
-            // Check if record needs to move to different report
+            // ✅ Move if record no longer belongs to old report month
             if (!$this->declarationService->canRecordBelongToReport($record->fresh(), $oldReport)) {
-                // Move record to appropriate report
                 $newReport = $this->declarationService->moveRecordToReport(
                     $record->fresh(),
                     $declarationMonth,
                     $oldReport
                 );
 
-                // Log the move
                 activity()
                     ->useLog('insurance-declaration')
                     ->performedOn($record)
@@ -329,7 +381,6 @@ class InsuranceReportService
                     ->log('Di chuyển record sang báo cáo khác');
             }
 
-            // Log activity
             activity()
                 ->useLog('insurance-declaration')
                 ->performedOn($record)

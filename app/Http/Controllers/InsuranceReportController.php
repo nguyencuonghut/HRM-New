@@ -237,8 +237,10 @@ class InsuranceReportController extends Controller
             'declaration_override_reason' => 'nullable|string|max:1000',
         ]);
 
-        // If declaration_month differs from suggested, reason is required
-        if ($validated['declaration_month'] !== $record->suggested_declaration_month) {
+        // ✅ Correct requirement:
+        // Reason is required when official declaration month differs from effective month
+        $effectiveMonth = \Carbon\Carbon::parse($record->effective_date)->format('Y-m');
+        if ($validated['declaration_month'] !== $effectiveMonth) {
             $request->validate([
                 'declaration_override_reason' => 'required|string|max:1000',
             ]);

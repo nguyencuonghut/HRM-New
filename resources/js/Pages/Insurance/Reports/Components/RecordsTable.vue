@@ -5,78 +5,96 @@
                 {{ data.employee?.employee_code || '-' }}
             </template>
         </Column>
+
         <Column header="Họ và tên" style="min-width: 180px">
             <template #body="{ data }">
                 {{ data.employee?.full_name || '-' }}
             </template>
         </Column>
+
         <Column header="Mã BHXH" style="min-width: 120px">
             <template #body="{ data }">
                 {{ data.employee?.si_number || '-' }}
             </template>
         </Column>
+
         <Column header="Lương BHXH" style="min-width: 130px">
             <template #body="{ data }">
                 {{ formatCurrency(data.insurance_salary) }}
             </template>
         </Column>
+
         <Column v-if="changeType === 'ADJUST'" header="Lương mới" style="min-width: 130px">
             <template #body="{ data }">
                 {{ formatCurrency(data.final_salary) }}
             </template>
         </Column>
+
         <Column header="Lý do" style="min-width: 150px">
             <template #body="{ data }">
                 {{ data.auto_reason_label || data.system_notes || '-' }}
             </template>
         </Column>
+
         <Column header="Ngày hiệu lực" style="min-width: 120px">
             <template #body="{ data }">
                 <span>{{ isFinalized ? formatDate(data.effective_date) : data.effective_date || '-' }}</span>
             </template>
         </Column>
+
         <Column header="Tháng KK gợi ý" style="min-width: 120px">
             <template #body="{ data }">
                 <Tag :value="data.suggested_declaration_month || '-'" severity="info" class="font-mono" />
             </template>
         </Column>
+
         <Column header="Tháng KK chính thức" style="min-width: 150px">
             <template #body="{ data }">
                 <div class="flex items-center gap-2">
+                    <!-- IMPORTANT:
+                         Do NOT bind directly to data.declaration_month (payload already has value).
+                         Use UI-only state to avoid "auto selected" + buggy change behaviors. -->
                     <Select
                         v-if="!isFinalized && data.approval_status === 'PENDING'"
-                        v-model="data.declaration_month"
+                        v-model="data.declaration_month_ui"
                         :options="getAvailableMonths(data)"
                         placeholder="Chọn tháng"
                         class="w-full"
-                        :class="{ 'border-yellow-500': data.declaration_month !== data.suggested_declaration_month }"
-                        @change="onDeclarationMonthChange(data)"
+                        :class="{ 'border-yellow-500': shouldShowDeclarationOverride(data) }"
+                        @change="onDeclarationMonthSelected(data)"
                     />
+
+                    <!-- When not editable, show persisted declaration_month -->
                     <span v-else>{{ data.declaration_month || '-' }}</span>
+
                     <i
-                        v-if="data.declaration_month !== data.suggested_declaration_month && !isFinalized"
+                        v-if="shouldShowDeclarationOverride(data) && !isFinalized"
                         class="pi pi-exclamation-triangle text-yellow-500"
-                        v-tooltip.top="'Đã thay đổi từ tháng gợi ý'"
+                        v-tooltip.top="'Đã thay đổi từ tháng của ngày hiệu lực'"
                     />
                 </div>
             </template>
         </Column>
+
         <Column header="Lý do thay đổi tháng KK" style="min-width: 200px">
             <template #body="{ data }">
                 <InputText
-                    v-if="!isFinalized && data.approval_status === 'PENDING' && data.declaration_month !== data.suggested_declaration_month"
+                    v-if="!isFinalized && data.approval_status === 'PENDING' && shouldShowDeclarationOverride(data)"
                     v-model="data.declaration_override_reason"
                     placeholder="Nhập lý do (bắt buộc)"
                     class="w-full text-sm"
-                    :class="{ 'border-red-500': !data.declaration_override_reason && data.declaration_month !== data.suggested_declaration_month }"
+                    :class="{ 'border-red-500': !data.declaration_override_reason }"
                     @blur="validateOverrideReason(data)"
                 />
+
                 <span v-else-if="data.declaration_override_reason" class="text-sm text-gray-600">
                     {{ data.declaration_override_reason }}
                 </span>
+
                 <span v-else class="text-gray-400">-</span>
             </template>
         </Column>
+
         <Column header="Trạng thái" style="min-width: 120px">
             <template #body="{ data }">
                 <Tag
@@ -85,6 +103,7 @@
                 />
             </template>
         </Column>
+
         <Column v-if="!isFinalized && canApprove" header="Thao tác" style="min-width: 200px">
             <template #body="{ data }">
                 <div v-if="data.approval_status === 'PENDING'" class="flex gap-2">
@@ -120,11 +139,13 @@
                 </div>
             </template>
         </Column>
+
         <Column v-if="isFinalized" header="Người duyệt" style="min-width: 150px">
             <template #body="{ data }">
                 {{ data.approved_by?.name || '-' }}
             </template>
         </Column>
+
         <Column v-if="isFinalized" header="Thời gian duyệt" style="min-width: 150px">
             <template #body="{ data }">
                 <div v-if="data.approval_status !== 'PENDING'" class="text-sm">
@@ -145,7 +166,6 @@
 </template>
 
 <script setup>
-import { ref } from 'vue';
 import DataTable from 'primevue/datatable';
 import Column from 'primevue/column';
 import Button from 'primevue/button';
@@ -196,11 +216,47 @@ const getStatusSeverity = (status) => {
     return severities[status] || 'secondary';
 };
 
+/**
+ * IMPORTANT FIX:
+ * Payload effective_date is "DD/MM/YYYY" (e.g. "25/12/2025"), not ISO.
+ * Return "YYYY-MM".
+ * Also supports ISO "YYYY-MM-DD" as fallback.
+ */
+function getEffectiveMonth(effectiveDate) {
+    if (!effectiveDate) return null;
+    const s = String(effectiveDate).trim();
+
+    // DD/MM/YYYY
+    if (/^\d{2}\/\d{2}\/\d{4}$/.test(s)) {
+        const [dd, mm, yyyy] = s.split('/');
+        return `${yyyy}-${mm}`;
+    }
+
+    // YYYY-MM-DD or YYYY-MM
+    if (/^\d{4}-\d{2}-\d{2}$/.test(s)) return s.slice(0, 7);
+    if (/^\d{4}-\d{2}$/.test(s)) return s;
+
+    return null;
+}
+
+/**
+ * Only show tooltip/icon & require reason when:
+ * - user has selected a declaration month (touched)
+ * - selected month differs from effective month
+ */
+function shouldShowDeclarationOverride(record) {
+    if (!record) return false;
+    if (!record.declaration_month_touched) return false;
+
+    const effectiveMonth = getEffectiveMonth(record.effective_date);
+    return !!record.declaration_month_ui && record.declaration_month_ui !== effectiveMonth;
+}
+
 // Declaration month helpers
 const getAvailableMonths = (record) => {
-    // Nếu có suggested_declaration_month thì sinh ra ±3 tháng quanh đó
     const months = [];
-    let baseMonth = record.suggested_declaration_month;
+    const baseMonth = record.suggested_declaration_month;
+
     if (baseMonth && /^\d{4}-\d{2}$/.test(baseMonth)) {
         const [year, month] = baseMonth.split('-').map(Number);
         for (let offset = -3; offset <= 3; offset++) {
@@ -209,10 +265,10 @@ const getAvailableMonths = (record) => {
             const m = String(d.getMonth() + 1).padStart(2, '0');
             months.push(`${y}-${m}`);
         }
-        // Loại trùng
         return [...new Set(months)];
     }
-    // Fallback: 12 tháng hiện tại như cũ
+
+    // fallback 12 months of current year
     const currentDate = new Date();
     const fallbackYear = currentDate.getFullYear();
     for (let m = 1; m <= 12; m++) {
@@ -221,37 +277,64 @@ const getAvailableMonths = (record) => {
     return months;
 };
 
-const onDeclarationMonthChange = async (record) => {
-    if (record.declaration_month === record.suggested_declaration_month) {
-        // Cleared override - remove reason
+/**
+ * Called only when user selects a month from dropdown.
+ * - Set touched flag
+ * - Copy UI month -> declaration_month (the persisted value)
+ * - If selected month equals effective month => clear reason and save immediately
+ * - Else => require reason (save on blur)
+ */
+const onDeclarationMonthSelected = async (record) => {
+    record.declaration_month_touched = true;
+
+    if (!record.declaration_month_ui) return;
+
+    // persist value
+    record.declaration_month = record.declaration_month_ui;
+
+    const effectiveMonth = getEffectiveMonth(record.effective_date);
+
+    // If equals effective month, no reason needed => save right away
+    if (record.declaration_month === effectiveMonth) {
         record.declaration_override_reason = null;
         await saveDeclarationMonth(record);
-    } else {
-        // Require reason
-        if (!record.declaration_override_reason) {
-            toast.add({
-                severity: 'warn',
-                summary: 'Yêu cầu lý do',
-                detail: 'Vui lòng nhập lý do thay đổi tháng kê khai',
-                life: 3000
-            });
-        }
+        return;
+    }
+
+    // Otherwise, reason required; user will enter and blur to save
+    if (!record.declaration_override_reason) {
+        toast.add({
+            severity: 'warn',
+            summary: 'Yêu cầu lý do',
+            detail: 'Vui lòng nhập lý do thay đổi tháng kê khai (khác tháng của ngày hiệu lực)',
+            life: 3000
+        });
     }
 };
 
 const validateOverrideReason = async (record) => {
-    if (record.declaration_month !== record.suggested_declaration_month && record.declaration_override_reason) {
+    if (!record.declaration_month_touched) return;
+
+    const effectiveMonth = getEffectiveMonth(record.effective_date);
+
+    if (
+        record.declaration_month_ui &&
+        record.declaration_month_ui !== effectiveMonth &&
+        record.declaration_override_reason
+    ) {
         await saveDeclarationMonth(record);
     }
 };
 
 const saveDeclarationMonth = async (record) => {
-    // Validate
-    if (record.declaration_month !== record.suggested_declaration_month && !record.declaration_override_reason) {
+    const effectiveMonth = getEffectiveMonth(record.effective_date);
+
+    // Validate reason only when declaration differs from effective month
+    if (record.declaration_month !== effectiveMonth && !record.declaration_override_reason) {
         toast.add({
             severity: 'error',
             summary: 'Lỗi',
-            detail: 'Phải nhập lý do khi thay đổi tháng kê khai',
+            detail: 'Phải nhập lý do khi thay đổi tháng kê khai (khác tháng của ngày hiệu lực)',
             life: 3000
         });
         return;

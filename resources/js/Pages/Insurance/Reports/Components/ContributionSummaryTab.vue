@@ -147,11 +147,11 @@ const summary = computed(() => {
     };
 
     contributions.value.forEach(c => {
-        totals.total_bhxh_huu_tu += getComponentAmount(c, 'BHXH_HUU_TU');
-        totals.total_bhxh_benh += getComponentAmount(c, 'BHXH_BENH');
-        totals.total_bhxh_tnld += getComponentAmount(c, 'BHXH_TNLD');
-        totals.total_bhtn += getComponentAmount(c, 'BHTN');
-        totals.total_bhyt += getComponentAmount(c, 'BHYT');
+        totals.total_bhxh_huu_tu += getComponentAmount(c, 'RETIREMENT_SURVIVOR');
+        totals.total_bhxh_benh += getComponentAmount(c, 'SICKNESS_MATERNITY');
+        totals.total_bhxh_tnld += getComponentAmount(c, 'OCC_ACCIDENT_DISEASE');
+        totals.total_bhtn += getComponentAmount(c, 'UNEMPLOYMENT');
+        totals.total_bhyt += getComponentAmount(c, 'HEALTH');
         totals.grand_total += parseFloat(c.total_amount || 0);
     });
 

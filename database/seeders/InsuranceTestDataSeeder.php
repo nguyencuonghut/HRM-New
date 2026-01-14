@@ -76,8 +76,8 @@ class InsuranceTestDataSeeder extends Seeder
             '468' => ['start' => '2023-01-15', 'status' => 'ACTIVE'], // Nhân viên CL
             '2272' => ['start' => '2014-01-01', 'status' => 'ACTIVE'], // Thâm niên 11 năm
             '912' => ['start' => '2020-01-01', 'status' => 'SUSPENDED'], // Nghỉ ốm >30 ngày
-            '1992' => ['start' => '2025-12-01', 'status' => 'ACTIVE'], // Nhân viên mới (tháng này)
-            '2571' => ['start' => '2025-10-01', 'status' => 'ACTIVE'], // Thử việc
+            '1992' => ['start' => '2024-12-01', 'status' => 'ACTIVE'], // Nhân viên mới (tháng này)
+            '2571' => ['start' => '2024-10-01', 'status' => 'ACTIVE'], // Thử việc
         ];
 
         // Employee nghỉ thai sản (đã SUSPEND)
@@ -325,7 +325,7 @@ class InsuranceTestDataSeeder extends Seeder
                 'source' => 'WORKFLOW',
                 'title' => 'Phụ lục tăng lương',
                 'summary' => 'Tăng lương định kỳ từ 14M lên 16M',
-                'effective_date' => '2025-12-01',
+                'effective_date' => '2024-12-01',
                 'base_salary' => 16000000,
                 'insurance_salary' => 16000000 * 0.7,
                 'position_allowance' => 2000000,
@@ -352,7 +352,7 @@ class InsuranceTestDataSeeder extends Seeder
                 'source' => 'WORKFLOW',
                 'title' => 'Phụ lục tăng lương thâm niên',
                 'summary' => 'Tăng lương thâm niên 11 năm từ 10M lên 12M',
-                'effective_date' => '2025-12-01',
+                'effective_date' => '2024-12-01',
                 'base_salary' => 12000000,
                 'insurance_salary' => 12000000 * 0.7,
                 'position_allowance' => 1500000,

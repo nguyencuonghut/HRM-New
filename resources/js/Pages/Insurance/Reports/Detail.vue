@@ -265,14 +265,25 @@ const confirmFinalize = () => {
 };
 
 const finalizeReport = () => {
-    finalizing.value = true;
-    InsuranceReportService.finalize(props.report.id, {
-        onFinish: () => {
-            finalizing.value = false;
-            finalizeDialog.value = false;
-        },
-    });
+  finalizing.value = true;
+
+  InsuranceReportService.finalize(props.report.id, {
+    onSuccess: () => {
+        finalizeDialog.value = false;
+
+        router.visit(window.location.href, {
+            method: 'get',
+            replace: true,
+            preserveScroll: true,
+            preserveState: false, // ✅ quan trọng
+        });
+    },
+    onFinish: () => {
+      finalizing.value = false;
+    },
+  });
 };
+
 
 const confirmDelete = () => {
     deleteDialog.value = true;
