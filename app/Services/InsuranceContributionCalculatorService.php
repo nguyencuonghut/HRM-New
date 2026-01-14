@@ -158,41 +158,43 @@ class InsuranceContributionCalculatorService
      */
     protected function getInsuranceSalary(Employee $employee, string $declarationMonth): ?float
     {
-        $declarationDate = Carbon::createFromFormat('Y-m', $declarationMonth)->startOfMonth();
+        $monthStart = Carbon::createFromFormat('Y-m', $declarationMonth)->startOfMonth();
+        $monthEnd   = (clone $monthStart)->endOfMonth();
 
-        // Tìm ContractAppendix active tại tháng khai báo, join với Contract để lấy employee_id
+        // 1) Appendix effective trong tháng (hoặc trước đó nhưng vẫn còn hiệu lực trong tháng)
         $appendix = ContractAppendix::whereHas('contract', function ($query) use ($employee) {
                 $query->where('employee_id', $employee->id);
             })
-            ->where('effective_date', '<=', $declarationDate)
-            ->where(function ($query) use ($declarationDate) {
+            ->where('effective_date', '<=', $monthEnd)
+            ->where(function ($query) use ($monthStart) {
                 $query->whereNull('end_date')
-                    ->orWhere('end_date', '>=', $declarationDate);
+                    ->orWhere('end_date', '>=', $monthStart);
             })
             ->orderBy('effective_date', 'desc')
             ->first();
 
         if ($appendix && $appendix->insurance_salary !== null) {
-            return $appendix->insurance_salary;
+            return (float) $appendix->insurance_salary;
         }
 
-        // Nếu không có appendix, tìm Contract active
+        // 2) Contract overlap tháng (không dùng startOfMonth để so start_date)
         $contract = Contract::where('employee_id', $employee->id)
-            ->where('start_date', '<=', $declarationDate)
-            ->where(function ($query) use ($declarationDate) {
+            ->where('start_date', '<=', $monthEnd)
+            ->where(function ($query) use ($monthStart) {
                 $query->whereNull('end_date')
-                    ->orWhere('end_date', '>=', $declarationDate);
+                    ->orWhere('end_date', '>=', $monthStart);
             })
-            ->where('status', 'ACTIVE')
+            // IMPORTANT: đừng khóa cứng ACTIVE nếu status đổi khi terminate
             ->orderBy('start_date', 'desc')
             ->first();
 
         if ($contract && $contract->insurance_salary !== null) {
-            return $contract->insurance_salary;
+            return (float) $contract->insurance_salary;
         }
 
         return null;
     }
+
 
     /**
      * Get summary statistics for a set of calculation results

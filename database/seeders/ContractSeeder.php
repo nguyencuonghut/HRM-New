@@ -140,7 +140,7 @@ class ContractSeeder extends Seeder
                 'employee_code' => '1992',
                 'contract_type' => 'INDEFINITE',
                 'contract_number' => 'HĐLĐ-1992-2025',
-                'start_date' => '2025-12-01',
+                'start_date' => '2025-11-01',
                 'end_date' => null,
                 'status' => 'ACTIVE',
                 'salary' => 11000000,
