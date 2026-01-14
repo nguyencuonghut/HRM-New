@@ -42,11 +42,27 @@ class EmployeeController extends Controller
 
         // Lấy employment hiện tại (nếu có)
         $currentEmployment = $employee->currentEmployment;
+        $today = now()->toDateString();
         $activeContractQuery = $employee->contracts()->active()->orderByDesc('start_date');
         if ($currentEmployment) {
             $activeContractQuery->where('employment_id', $currentEmployment->id);
         }
         $currentContract = $activeContractQuery->with(['appendixes'])->first();
+
+        // Nếu không có hợp đồng hiệu lực, lấy hợp đồng sắp có hiệu lực (start_date > hôm nay, gần nhất)
+        if (!$currentContract) {
+            $futureContractQuery = $employee->contracts()
+                ->whereDate('start_date', '>', $today)
+                ->orderBy('start_date')
+                ->with(['appendixes']);
+            if ($currentEmployment) {
+                $futureContractQuery->where('employment_id', $currentEmployment->id);
+            }
+            $currentContract = $futureContractQuery->first();
+            $isFutureContract = true;
+        } else {
+            $isFutureContract = false;
+        }
 
         $currentPayroll = null;
         if ($currentContract) {
@@ -71,6 +87,8 @@ class EmployeeController extends Controller
                     'status' => $activeAppendix->status,
                     'status_label' => method_exists($activeAppendix, 'getStatusLabel') ? $activeAppendix->getStatusLabel() : $activeAppendix->status,
                     'title' => $activeAppendix->title,
+                    'is_future' => $isFutureContract,
+                    'future_start_date' => $isFutureContract ? optional($currentContract->start_date)->format('d/m/Y') : null,
                 ];
             } else {
                 $currentPayroll = [
@@ -85,6 +103,8 @@ class EmployeeController extends Controller
                     'status' => $currentContract->status,
                     'status_label' => method_exists($currentContract, 'getStatusLabel') ? $currentContract->getStatusLabel() : $currentContract->status,
                     'title' => $currentContract->contract_type_label,
+                    'is_future' => $isFutureContract,
+                    'future_start_date' => $isFutureContract ? optional($currentContract->start_date)->format('d/m/Y') : null,
                 ];
             }
         }
@@ -191,7 +211,7 @@ class EmployeeController extends Controller
             'insurance_data' => $insuranceData,
             'insurance_history' => $insuranceHistory,
             // Insurance Participation (NEW - for Insurance tab)
-            'current_participation' => $this->getCurrentInsuranceParticipation($currentContract),
+            'current_participation' => $this->getCurrentInsuranceParticipation($currentContract, $isFutureContract ?? false),
             'participation_history' => $this->getInsuranceParticipationHistory($employee),
             // Khen thưởng & Kỷ luật
             'rewards_disciplines_data' => EmployeeRewardDisciplineController::getProfileData($employee),

@@ -93,7 +93,18 @@
 
     <!-- No Current Participation -->
     <template v-else>
-      <div class="bg-orange-50 border-l-4 border-orange-400 p-6 rounded-lg mb-6">
+      <div v-if="currentParticipation && currentParticipation.is_future" class="bg-blue-50 border-l-4 border-blue-400 p-6 rounded-lg mb-6">
+        <div class="flex items-start gap-4">
+          <i class="pi pi-info-circle text-blue-600 text-3xl"></i>
+          <div class="flex-1">
+            <h4 class="font-bold text-blue-800 mb-2">Sắp tham gia BHXH</h4>
+            <p class="text-sm text-blue-700 mb-3">
+              Nhân viên sẽ bắt đầu tham gia BHXH từ ngày {{ currentParticipation.future_start_date }} theo hợp đồng mới.
+            </p>
+          </div>
+        </div>
+      </div>
+      <div v-else class="bg-orange-50 border-l-4 border-orange-400 p-6 rounded-lg mb-6">
         <div class="flex items-start gap-4">
           <i class="pi pi-exclamation-triangle text-orange-600 text-3xl"></i>
           <div class="flex-1">

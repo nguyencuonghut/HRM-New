@@ -211,7 +211,16 @@
       </div>
     </template>
     <template v-else>
-      <div class="bg-yellow-50 border-l-4 border-yellow-400 p-4 rounded mb-4 flex items-center justify-between">
+      <div v-if="currentPayroll && currentPayroll.is_future" class="bg-blue-50 border-l-4 border-blue-400 p-4 rounded mb-4 flex items-center justify-between">
+        <div class="flex items-center gap-2">
+          <i class="pi pi-info-circle text-blue-600 text-2xl"></i>
+          <span class="text-blue-800 font-semibold">
+            Hợp đồng sắp có hiệu lực từ ngày {{ currentPayroll.future_start_date }}. Thông tin lương dưới đây sẽ áp dụng từ ngày này.
+          </span>
+        </div>
+        <button type="button" @click="goToContractTab" class="text-blue-600 hover:underline text-sm font-medium">Xem hợp đồng</button>
+      </div>
+      <div v-else class="bg-yellow-50 border-l-4 border-yellow-400 p-4 rounded mb-4 flex items-center justify-between">
         <div class="flex items-center gap-2">
           <i class="pi pi-exclamation-triangle text-yellow-600 text-2xl"></i>
           <span class="text-yellow-800 font-semibold">Nhân viên hiện chưa có hợp đồng hiệu lực. Không thể xác định thông tin lương.</span>
