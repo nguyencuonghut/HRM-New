@@ -86,7 +86,7 @@ class DepartmentOrgController extends Controller
     }
 
     // Map về cấu trúc PrimeVue Tree + headcount + trưởng/phó
-    private function nodes($rows)
+    public function nodes($rows)
     {
         $ids = $rows->pluck('id')->all();
 

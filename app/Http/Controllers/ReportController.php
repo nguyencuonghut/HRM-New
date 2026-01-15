@@ -48,27 +48,88 @@ class ReportController extends Controller
     {
         $asOfDate = $request->input('as_of_date', Carbon::today()->format('Y-m-d'));
 
+        // Get all employees with assignments as of date
         $employees = $this->reportService->getEmployeesWithAssignmentsAsOf($asOfDate);
-        $totalHeadcount = $employees->count();
+        $employeeAssignments = $employees->map(function($e) {
+            $a = $e->assignments->first();
+            return $a ? [
+                'employee_id' => $e->id,
+                'department_id' => $a->department_id,
+            ] : null;
+        })->filter()->values();
 
-        // Count by department
-        $byDepartment = $this->reportService->countEmployeesByDepartmentAsOf($asOfDate);
-        $departments = Department::whereIn('id', $byDepartment->keys())->get()->keyBy('id');
+        // Helper: get all department IDs that have at least one employee (direct or descendant)
+        $allDeptIdsWithEmp = $employeeAssignments->pluck('department_id')->unique()->all();
+        $descendantMap = [];
+        $getAllDescendants = null;
+        $getAllDescendants = function($deptId) use (&$descendantMap, &$getAllDescendants) {
+            if (isset($descendantMap[$deptId])) return $descendantMap[$deptId];
+            $descendants = Department::where('parent_id', $deptId)->pluck('id')->all();
+            $all = [];
+            foreach ($descendants as $childId) {
+                $all[] = $childId;
+                $all = array_merge($all, $getAllDescendants($childId));
+            }
+            $descendantMap[$deptId] = $all;
+            return $all;
+        };
 
-        $departmentBreakdown = $byDepartment->map(function ($count, $deptId) use ($departments) {
-            $department = $departments->get($deptId);
-            $name = $department && !empty(trim($department->name)) ? $department->name : 'Chưa xác định';
-            return [
-                'department_id' => $deptId,
-                'department_name' => $name,
-                'count' => $count,
-            ];
+        // Filter root departments: only those (or their descendants) with employees
+        $rootDepartments = Department::whereNull('parent_id')
+            ->orderByRaw('CASE WHEN order_index IS NULL THEN 1 ELSE 0 END, order_index ASC')
+            ->orderBy('name')
+            ->get(['id','parent_id','type','name','code','is_active']);
+
+        $rootDepartments = $rootDepartments->filter(function($dept) use ($allDeptIdsWithEmp, $getAllDescendants) {
+            $ids = array_merge([$dept->id], $getAllDescendants($dept->id));
+            return count(array_intersect($ids, $allDeptIdsWithEmp)) > 0;
         })->values();
 
-        // Count by position
-        $byPosition = $this->reportService->countEmployeesByPositionAsOf($asOfDate);
-        $positions = Position::whereIn('id', $byPosition->keys())->get()->keyBy('id');
+        // Recursive build tree, only keep children with employees
+        $buildTree = function($dept) use (&$buildTree, $allDeptIdsWithEmp, $getAllDescendants, $employeeAssignments) {
+            $ids = array_merge([$dept->id], $getAllDescendants($dept->id));
+            if (count(array_intersect($ids, $allDeptIdsWithEmp)) === 0) return null;
+            $children = Department::where('parent_id', $dept->id)
+                ->orderByRaw('CASE WHEN order_index IS NULL THEN 1 ELSE 0 END, order_index ASC')
+                ->orderBy('name')
+                ->get(['id','parent_id','type','name','code','is_active']);
+            $childNodes = $children->map(fn($c) => $buildTree($c))->filter()->values();
+            // Count employees in this dept and all descendants
+            $count = collect($ids)->sum(fn($id) => $employeeAssignments->where('department_id', $id)->count());
+            return [
+                'key' => $dept->id,
+                'label' => $dept->name,
+                'data' => [
+                    'id' => $dept->id,
+                    'type' => $dept->type,
+                    'code' => $dept->code,
+                    'is_active' => (bool)$dept->is_active,
+                    'headcount' => $count,
+                ],
+                'children' => $childNodes,
+                'leaf' => $childNodes->isEmpty(),
+            ];
+        };
+        $departmentTree = $rootDepartments->map(fn($dept) => $buildTree($dept))->filter()->values()->toArray();
 
+        // Total headcount = sum of all employees in filtered tree
+        $totalHeadcount = $employeeAssignments->count();
+
+
+        // byPosition: only count employees in filtered tree
+        // First, ensure we have position_id in each assignment (add to $employeeAssignments above if missing)
+        $employeeAssignmentsWithPosition = $employees->map(function($e) {
+            $a = $e->assignments->first();
+            return $a ? [
+                'employee_id' => $e->id,
+                'department_id' => $a->department_id,
+                'employment_type' => $a->employment_type,
+                'position_id' => $a->position_id,
+            ] : null;
+        })->filter()->values();
+
+        $byPosition = $employeeAssignmentsWithPosition->groupBy('position_id')->map->count();
+        $positions = Position::whereIn('id', $byPosition->keys())->get()->keyBy('id');
         $positionBreakdown = $byPosition->map(function ($count, $posId) use ($positions) {
             $position = $positions->get($posId);
             $title = $position && !empty(trim($position->title)) ? $position->title : 'Chưa xác định';
@@ -79,11 +140,54 @@ class ReportController extends Controller
             ];
         })->values();
 
+        // byContractType: count employees by contract_type of ACTIVE contract at as_of_date
+        $asOf = Carbon::parse($asOfDate);
+
+        // Assumption: $employees already includes contracts relationship.
+        // If not, you MUST eager load it in getEmployeesWithAssignmentsAsOf or here:
+        // $employees->load('contracts');
+
+        $contractTypeCounts = $employees->map(function ($e) use ($asOf) {
+            // Find contract effective at as_of_date
+            $activeContract = $e->contracts
+                ->filter(function ($c) use ($asOf) {
+                    $startOk = $c->start_date && Carbon::parse($c->start_date)->lte($asOf);
+                    $endOk = !$c->end_date || Carbon::parse($c->end_date)->gte($asOf);
+                    return $startOk && $endOk;
+                })
+                ->sortByDesc('start_date')
+                ->first();
+
+            // Return enum value or special bucket
+            return $activeContract?->contract_type ?: '__NO_ACTIVE_CONTRACT__';
+        })
+        ->groupBy(fn ($t) => $t)
+        ->map->count()
+        ->toArray();
+
+        // Map enum value -> Vietnamese label (using ContractType enum)
+        $byEmploymentType = []; // keep prop name to avoid FE changes
+        foreach ($contractTypeCounts as $typeValue => $count) {
+            if ($typeValue === '__NO_ACTIVE_CONTRACT__') {
+                $label = 'Chưa có HĐ hiệu lực';
+            } else {
+                try {
+                    $label = ContractType::from($typeValue)->label();
+                } catch (\ValueError $e) {
+                    // In case DB has unexpected value
+                    $label = $typeValue;
+                }
+            }
+
+            $byEmploymentType[$label] = $count;
+        }
+
         return Inertia::render('Reports/Headcount', [
             'asOfDate' => $asOfDate,
             'totalHeadcount' => $totalHeadcount,
-            'byDepartment' => $departmentBreakdown,
+            'departmentTree' => $departmentTree,
             'byPosition' => $positionBreakdown,
+            'byEmploymentType' => $byEmploymentType,
             'filters' => $request->only(['as_of_date']),
         ]);
     }

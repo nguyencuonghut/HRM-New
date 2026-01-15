@@ -61,32 +61,39 @@
             </Card>
         </div>
 
-        <!-- Department Breakdown Table -->
-        <ReportTable
-            title="Chi tiết theo Bộ phận"
-            :data="byDepartment"
-            :paginator="false"
-        >
-            <Column field="department_name" header="Bộ phận" sortable />
-            <Column field="count" header="Số lượng" sortable>
-                <template #body="{ data }">
-                    <span class="font-semibold">{{ data.count }}</span>
-                </template>
-            </Column>
-            <Column header="Tỷ lệ">
-                <template #body="{ data }">
-                    <ProgressBar
-                        :value="calculatePercentage(data.count)"
-                        :showValue="true"
-                        class="h-6"
-                    />
-                </template>
-            </Column>
-        </ReportTable>
+        <!-- Department Breakdown TreeTable -->
+        <Card class="mt-6">
+            <template #title>Chi tiết theo Bộ phận (Cây)</template>
+            <template #content>
+                <TreeTable :value="departmentTree" :tableStyle="{ minWidth: '50rem' }" expandableRows rowKey="key">
+                    <Column header="Bộ phận" expander>
+                        <template #body="{ node }">
+                            <span>{{ node.label }}</span>
+                        </template>
+                    </Column>
+                    <Column field="data.headcount" header="Số lượng">
+                        <template #body="{ node }">
+                            <span class="font-semibold">{{ node.data.headcount }}</span>
+                        </template>
+                    </Column>
+                    <Column header="Tỷ lệ" style="min-width: 280px">
+                        <template #body="{ node }">
+                            <div class="w-full">
+                                <ProgressBar
+                                    :value="calculatePercentage(node.data.headcount)"
+                                    :showValue="true"
+                                    class="h-6 w-full"
+                                />
+                            </div>
+                        </template>
+                    </Column>
+                </TreeTable>
+            </template>
+        </Card>
 
         <!-- Employment Type Breakdown -->
         <Card class="mt-6">
-            <template #title>Phân loại theo Hình thức</template>
+            <template #title>Phân loại theo hợp đồng</template>
             <template #content>
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div
@@ -111,10 +118,9 @@ import { Head } from '@inertiajs/vue3';
 import { ReportService } from '@/services/ReportService';
 import ReportFilterBar from '@/Components/Reports/ReportFilterBar.vue';
 import ReportKpiCards from '@/Components/Reports/ReportKpiCards.vue';
-import ReportTable from '@/Components/Reports/ReportTable.vue';
+import TreeTable from 'primevue/treetable';
 import Breadcrumb from 'primevue/breadcrumb';
 import Card from 'primevue/card';
-import Button from 'primevue/button';
 import DatePicker from 'primevue/datepicker';
 import Chart from 'primevue/chart';
 import Column from 'primevue/column';
@@ -141,7 +147,7 @@ const breadcrumbItems = [
 const props = defineProps({
     asOfDate: String,
     totalHeadcount: Number,
-    byDepartment: Array,
+    departmentTree: Array, // hierarchical tree from backend
     byPosition: Array,
     byEmploymentType: Object,
     filters: Object,
@@ -164,7 +170,7 @@ const kpiData = computed(() => [
     },
     {
         label: 'Số bộ phận',
-        value: props.byDepartment.length,
+        value: props.departmentTree ? props.departmentTree.length : 0,
         format: 'number',
         icon: 'pi-building',
         iconColor: 'text-green-500',
@@ -187,10 +193,10 @@ const kpiData = computed(() => [
 ]);
 
 const departmentChartData = computed(() => {
-    const labels = props.byDepartment.map(d => d.department_name);
-    const data = props.byDepartment.map(d => d.count);
+    // Only use root departments for chart
+    const labels = props.departmentTree ? props.departmentTree.map(d => d.label) : [];
+    const data = props.departmentTree ? props.departmentTree.map(d => d.data.headcount) : [];
     const colors = ReportService.getChartColors(labels.length);
-
     return {
         labels: labels,
         datasets: [{
@@ -236,7 +242,8 @@ const exportReport = () => {
 };
 
 const calculatePercentage = (count) => {
-    return ReportService.calculatePercentage(count, props.totalHeadcount);
+    if (!props.totalHeadcount || props.totalHeadcount === 0) return 0;
+    return Math.round((count / props.totalHeadcount) * 100);
 };
 
 const formatDisplayDate = (date) => {
