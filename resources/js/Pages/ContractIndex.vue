@@ -892,9 +892,9 @@ function openNew() {
   insuranceSuggestionNote.value = ''
   submitted.value = false
 
-  // Reset insurance components
+  // Set all insurance components enabled by default
   insuranceComponents.value.forEach(c => {
-    c.enabled = false
+    c.enabled = true
     c.base_type = 'INSURANCE_SALARY'
     c.base_amount = null
   })
