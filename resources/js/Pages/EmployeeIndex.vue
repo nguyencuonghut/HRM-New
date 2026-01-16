@@ -8,10 +8,10 @@
             <Toolbar class="mb-6">
                 <template #start>
                     <Button v-if="can('create employees')" :label="'Thêm mới'" icon="pi pi-plus" class="mr-2" @click="openNew" />
-                    <Button v-if="can('create employees') || can('edit employees')" :label="'Import'" icon="pi pi-file-import" class="mr-2" @click="importDialog = true" />
                 </template>
 
                 <template #end>
+                    <Button v-if="can('create employees') || can('edit employees')" :label="'Import'" icon="pi pi-download" severity="help" class="mr-2" @click="importDialog = true" />
                     <Button v-if="can('view employee profiles')" :label="'Xuất CSV'" icon="pi pi-upload" severity="secondary" @click="exportCSV" />
                 </template>
             </Toolbar>
