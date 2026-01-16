@@ -60,6 +60,8 @@ class EmployeeResource extends JsonResource
             'address_street'           => $this->address_street,
             'temp_ward_id'             => $this->temp_ward_id,
             'temp_address_street'      => $this->temp_address_street,
+            'province_id'      => $this->whenLoaded('ward', fn() => $this->ward?->province_id),
+            'temp_province_id' => $this->whenLoaded('tempWard', fn() => $this->tempWard?->province_id),
             'phone'                    => $this->phone,
             'emergency_contact_phone'  => $this->emergency_contact_phone,
             'personal_email'           => $this->personal_email,

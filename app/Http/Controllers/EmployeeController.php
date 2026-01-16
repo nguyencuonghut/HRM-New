@@ -281,7 +281,10 @@ class EmployeeController extends Controller
             ->with([
                 'currentEmployment:id,employee_id,start_date,end_date',
                 // Load latest contract to display its status
-                'latestContract:id,employee_id,status,contract_number'
+                'latestContract:id,employee_id,status,contract_number',
+                // ✅ load ward để suy ra province_id
+                'ward:id,province_id',
+                'tempWard:id,province_id',
             ])
             // Count relationships for completion score (fast, no data loading)
             ->withCount([
