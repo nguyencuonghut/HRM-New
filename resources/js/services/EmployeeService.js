@@ -32,6 +32,20 @@ export class EmployeeService {
         });
     }
 
+        static importExcel(formData, options = {}) {
+            const { onStart, onFinish, onError, onSuccess } = options;
+            router.post('/employees/import-excel', formData, {
+                forceFormData: true,
+                onStart: () => { onStart && onStart(); },
+                onFinish: () => { onFinish && onFinish(); },
+                onError: (errors) => {
+                    ToastService.error(errors?.message || 'Có lỗi xảy ra khi import file Excel!');
+                    onError && onError(errors);
+                },
+                onSuccess: (page) => { onSuccess && onSuccess(page); }
+            });
+        }
+
     static update(id, payload, options = {}) {
         const { onStart, onFinish, onError, onSuccess } = options;
         router.put(`/employees/${id}`, payload, {

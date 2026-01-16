@@ -144,6 +144,7 @@ Route::group(['middleware' => 'auth'], function () {
 
     // Employee
     Route::resource('employees', EmployeeController::class);
+    Route::post('employees/import-excel', [EmployeeController::class, 'importExcel'])->name('employees.import-excel');
 
     // Trang tổng profile (tabs)
     Route::get('employees/{employee}/profile', [EmployeeController::class, 'profile'])

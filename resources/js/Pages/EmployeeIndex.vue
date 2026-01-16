@@ -8,6 +8,7 @@
             <Toolbar class="mb-6">
                 <template #start>
                     <Button v-if="can('create employees')" :label="'Thêm mới'" icon="pi pi-plus" class="mr-2" @click="openNew" />
+                    <Button v-if="can('create employees') || can('edit employees')" :label="'Import'" icon="pi pi-file-import" class="mr-2" @click="importDialog = true" />
                 </template>
 
                 <template #end>
@@ -289,11 +290,45 @@
                 <Button label="Có" icon="pi pi-check" @click="doDelete" severity="danger" :loading="deleting" />
             </template>
         </Dialog>
+
+        <!-- Import Excel Dialog -->
+        <Dialog v-model:visible="importDialog" :style="{ width: '400px' }" header="Import nhân viên từ Excel" :modal="true">
+            <div>
+                <input type="file" accept=".xlsx,.xls" @change="handleFileChange" />
+            </div>
+            <template #footer>
+                <Button label="Hủy" icon="pi pi-times" text @click="importDialog = false" />
+                <Button label="Import" icon="pi pi-check" @click="uploadImportFile" :disabled="!importFile" />
+            </template>
+        </Dialog>
     </div>
 </template>
 
 <script setup>
 import { ref, computed, watch, watchEffect } from 'vue'
+const importDialog = ref(false)
+const importFile = ref(null)
+
+function openImportDialog() {
+    importDialog.value = true
+}
+
+function handleFileChange(e) {
+    importFile.value = e.target.files[0]
+}
+
+function uploadImportFile() {
+    if (!importFile.value) return
+    const formData = new FormData()
+    formData.append('file', importFile.value)
+    // Gửi lên API, ví dụ: /employees/import-excel
+    EmployeeService.importExcel(formData, {
+        onStart: () => {},
+        onFinish: () => { importDialog.value = false; importFile.value = null },
+        onSuccess: () => {},
+        onError: () => {}
+    })
+}
 import { FilterMatchMode } from '@primevue/core/api'
 import { Head, router } from '@inertiajs/vue3'
 import Select from 'primevue/select'

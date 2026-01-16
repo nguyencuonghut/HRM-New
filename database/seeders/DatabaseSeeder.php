@@ -23,9 +23,9 @@ class DatabaseSeeder extends Seeder
             PositionSeeder::class,
             CompanyRegionSeeder::class, // Company BHXH region tracking
             PositionSalaryCategorySeeder::class, // Assign categories to positions and create salary grades
-            EmployeeSeeder::class,
-            EmployeeAssignmentSeeder::class,
-            RoleScopeSeeder::class,
+            //EmployeeSeeder::class,
+            //EmployeeAssignmentSeeder::class,
+            //RoleScopeSeeder::class,
             EducationLevelSeeder::class,
             SchoolSeeder::class,
             SkillCategorySeeder::class,
@@ -34,13 +34,13 @@ class DatabaseSeeder extends Seeder
             ContractTemplatePlaceholderMappingSeeder::class,
             ContractAppendixTemplateSeeder::class,
             ContractAppendixTemplatePlaceholderMappingSeeder::class,
-            ContractApprovalSeeder::class, // Setup HR Head cho phê duyệt hợp đồng
+            //ContractApprovalSeeder::class, // Setup HR Head cho phê duyệt hợp đồng
             LeaveTypeSeeder::class, // Leave types with colors and configurations
-            ContractSeeder::class, // Test contracts for leave balance system
-            ContractAppendixSeeder::class, // Test appendices for contract modifications
+            //ContractSeeder::class, // Test contracts for leave balance system
+            //ContractAppendixSeeder::class, // Test appendices for contract modifications
             InsuranceComponentSeeder::class, // 5 insurance components (BHXH, BHYT, BHTN, etc.)
-            InsuranceTestDataSeeder::class, // Test data for insurance workflow
-            MigrateExistingEmployeesToEmploymentSeeder::class, // Migrate existing insurance data
+            //InsuranceTestDataSeeder::class, // Test data for insurance workflow
+            //MigrateExistingEmployeesToEmploymentSeeder::class, // Migrate existing insurance data
             BenefitTypeSeeder::class, // Danh mục loại phúc lợi
             InsuranceConfigSeeder::class, // Cấu hình bảo hiểm
             InsuranceSalaryCategorySeeder::class, // Liên kết loại lương BHXH cho các vị trí

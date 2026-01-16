@@ -261,11 +261,21 @@ class EmployeeController extends Controller
                 'full_name',
                 'phone',
                 'company_email',
+                'personal_email',
                 'status',
                 'hire_date',
                 'dob',
                 'gender',
+                'marital_status',
                 'cccd',
+                'si_number',
+                'cccd_issued_on',
+                'cccd_issued_by',
+                'ward_id',
+                'address_street',
+                'temp_ward_id',
+                'temp_address_street',
+                'emergency_contact_phone',
                 'created_at'
             ])
             ->with([
@@ -467,6 +477,33 @@ class EmployeeController extends Controller
 
         return Inertia::render('Employees/Show', [
             'employee' => new EmployeeResource($employee)
+        ]);
+    }
+
+    /**
+     * Import employees from Excel file (async via queue)
+     */
+    public function importExcel(Request $request)
+    {
+        $request->validate([
+            'file' => 'required|file|mimes:xlsx,xls',
+        ]);
+
+        $user = $request->user();
+        $file = $request->file('file');
+
+        // Lưu file tạm vào storage/app/imports
+        $disk = 'local';
+        $path = $file->store('imports', $disk);
+
+        // Dispatch job xử lý import
+        \App\Jobs\ImportEmployeesFromExcelJob::dispatch($disk, $path, $user->id);
+
+        // Trả về response cho FE (có thể trả về trạng thái đang xử lý)
+        return redirect()->route('employees.index')
+            ->with([
+                'type' => 'success',
+                'message' => 'File đã được upload, hệ thống sẽ xử lý và gửi thông báo khi hoàn thành.'
         ]);
     }
 
