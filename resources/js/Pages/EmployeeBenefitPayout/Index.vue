@@ -248,7 +248,7 @@ const getPaymentMethodSeverity = (method) => {
               <Select v-model="filters.year" :options="years" placeholder="Năm" class="w-32" showClear />
               <Select v-model="filters.month" :options="months" optionLabel="label" optionValue="value" placeholder="Tháng" class="w-32" showClear />
               <Select v-model="filters.benefit_type_id" :options="benefitTypes" optionLabel="name" optionValue="id" placeholder="Loại phúc lợi" class="w-48" showClear />
-              <Select v-model="filters.employee_id" :options="employees" optionLabel="full_name" optionValue="id" placeholder="Nhân viên" class="w-48" showClear filter />
+              <Select v-model="filters.employee_id" :options="employees" optionLabel="display_name" optionValue="id" placeholder="Nhân viên" class="w-48" showClear filter />
               <InputText v-model="filters.search" placeholder="Tìm kiếm..." class="w-64" />
             </div>
           </template>
@@ -329,7 +329,7 @@ const getPaymentMethodSeverity = (method) => {
           <div class="grid grid-cols-2 gap-4">
             <div>
               <label class="block text-sm font-medium mb-2">Nhân viên <span class="text-red-500">*</span></label>
-              <Select v-model="formData.employee_id" :options="employees" optionLabel="full_name" optionValue="id" placeholder="Chọn nhân viên" class="w-full" filter />
+              <Select v-model="formData.employee_id" :options="employees" optionLabel="display_name" optionValue="id" placeholder="Chọn nhân viên" class="w-full" filter />
             </div>
 
             <div>

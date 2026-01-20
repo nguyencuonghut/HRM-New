@@ -52,7 +52,7 @@
         </Column>
         <Column field="employee_name" header="Nhân viên" headerStyle="min-width:14rem;">
           <template #body="sp">
-            {{ sp.data.employee?.full_name }} ({{ sp.data.employee?.employee_code }})
+            {{ sp.data.employee?.display_name || sp.data.employee_display_name }}
           </template>
         </Column>
         <Column field="department_name" header="Đơn vị" headerStyle="min-width:12rem;">
@@ -156,10 +156,8 @@
       <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
           <label class="block font-bold mb-2 required-field">Nhân viên</label>
-          <Select v-model="form.employee_id" :options="employees" optionLabel="full_name" optionValue="id" filter showClear fluid
-                  :invalid="submitted && !form.employee_id"
-                  optionGroupLabel=""
-                  :itemTemplate="empItemTmpl" />
+          <Select v-model="form.employee_id" :options="employees" optionLabel="display_name" optionValue="id" filter showClear fluid
+                  :invalid="submitted && !form.employee_id" />
           <small class="text-red-500" v-if="submitted && !form.employee_id">Nhân viên là bắt buộc.</small>
           <small class="text-red-500" v-if="hasError('employee_id')">{{ errors.employee_id }}</small>
         </div>
@@ -474,7 +472,7 @@
     <Dialog v-model:visible="deleteDialog" :style="{ width: '450px' }" header="Xác nhận" :modal="true">
       <div class="flex items-center gap-4">
         <i class="pi pi-exclamation-triangle !text-3xl" />
-        <span v-if="current">Bạn có chắc muốn xóa <b>{{ current.contract_number || current.employee?.full_name }}</b>?</span>
+        <span v-if="current">Bạn có chắc muốn xóa <b>{{ current.contract_number || current.employee?.display_name }}</b>?</span>
       </div>
       <template #footer>
         <Button label="Không" icon="pi pi-times" text @click="deleteDialog=false" />
@@ -501,7 +499,7 @@
           <i class="pi pi-info-circle text-blue-600 text-xl"></i>
           <div>
             <div class="font-semibold text-gray-800">{{ current?.contract_number }}</div>
-            <div class="text-sm text-gray-600">{{ current?.employee?.full_name }}</div>
+            <div class="text-sm text-gray-600">{{ current?.employee?.display_name }}</div>
           </div>
         </div>
         <p class="text-sm text-gray-700">
@@ -522,7 +520,7 @@
           <i class="pi pi-check-circle text-green-600 text-xl"></i>
           <div>
             <div class="font-semibold text-gray-800">{{ current?.contract_number }}</div>
-            <div class="text-sm text-gray-600">{{ current?.employee?.full_name }}</div>
+            <div class="text-sm text-gray-600">{{ current?.employee?.display_name }}</div>
           </div>
         </div>
 
@@ -549,7 +547,7 @@
           <i class="pi pi-times-circle text-red-600 text-xl"></i>
           <div>
             <div class="font-semibold text-gray-800">{{ current?.contract_number }}</div>
-            <div class="text-sm text-gray-600">{{ current?.employee?.full_name }}</div>
+            <div class="text-sm text-gray-600">{{ current?.employee?.display_name }}</div>
           </div>
         </div>
 

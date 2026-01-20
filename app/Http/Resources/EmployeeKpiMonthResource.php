@@ -23,6 +23,7 @@ class EmployeeKpiMonthResource extends JsonResource
                 'id' => $this->employee->id,
                 'full_name' => $this->employee->full_name,
                 'employee_code' => $this->employee->employee_code,
+                'display_name' => $this->employee->display_name,
             ]),
             'input_by_user' => $this->whenLoaded('inputBy', fn() => [
                 'id' => $this->inputBy->id,

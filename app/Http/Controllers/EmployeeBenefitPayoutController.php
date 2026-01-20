@@ -53,6 +53,7 @@ class EmployeeBenefitPayoutController extends Controller
         $payouts = $query->get();
 
         // Lấy danh sách nhân viên để dropdown
+        // Note: display_name accessor will be auto-appended (defined in $appends)
         $employees = Employee::query()
             ->orderBy('full_name')
             ->get(['id', 'employee_code', 'full_name']);

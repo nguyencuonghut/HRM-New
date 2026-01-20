@@ -10,7 +10,7 @@
                     </div>
                     <div>
                         <span class="font-semibold">Nhân viên:</span>
-                        <span class="ml-2">{{ contract?.employee?.full_name }}</span>
+                        <span class="ml-2">{{ contract?.employee?.display_name }}</span>
                     </div>
                     <div>
                         <span class="font-semibold">Loại HĐ:</span>

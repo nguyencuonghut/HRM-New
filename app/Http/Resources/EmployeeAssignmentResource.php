@@ -26,9 +26,10 @@ class EmployeeAssignmentResource extends JsonResource
 
             // Thông tin để hiển thị
             'employee'  => [
-                'id'        => $this->employee?->id,
-                'full_name' => $this->employee?->full_name,
-                'code'      => $this->employee?->employee_code ?? null,
+                'id'           => $this->employee?->id,
+                'full_name'    => $this->employee?->full_name,
+                'code'         => $this->employee?->employee_code ?? null,
+                'display_name' => $this->employee?->display_name ?? null,
             ],
             'department' => [
                 'id'   => $this->department?->id,

@@ -12,7 +12,7 @@
         <div class="grid grid-cols-2 gap-4 text-sm">
           <div>
             <span class="font-semibold">Nhân viên:</span>
-            {{ contract?.employee?.full_name }}
+            {{ contract?.employee?.display_name }}
           </div>
           <div>
             <span class="font-semibold">Ngày bắt đầu:</span>

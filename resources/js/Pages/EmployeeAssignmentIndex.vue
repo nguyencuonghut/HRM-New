@@ -75,7 +75,7 @@
         <Column selectionMode="multiple" style="width: 3rem" :exportable="false"></Column>
         <Column field="employee.full_name" header="Nhân viên" sortable style="min-width: 14rem">
           <template #body="sp">
-            {{ sp.data.employee?.full_name }}
+            {{ sp.data.employee?.display_name }}
           </template>
         </Column>
         <Column field="department.name" header="Phòng/Ban" sortable style="min-width: 14rem">
@@ -124,7 +124,7 @@
       <div class="flex flex-col gap-6">
         <div>
           <label class="block font-bold mb-3 required-field">Nhân viên</label>
-          <Select v-model="form.employee_id" :options="employeesForSelect" optionLabel="full_name" filter optionValue="id" fluid
+          <Select v-model="form.employee_id" :options="employeesForSelect" optionLabel="display_name" filter optionValue="id" fluid
                   :invalid="submitted && !form.employee_id || hasError('employee_id')" />
           <small v-if="submitted && !form.employee_id" class="text-red-500">Bắt buộc</small>
           <small v-if="hasError('employee_id')" class="p-error block mt-1">{{ getError('employee_id') }}</small>
@@ -191,7 +191,7 @@
     <Dialog v-model:visible="deleteDialog" :style="{ width: '450px' }" :header="'Xác nhận xoá'" :modal="true">
       <div class="flex items-center gap-4">
         <i class="pi pi-exclamation-triangle !text-3xl" />
-        <span v-if="currentRow">Bạn có chắc muốn xoá phân công của <b>{{ currentRow.employee?.full_name }}</b>?</span>
+        <span v-if="currentRow">Bạn có chắc muốn xoá phân công của <b>{{ currentRow.employee?.display_name }}</b>?</span>
       </div>
       <template #footer>
         <Button :label="'Không'" icon="pi pi-times" text @click="deleteDialog = false" severity="secondary" variant="text" />

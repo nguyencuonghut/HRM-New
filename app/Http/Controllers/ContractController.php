@@ -38,7 +38,8 @@ class ContractController extends Controller
             ->latest('created_at')
             ->get();
 
-        $employees   = Employee::select('id','full_name','employee_code')->orderBy('full_name')->get();
+        // Note: display_name accessor will be auto-appended (defined in $appends)
+        $employees   = Employee::select('id', 'employee_code', 'full_name')->orderBy('full_name')->get();
         $departments = Department::select('id','name')->orderBy('name')->get();
         $positions   = Position::select('id','title','department_id')->orderBy('title')->get();
 

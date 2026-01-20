@@ -21,6 +21,7 @@ class LeaveRequestResource extends JsonResource
                 'id' => $this->employee->id,
                 'full_name' => $this->employee->full_name,
                 'employee_code' => $this->employee->employee_code,
+                'display_name' => $this->employee->display_name,
             ] : null,
             'leave_type_id' => $this->leave_type_id,
             'leave_type' => $this->leaveType ? [

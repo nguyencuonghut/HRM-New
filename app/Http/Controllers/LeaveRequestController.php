@@ -99,8 +99,9 @@ class LeaveRequestController extends Controller
 
         // If Admin or Super Admin, provide ALL employees list for selection
         if ($isAdmin) {
+            // Note: display_name accessor will be auto-appended
             $data['employees'] = Employee::orderBy('full_name')
-                ->get(['id', 'full_name', 'employee_code']);
+                ->get(['id', 'employee_code', 'full_name']);
         } else {
             // Non-Admin: provide their own employee info
             $employee = Employee::where('user_id', $user->id)->first();
@@ -307,8 +308,9 @@ class LeaveRequestController extends Controller
 
         // If Admin or Super Admin, provide ALL employees list for selection
         if ($user->hasAnyRole(['Admin', 'Super Admin'])) {
+            // Note: display_name accessor will be auto-appended
             $data['employees'] = Employee::orderBy('full_name')
-                ->get(['id', 'full_name', 'employee_code']);
+                ->get(['id', 'employee_code', 'full_name']);
         }
 
         return Inertia::render('LeaveRequests/Form', $data);

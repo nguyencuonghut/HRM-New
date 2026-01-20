@@ -26,6 +26,7 @@ class EmployeeBenefitPayoutResource extends JsonResource
                 'id' => $this->employee->id,
                 'full_name' => $this->employee->full_name,
                 'employee_code' => $this->employee->employee_code,
+                'display_name' => $this->employee->display_name,
             ]),
             'benefit_type' => $this->whenLoaded('benefitType', fn() => [
                 'id' => $this->benefitType->id,

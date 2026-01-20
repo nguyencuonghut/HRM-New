@@ -16,6 +16,7 @@ class ContractResource extends JsonResource
                 'id' => $this->employee->id,
                 'full_name' => $this->employee->full_name,
                 'employee_code' => $this->employee->employee_code,
+                'display_name' => $this->employee->display_name,
             ] : null,
             'department_id' => $this->department_id,
             'department' => $this->department ? [
@@ -38,6 +39,7 @@ class ContractResource extends JsonResource
             // Flat fields for easy filtering
             'employee_name' => $this->employee ? $this->employee->full_name : null,
             'employee_code' => $this->employee ? $this->employee->employee_code : null,
+            'employee_display_name' => $this->employee ? $this->employee->display_name : null,
             'department_name' => $this->department ? $this->department->name : null,
             'position_name' => $this->position ? $this->position->title : null,
             'sign_date' => optional($this->sign_date)->toDateString(),

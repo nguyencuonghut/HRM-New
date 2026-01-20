@@ -7,7 +7,7 @@
     <div class="mb-4 flex items-center justify-between">
       <div>
         <h2 class="text-xl font-semibold">
-          Hợp đồng: {{ contract.contract_number }} - {{ contract.employee?.full_name }} ({{ contract.employee?.employee_code }})
+          Hợp đồng: {{ contract.contract_number }} - {{ contract.employee?.display_name }}
         </h2>
         <div class="flex items-center gap-3 mt-2">
           <div class="flex items-center gap-2">
@@ -42,7 +42,7 @@
               Thông tin hợp đồng (tại thời điểm ký)
             </h3>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div><b>Nhân viên:</b> {{ contract.employee?.full_name }} ({{ contract.employee?.employee_code }})</div>
+              <div><b>Nhân viên:</b> {{ contract.employee?.display_name }}</div>
               <div><b>Đơn vị (theo HĐ):</b> {{ contract.department?.name || '—' }}</div>
               <div><b>Chức danh (theo HĐ):</b> {{ contract.position?.title || '—' }}</div>
               <div><b>Loại HĐ:</b> {{ contract.contract_type_label }}</div>

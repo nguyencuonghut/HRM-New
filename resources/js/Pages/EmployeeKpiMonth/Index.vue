@@ -102,7 +102,7 @@
 
                 <Column header="Nhân viên" sortable style="min-width: 14rem">
                     <template #body="slotProps">
-                        {{ slotProps.data.employee?.employee_code }} - {{ slotProps.data.employee?.full_name }}
+                        {{ slotProps.data.employee?.display_name }}
                     </template>
                 </Column>
 
@@ -157,24 +157,13 @@
                         id="employee"
                         v-model="kpi.employee_id"
                         :options="employees"
-                        optionLabel="full_name"
+                        optionLabel="display_name"
                         optionValue="id"
                         filter
                         :invalid="(submitted && !kpi.employee_id) || hasError('employee_id')"
                         fluid
                         placeholder="Chọn nhân viên"
-                    >
-                        <template #option="slotProps">
-                            {{ slotProps.option.employee_code }} - {{ slotProps.option.full_name }}
-                        </template>
-                        <template #value="slotProps">
-                            <span v-if="slotProps.value">
-                                {{ employees.find(e => e.id === slotProps.value)?.employee_code }} -
-                                {{ employees.find(e => e.id === slotProps.value)?.full_name }}
-                            </span>
-                            <span v-else>Chọn nhân viên</span>
-                        </template>
-                    </Select>
+                    />
                     <small v-if="submitted && !kpi.employee_id" class="text-red-500">Nhân viên là bắt buộc</small>
                     <small v-if="hasError('employee_id')" class="p-error block mt-1">{{ getError('employee_id') }}</small>
                 </div>

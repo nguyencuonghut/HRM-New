@@ -22,7 +22,7 @@
                             v-if="isAdmin"
                             v-model="form.employee_id"
                             :options="employees"
-                            optionLabel="full_name"
+                            optionLabel="display_name"
                             optionValue="id"
                             placeholder="Chọn nhân viên"
                             :invalid="(submitted && !form.employee_id) || hasError('employee_id')"
@@ -30,19 +30,12 @@
                             showClear
                             filter
                             @change="onEmployeeChange"
-                        >
-                            <template #option="slotProps">
-                                <div class="flex items-center gap-2">
-                                    <span class="font-semibold">{{ slotProps.option.full_name }}</span>
-                                    <span class="text-gray-500 text-sm">({{ slotProps.option.employee_code }})</span>
-                                </div>
-                            </template>
-                        </Select>
+                        />
 
                         <!-- Non-Admin: Read-only display -->
                         <InputText
                             v-else
-                            :value="employee ? `${employee.full_name} (${employee.employee_code})` : ''"
+                            :value="employee ? employee.display_name : ''"
                             disabled
                             fluid
                         />

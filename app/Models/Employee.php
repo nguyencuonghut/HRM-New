@@ -39,6 +39,17 @@ class Employee extends Model
         'hire_date' => 'date',
     ];
 
+    protected $appends = ['display_name'];
+
+    /**
+     * Accessor: display_name - Format hiển thị "Họ tên (Mã NV)"
+     * Dùng cho các dropdown, select để tránh nhầm lẫn khi trùng tên
+     */
+    public function getDisplayNameAttribute(): string
+    {
+        return "{$this->full_name} ({$this->employee_code})";
+    }
+
     // Quan hệ: tài khoản đăng nhập (nếu có)
     public function user() { return $this->belongsTo(\App\Models\User::class); }
 

@@ -21,6 +21,7 @@ class InsuranceChangeRecordResource extends JsonResource
                 'id' => $this->employee->id,
                 'employee_code' => $this->employee->employee_code,
                 'full_name' => $this->employee->full_name,
+                'display_name' => $this->employee->display_name,
                 'si_number' => $this->employee->si_number,
             ]),
 
