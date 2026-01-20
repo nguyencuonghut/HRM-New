@@ -54,7 +54,8 @@ class ReportService
      * @param array $filters Optional filters (department_id, position_id, etc.)
      * @return Collection
      */
-    public function getEmployeesWithAssignmentsAsOf($asOfDate, array $filters = []): Collection
+    public function 
+    getEmployeesWithAssignmentsAsOf($asOfDate, array $filters = []): Collection
     {
         $date = $asOfDate instanceof Carbon ? $asOfDate : Carbon::parse($asOfDate);
 

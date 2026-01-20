@@ -123,7 +123,6 @@ class ReportController extends Controller
             return $a ? [
                 'employee_id' => $e->id,
                 'department_id' => $a->department_id,
-                'employment_type' => $a->employment_type,
                 'position_id' => $a->position_id,
             ] : null;
         })->filter()->values();
