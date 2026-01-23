@@ -166,6 +166,33 @@ return [
             ]
         ],
 
+        'calendar' => [
+            'label' => 'Lịch làm việc',
+            'icon' => 'pi-calendar',
+            'permissions' => [
+                'view calendar' => [
+                    'label' => 'Xem lịch',
+                    'description' => 'Truy cập calendar module'
+                ],
+                'view team calendar' => [
+                    'label' => 'Xem lịch team',
+                    'description' => 'Xem lịch nhân viên trong team (Department Manager)'
+                ],
+                'view executive calendar' => [
+                    'label' => 'Xem lịch điều hành',
+                    'description' => 'Xem lịch tổng quan cho Director'
+                ],
+                'manage company holidays' => [
+                    'label' => 'Quản lý ngày lễ',
+                    'description' => 'Tạo, sửa, xóa ngày lễ công ty'
+                ],
+                'export calendar' => [
+                    'label' => 'Xuất lịch',
+                    'description' => 'Export calendar dưới dạng Excel/PDF'
+                ],
+            ]
+        ],
+
         'organization_structure' => [
             'label' => 'Cơ cấu tổ chức',
             'icon' => 'pi-sitemap',

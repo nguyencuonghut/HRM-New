@@ -419,4 +419,9 @@ Route::group(['middleware' => 'auth'], function () {
         // Export
         Route::get('/{reportCode}/export', [\App\Http\Controllers\ReportController::class, 'export'])->name('export');
     });
+
+    // Calendar Routes
+    Route::get('/calendar', [\App\Http\Controllers\CalendarController::class, 'index'])->name('calendar.index');
+    Route::get('/calendar/events', [\App\Http\Controllers\CalendarController::class, 'events'])->name('calendar.events');
+    Route::get('/calendar/team-summary', [\App\Http\Controllers\CalendarController::class, 'teamSummary'])->name('calendar.team-summary');
 });

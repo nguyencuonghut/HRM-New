@@ -122,6 +122,9 @@ class RolesAndPermissionsSeeder extends Seeder
             'view contract reports', 'view leave reports', 'view performance reports',
             'export all reports',
 
+            // Calendar - Full access
+            'view calendar', 'manage company holidays', 'export calendar',
+
             // Master Data - Full access
             'view provinces', 'create provinces', 'edit provinces', 'delete provinces',
             'view wards', 'create wards', 'edit wards', 'delete wards',
@@ -168,6 +171,9 @@ class RolesAndPermissionsSeeder extends Seeder
             'view all reports', 'view employee reports',
             'export all reports',
 
+            // Calendar - View only
+            'view calendar',
+
             // Activity Logs - View own
             'view own activity logs',
         ];
@@ -212,6 +218,9 @@ class RolesAndPermissionsSeeder extends Seeder
             // Reports - View all
             'view all reports', 'view employee reports', 'view department reports',
             'view contract reports', 'view leave reports', 'view performance reports',
+
+            // Calendar - Executive view
+            'view executive calendar',
 
             // Activity Logs - View all
             'view activity logs',
@@ -258,6 +267,9 @@ class RolesAndPermissionsSeeder extends Seeder
 
             // Reports - Department & Employee reports
             'view department reports', 'view employee reports',
+
+            // Calendar - Team calendar
+            'view team calendar',
 
             // Activity Logs - View own department
             'view own activity logs',

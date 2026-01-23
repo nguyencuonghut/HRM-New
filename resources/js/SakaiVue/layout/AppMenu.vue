@@ -133,6 +133,15 @@ const model = computed(() => {
         });
     }
 
+    // Add Calendar - for viewing company events and schedules
+    if (can('view calendar') || can('view team calendar') || can('view executive calendar')) {
+        homeItems.push({
+            label: 'Lịch làm việc',
+            icon: 'pi pi-fw pi-calendar',
+            to: '/calendar'
+        });
+    }
+
     const items = [
         {
             label: t('nav.home'),
