@@ -416,9 +416,15 @@ Route::group(['middleware' => 'auth'], function () {
         Route::get('/leave-monthly', [\App\Http\Controllers\ReportController::class, 'leaveMonthly'])->name('leave-monthly');
         Route::get('/leave-balances', [\App\Http\Controllers\ReportController::class, 'leaveBalances'])->name('leave-balances');
 
+        // People Reports
+        Route::get('/birthdays', [\App\Http\Controllers\ReportController::class, 'birthdays'])->name('birthdays');
+
         // Export
         Route::get('/{reportCode}/export', [\App\Http\Controllers\ReportController::class, 'export'])->name('export');
     });
+
+    // Employee Benefit Payout - Quick Store for Birthday
+    Route::post('employee-benefit-payouts/quick-store', [\App\Http\Controllers\EmployeeBenefitPayoutController::class, 'quickStore'])->name('employee-benefit-payouts.quick-store');
 
     // Calendar Routes
     Route::get('/calendar', [\App\Http\Controllers\CalendarController::class, 'index'])->name('calendar.index');

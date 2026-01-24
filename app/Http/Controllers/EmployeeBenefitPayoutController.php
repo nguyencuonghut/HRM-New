@@ -187,4 +187,54 @@ class EmployeeBenefitPayoutController extends Controller
             return redirect()->back()->withErrors(['error' => 'Có lỗi xảy ra: ' . $e->getMessage()]);
         }
     }
+
+    /**
+     * POST /employee-benefit-payouts/quick-store
+     * Quick store from Birthday Report - Auto-assign BIRTHDAY benefit type
+     */
+    public function quickStore(Request $request)
+    {
+        // $this->authorize('create', EmployeeBenefitPayout::class);
+
+        $validated = $request->validate([
+            'employee_id' => 'required|exists:employees,id',
+            'amount' => 'required|numeric|min:0',
+            'paid_date' => 'required|date',
+            'payment_method' => 'required|in:CASH,BANK_TRANSFER',
+            'reference_no' => 'nullable|string|max:255',
+            'note' => 'nullable|string',
+        ]);
+
+        DB::beginTransaction();
+        try {
+            // Auto-find BIRTHDAY benefit type
+            $birthdayType = BenefitType::where('code', 'BIRTHDAY')->firstOrFail();
+
+            $payout = EmployeeBenefitPayout::create([
+                'employee_id' => $validated['employee_id'],
+                'benefit_type_id' => $birthdayType->id,
+                'paid_date' => $validated['paid_date'],
+                'amount' => $validated['amount'],
+                'payment_method' => $validated['payment_method'],
+                'reference_no' => $validated['reference_no'] ?? null,
+                'note' => $validated['note'] ?? null,
+                'currency' => 'VND',
+                'paid_by' => auth()->id(),
+                'source' => 'MANUAL',
+            ]);
+
+            DB::commit();
+            return response()->json([
+                'success' => true,
+                'message' => 'Ghi nhận chi trả sinh nhật thành công!',
+                'data' => $payout->load(['employee', 'benefitType', 'paidByUser'])
+            ]);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json([
+                'success' => false,
+                'message' => 'Có lỗi xảy ra: ' . $e->getMessage()
+            ], 500);
+        }
+    }
 }

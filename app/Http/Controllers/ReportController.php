@@ -646,6 +646,77 @@ class ReportController extends Controller
     }
 
     /**
+     * RPT-012: Employee Birthdays Report
+     * Track birthdays for celebration planning and benefit payout
+     */
+    public function birthdays(Request $request): Response
+    {
+        $validated = $request->validate([
+            'month' => 'nullable|integer|min:1|max:12',
+            'year' => 'nullable|integer|min:2000',
+            'quarter' => 'nullable|integer|min:1|max:4',
+            'department_id' => 'nullable|exists:departments,id',
+            'age_min' => 'nullable|integer|min:0',
+            'age_max' => 'nullable|integer|max:100',
+            'view_mode' => 'nullable|in:table,calendar',
+        ]);
+
+        // Default: current month
+        $month = $validated['month'] ?? now()->month;
+        $year = $validated['year'] ?? now()->year;
+
+        // Get employees with birthdays in period
+        $employees = $this->reportService->getEmployeesWithBirthdaysInPeriod([
+            'month' => $month,
+            'year' => $year,
+            'quarter' => $validated['quarter'] ?? null,
+            'department_id' => $validated['department_id'] ?? null,
+            'age_min' => $validated['age_min'] ?? null,
+            'age_max' => $validated['age_max'] ?? null,
+        ]);
+
+        // Statistics
+        $stats = $this->reportService->getBirthdayStatistics($employees, $month, $year);
+
+        return Inertia::render('Reports/Birthdays', [
+            'employees' => $employees->map(function($emp) {
+                return [
+                    'id' => $emp->id,
+                    'employee_code' => $emp->employee_code,
+                    'full_name' => $emp->full_name,
+                    'dob' => $emp->dob->format('Y-m-d'),
+                    'age' => $emp->age,
+                    'birthday_this_year' => $emp->birthday_this_year->format('Y-m-d'),
+                    'days_until' => $emp->days_until,
+                    'phone' => $emp->phone,
+                    'company_email' => $emp->company_email,
+                    'avatar' => $emp->avatar,
+                    'department' => $emp->primaryAssignment?->department?->name,
+                    'department_id' => $emp->primaryAssignment?->department_id,
+                    'position' => $emp->primaryAssignment?->position?->title,
+                    'birthday_benefit_payout' => $emp->birthday_benefit_payout ? [
+                        'id' => $emp->birthday_benefit_payout->id,
+                        'amount' => $emp->birthday_benefit_payout->amount,
+                        'paid_date' => $emp->birthday_benefit_payout->paid_date->format('Y-m-d'),
+                        'payment_method' => $emp->birthday_benefit_payout->payment_method,
+                    ] : null,
+                ];
+            }),
+            'statistics' => $stats,
+            'filters' => [
+                'month' => $month,
+                'year' => $year,
+                'quarter' => $validated['quarter'] ?? null,
+                'department_id' => $validated['department_id'] ?? null,
+                'age_min' => $validated['age_min'] ?? null,
+                'age_max' => $validated['age_max'] ?? null,
+                'view_mode' => $validated['view_mode'] ?? 'table',
+            ],
+            'departments' => Department::orderBy('name')->get(['id', 'name']),
+        ]);
+    }
+
+    /**
      * Export report to Excel
      */
     public function export(Request $request, string $reportCode)
@@ -673,6 +744,7 @@ class ReportController extends Controller
                     ['code' => 'employee-list', 'name' => 'Danh sách nhân viên', 'description' => 'Danh sách chi tiết thông tin nhân viên với bộ lọc đa dạng'],
                     ['code' => 'data-completeness', 'name' => 'Độ hoàn thiện hồ sơ', 'description' => 'Đánh giá mức độ đầy đủ thông tin hồ sơ nhân viên'],
                     ['code' => 'employee-movement', 'name' => 'Biến động nhân sự', 'description' => 'Theo dõi tuyển mới, nghỉ việc và điều chuyển nhân sự'],
+                    ['code' => 'birthdays', 'name' => 'Sinh nhật nhân viên', 'description' => 'Theo dõi sinh nhật và lên kế hoạch chúc mừng, chi trả phúc lợi'],
                 ],
             ],
             [

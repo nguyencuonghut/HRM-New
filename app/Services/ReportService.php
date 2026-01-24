@@ -54,7 +54,7 @@ class ReportService
      * @param array $filters Optional filters (department_id, position_id, etc.)
      * @return Collection
      */
-    public function 
+    public function
     getEmployeesWithAssignmentsAsOf($asOfDate, array $filters = []): Collection
     {
         $date = $asOfDate instanceof Carbon ? $asOfDate : Carbon::parse($asOfDate);
@@ -351,5 +351,146 @@ class ReportService
         }
 
         return $query;
+    }
+
+    /**
+     * Get employees with birthdays in specific period
+     * Returns employees with calculated age and days until birthday
+     *
+     * @param array $filters [month, year, quarter, department_id, age_min, age_max]
+     * @return Collection
+     */
+    public function getEmployeesWithBirthdaysInPeriod(array $filters): Collection
+{
+    $query = Employee::query();
+
+    \Log::info('step0: ' . get_class($query));
+
+    $query = $query->where('status', 'ACTIVE');
+    \Log::info('step1: ' . get_class($query));
+
+    $query = $query->whereNotNull('dob');
+    \Log::info('step2: ' . get_class($query));
+
+    // ✅ Nếu ở đây đã là Query\Builder thì thủ phạm nằm ở đâu đó bạn gọi trước with()
+    \Log::info('before with: ' . get_class($query));
+
+    $query = $query->with(['primaryAssignment.department', 'primaryAssignment.position']);
+
+    // Filter by department
+    if (!empty($filters['department_id'])) {
+        $deptIds = $this->getAllDepartmentIds($filters['department_id']);
+        $query->whereHas('primaryAssignment', function ($q) use ($deptIds) {
+            $q->whereIn('department_id', $deptIds);
+        });
+    }
+
+    $employees = $query->get();
+
+    // Filter by quarter/month
+    if (!empty($filters['quarter'])) {
+        $months = $this->getMonthsInQuarter((int)$filters['quarter']);
+        $employees = $employees->filter(fn($emp) => $emp->dob && in_array($emp->dob->month, $months, true));
+    } elseif (!empty($filters['month'])) {
+        $m = (int)$filters['month'];
+        $employees = $employees->filter(fn($emp) => $emp->dob && $emp->dob->month === $m);
+    }
+
+    $year = (int)($filters['year'] ?? now()->year);
+    $today = now()->startOfDay();
+
+    $employees = $employees->map(function ($emp) use ($year, $today) {
+        $dob = $emp->dob instanceof Carbon ? $emp->dob : Carbon::parse($emp->dob);
+
+        $emp->age = $year - $dob->year;
+        $emp->birthday_this_year = Carbon::create($year, $dob->month, $dob->day);
+        $emp->days_until = $today->diffInDays($emp->birthday_this_year, false);
+
+        $emp->birthday_benefit_payout =
+            \App\Models\EmployeeBenefitPayout::getForBirthday($emp->id, $emp->birthday_this_year);
+
+        return $emp;
+    });
+
+    if (isset($filters['age_min'])) $employees = $employees->where('age', '>=', (int)$filters['age_min']);
+    if (isset($filters['age_max'])) $employees = $employees->where('age', '<=', (int)$filters['age_max']);
+
+    return $employees->sortBy('birthday_this_year')->values();
+}
+
+
+
+    /**
+     * Get birthday statistics
+     *
+     * @param Collection $employees
+     * @param int $month
+     * @param int $year
+     * @return array
+     */
+    public function getBirthdayStatistics(Collection $employees, int $month, int $year): array
+    {
+        $totalCount = $employees->count();
+
+        $byDepartment = $employees
+            ->filter(fn($e) => $e->primaryAssignment && $e->primaryAssignment->department)
+            ->groupBy('primaryAssignment.department.name')
+            ->map->count()
+            ->sortDesc();
+
+        $ageDistribution = $employees->groupBy(function($emp) {
+            $age = $emp->age;
+            if ($age < 25) return 'Dưới 25';
+            if ($age < 35) return '25-34';
+            if ($age < 45) return '35-44';
+            if ($age < 55) return '45-54';
+            return '55+';
+        })->map->count();
+
+        $upcoming = $employees->filter(fn($emp) => $emp->days_until >= 0 && $emp->days_until <= 30)->values();
+
+        // Count paid vs unpaid
+        $paidCount = $employees->filter(fn($emp) => $emp->birthday_benefit_payout !== null)->count();
+        $unpaidCount = $totalCount - $paidCount;
+
+        return [
+            'total_count' => $totalCount,
+            'by_department' => $byDepartment,
+            'age_distribution' => $ageDistribution,
+            'upcoming_7_days' => $upcoming->where('days_until', '<=', 7)->count(),
+            'upcoming_14_days' => $upcoming->where('days_until', '<=', 14)->count(),
+            'upcoming_30_days' => $upcoming->count(),
+            'paid_count' => $paidCount,
+            'unpaid_count' => $unpaidCount,
+        ];
+    }
+
+    /**
+     * Get months in quarter
+     */
+    private function getMonthsInQuarter(int $quarter): array
+    {
+        return match($quarter) {
+            1 => [1, 2, 3],
+            2 => [4, 5, 6],
+            3 => [7, 8, 9],
+            4 => [10, 11, 12],
+            default => [],
+        };
+    }
+
+    /**
+     * Get all descendant department IDs (including parent)
+     */
+    private function getAllDepartmentIds($departmentId): array
+    {
+        $ids = [$departmentId];
+        $children = \App\Models\Department::where('parent_id', $departmentId)->pluck('id');
+
+        foreach ($children as $childId) {
+            $ids = array_merge($ids, $this->getAllDepartmentIds($childId));
+        }
+
+        return $ids;
     }
 }

@@ -113,4 +113,19 @@ class EmployeeBenefitPayout extends Model
     {
         return $query->whereBetween('paid_date', [$startDate, $endDate]);
     }
+
+    /**
+     * Get birthday payout for employee in specific year
+     * Check if employee received birthday benefit within ±30 days of their birthday
+     */
+    public static function getForBirthday($employeeId, $birthdayDate)
+    {
+        return self::where('employee_id', $employeeId)
+            ->whereHas('benefitType', fn($q) => $q->where('code', 'BIRTHDAY'))
+            ->whereBetween('paid_date', [
+                $birthdayDate->copy()->subDays(30),
+                $birthdayDate->copy()->addDays(30)
+            ])
+            ->first();
+    }
 }

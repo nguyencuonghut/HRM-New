@@ -59,10 +59,9 @@ class Employee extends Model
     // Lấy primary assignment đang ACTIVE
     public function primaryAssignment()
     {
-        return $this->assignments()
+        return $this->hasOne(EmployeeAssignment::class)
             ->where('is_primary', true)
-            ->where('status', 'ACTIVE')
-            ->first();
+            ->where('status', 'ACTIVE');
     }
 
     // Quan hệ: ward thường trú (theo CCCD)
