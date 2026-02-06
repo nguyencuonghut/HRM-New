@@ -103,7 +103,7 @@ class PositionSalaryCategorySeeder extends Seeder
                             'position_id' => $position->id,
                             'grade' => $gradeIndex + 1,
                             'coefficient' => $coefficient,
-                            'effective_from' => '2024-01-01',
+                            'effective_from' => '2026-01-01',
                             'effective_to' => null,
                             'is_active' => true,
                             'note' => 'Hệ số ban đầu từ bảng phân loại chức danh',
