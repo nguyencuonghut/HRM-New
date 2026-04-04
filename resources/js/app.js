@@ -54,6 +54,15 @@ createInertiaApp({
       .directive('styleclass', StyleClass)
       .directive('tooltip', Tooltip)
       .component('Toast', Toast)
+      .mixin({
+        methods: {
+          can(permission) {
+            const user = this.$page.props.auth?.user;
+            if (!user || !user.permissions) return false;
+            return user.permissions.some(p => p.name === permission);
+          }
+        }
+      })
       .mount(el)
   },
 })
